@@ -19,6 +19,15 @@ export const TOOLS_REGISTRY: ToolConfig[] = [
     category: 'text',
     path: '/tools/text-formatter',
     component: lazy(() => import('@/tools/text-formatter'))
+  },
+  {
+    id: 'image-name-processor',
+    name: 'Xử lý tên ảnh',
+    description: 'Xử lý và tối ưu hóa tên file ảnh để dễ tìm kiếm trong Lightroom',
+    icon: 'Image',
+    category: 'image',
+    path: '/tools/image-name-processor',
+    component: lazy(() => import('@/tools/image-name-processor'))
   }
 ];
 
@@ -34,6 +43,12 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     name: 'Văn bản',
     description: 'Công cụ xử lý văn bản',
     tools: TOOLS_REGISTRY.filter(tool => tool.category === 'text')
+  },
+  {
+    id: 'image',
+    name: 'Hình ảnh',
+    description: 'Công cụ xử lý hình ảnh',
+    tools: TOOLS_REGISTRY.filter(tool => tool.category === 'image')
   }
 ];
 

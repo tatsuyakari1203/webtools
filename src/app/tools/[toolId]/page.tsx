@@ -2,6 +2,7 @@ import { getToolById } from "@/lib/tools-registry"
 import { notFound } from "next/navigation"
 import CalculatorTool from "@/components/tools/CalculatorTool"
 import TextFormatterTool from "@/components/tools/TextFormatterTool"
+import ImageNameProcessor from "@/pages/tools/image-name-processor"
 import ComingSoonTool from "@/components/tools/ComingSoonTool"
 
 interface ToolPageProps {
@@ -23,6 +24,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <CalculatorTool />
       case "text-formatter":
         return <TextFormatterTool />
+      case "image-name-processor":
+        return <ImageNameProcessor />
       default:
         return <ComingSoonTool tool={tool} />
     }

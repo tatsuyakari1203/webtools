@@ -1,4 +1,4 @@
-import { Calculator, Type, Hash, Code, Palette, Clock } from "lucide-react"
+import { Calculator, Type, Image } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -31,40 +31,13 @@ export const toolsRegistry: Tool[] = [
     featured: true,
   },
   {
-    id: "hash-generator",
-    name: "Hash Generator",
-    description: "Tạo hash MD5, SHA1, SHA256 cho văn bản",
-    category: "Security",
-    icon: Hash,
-    path: "/tools/hash-generator",
-    featured: false,
-  },
-  {
-    id: "base64-encoder",
-    name: "Base64 Encoder/Decoder",
-    description: "Mã hóa và giải mã Base64",
-    category: "Encoding",
-    icon: Code,
-    path: "/tools/base64-encoder",
-    featured: false,
-  },
-  {
-    id: "color-picker",
-    name: "Color Picker",
-    description: "Chọn màu và chuyển đổi giữa các định dạng màu",
-    category: "Design",
-    icon: Palette,
-    path: "/tools/color-picker",
-    featured: false,
-  },
-  {
-    id: "timestamp-converter",
-    name: "Timestamp Converter",
-    description: "Chuyển đổi timestamp và định dạng thời gian",
-    category: "Time",
-    icon: Clock,
-    path: "/tools/timestamp-converter",
-    featured: false,
+    id: "image-name-processor",
+    name: "Xử lý tên ảnh",
+    description: "Xử lý và tối ưu hóa tên file ảnh để dễ tìm kiếm trong Lightroom",
+    category: "Image",
+    icon: Image,
+    path: "/tools/image-name-processor",
+    featured: true,
   },
 ]
 
