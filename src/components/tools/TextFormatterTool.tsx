@@ -123,15 +123,11 @@ export default function TextFormatterTool() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">Text Formatter</CardTitle>
-            <Badge variant="secondary">Text</Badge>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-6">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-xl font-semibold">Text Formatter</h1>
+          <Badge variant="secondary">Text</Badge>
+        </div>
           {/* Input Section */}
           <div className="space-y-2">
             <Label htmlFor="input-text" className="text-sm font-medium">
@@ -208,8 +204,7 @@ export default function TextFormatterTool() {
           <div className="text-center text-sm text-muted-foreground">
             <p>Nhập văn bản và chọn định dạng mong muốn. Kết quả sẽ hiển thị bên dưới.</p>
           </div>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }

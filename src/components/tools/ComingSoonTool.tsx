@@ -11,21 +11,19 @@ interface ComingSoonToolProps {
 
 export default function ComingSoonTool({ tool }: ComingSoonToolProps) {
   return (
-    <div className="max-w-2xl mx-auto">
-      <Card className="text-center">
-        <CardHeader className="pb-6">
+    <div className="max-w-2xl mx-auto text-center">
+      <div className="space-y-6">
+        <div className="pb-6">
           <div className="mx-auto mb-4 rounded-full bg-muted p-6 w-fit">
             <Construction className="h-12 w-12 text-muted-foreground" />
           </div>
-          <CardTitle className="text-2xl">
+          <h1 className="text-2xl font-semibold">
             Công cụ đang được phát triển
-          </CardTitle>
-          <CardDescription className="text-lg">
+          </h1>
+          <p className="text-lg text-muted-foreground mt-2">
             {tool.name} sẽ sớm có mặt trên nền tảng
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-6">
+          </p>
+        </div>
           <div className="rounded-lg bg-muted/50 p-6">
             <div className="flex items-center justify-center gap-3 mb-3">
               <tool.icon className="h-6 w-6 text-primary" />
@@ -58,8 +56,7 @@ export default function ComingSoonTool({ tool }: ComingSoonToolProps) {
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }

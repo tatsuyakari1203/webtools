@@ -97,15 +97,11 @@ export default function CalculatorTool() {
 
   return (
     <div className="max-w-md mx-auto">
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">Máy tính</CardTitle>
-            <Badge variant="secondary">Math</Badge>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-xl font-semibold">Máy tính</h1>
+          <Badge variant="secondary">Math</Badge>
+        </div>
           {/* Display */}
           <div className="bg-muted/50 rounded-lg p-4 border-2">
             <div className="text-right">
@@ -219,8 +215,7 @@ export default function CalculatorTool() {
           <div className="text-center text-sm text-muted-foreground mt-4">
             <p>Sử dụng các nút số và phép toán để thực hiện tính toán</p>
           </div>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }
