@@ -25,6 +25,54 @@ import {
   downloadAsFile
 } from './utils/clipboard';
 
+// Function to sanitize HTML by removing color-related CSS properties
+const sanitizeHtmlColors = (html: string): string => {
+  // Create a temporary div to parse HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  
+  // Function to remove color-related styles from an element
+  const removeColorStyles = (element: Element) => {
+    if (element instanceof HTMLElement && element.style) {
+      // Remove color-related CSS properties
+      element.style.removeProperty('color');
+      element.style.removeProperty('background-color');
+      element.style.removeProperty('background');
+      element.style.removeProperty('border-color');
+      element.style.removeProperty('text-shadow');
+      element.style.removeProperty('box-shadow');
+      
+      // Also remove from style attribute if it contains color properties
+      const styleAttr = element.getAttribute('style');
+      if (styleAttr) {
+        const cleanedStyle = styleAttr
+          .replace(/color\s*:[^;]+;?/gi, '')
+          .replace(/background(-color)?\s*:[^;]+;?/gi, '')
+          .replace(/border-color\s*:[^;]+;?/gi, '')
+          .replace(/text-shadow\s*:[^;]+;?/gi, '')
+          .replace(/box-shadow\s*:[^;]+;?/gi, '')
+          .replace(/;\s*;/g, ';')
+          .replace(/^\s*;|;\s*$/g, '')
+          .trim();
+        
+        if (cleanedStyle) {
+          element.setAttribute('style', cleanedStyle);
+        } else {
+          element.removeAttribute('style');
+        }
+      }
+    }
+    
+    // Recursively process child elements
+    Array.from(element.children).forEach(removeColorStyles);
+  };
+  
+  // Process all elements
+  Array.from(tempDiv.children).forEach(removeColorStyles);
+  
+  return tempDiv.innerHTML;
+};
+
 export default function GoogleDocsToMarkdown() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
@@ -72,11 +120,12 @@ export default function GoogleDocsToMarkdown() {
       
       // Set input to show what was pasted (HTML for rendering)
       if (clipboardData.html) {
-        setInput(clipboardData.html);
+        const sanitizedHtml = sanitizeHtmlColors(clipboardData.html);
+        setInput(sanitizedHtml);
         // Update the contentEditable div immediately
         const target = event.target as HTMLElement;
         if (target && target.contentEditable === 'true') {
-          target.innerHTML = clipboardData.html;
+          target.innerHTML = sanitizedHtml;
         }
       }
       
@@ -189,11 +238,12 @@ export default function GoogleDocsToMarkdown() {
           const htmlText = await htmlBlob.text();
           
           if (htmlText) {
-            setInput(htmlText);
+            const sanitizedHtml = sanitizeHtmlColors(htmlText);
+            setInput(sanitizedHtml);
             // Update the contentEditable div
             const contentEditableDiv = document.querySelector('[contenteditable="true"]') as HTMLElement;
             if (contentEditableDiv) {
-              contentEditableDiv.innerHTML = htmlText;
+              contentEditableDiv.innerHTML = sanitizedHtml;
             }
             
             // Convert to markdown
@@ -360,7 +410,7 @@ export default function GoogleDocsToMarkdown() {
                 onPaste={handlePaste}
                 onInput={(e) => setInput(e.currentTarget.innerHTML)}
                 dangerouslySetInnerHTML={{
-                  __html: input || '<p class="text-muted-foreground">Paste your Google Docs content here...</p>'
+                  __html: input ? sanitizeHtmlColors(input) : '<p class="text-muted-foreground">Paste your Google Docs content here...</p>'
                 }}
                 style={{
                   minHeight: '400px',
