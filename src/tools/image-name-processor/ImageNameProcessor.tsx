@@ -81,7 +81,7 @@ export default function ImageNameProcessor() {
     try {
       await navigator.clipboard.writeText(output);
       toast.success('Đã sao chép vào clipboard!');
-    } catch (err) {
+    } catch {
       toast.error('Không thể sao chép vào clipboard');
     }
   };

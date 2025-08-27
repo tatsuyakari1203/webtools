@@ -28,6 +28,15 @@ export const TOOLS_REGISTRY: ToolConfig[] = [
     category: 'image',
     path: '/tools/image-name-processor',
     component: lazy(() => import('@/tools/image-name-processor'))
+  },
+  {
+    id: 'image-converter',
+    name: 'Image Converter',
+    description: 'Convert, compress, and optimize images with bulk processing support',
+    icon: 'ImageIcon',
+    category: 'image',
+    path: '/tools/image-converter',
+    component: lazy(() => import('@/tools/image-converter'))
   }
 ];
 

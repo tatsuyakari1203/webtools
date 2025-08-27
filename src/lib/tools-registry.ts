@@ -1,4 +1,4 @@
-import { Calculator, Type, Image } from "lucide-react"
+import { Calculator, Type, Image, ImageIcon } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -37,6 +37,15 @@ export const toolsRegistry: Tool[] = [
     category: "Image",
     icon: Image,
     path: "/tools/image-name-processor",
+    featured: true,
+  },
+  {
+    id: "image-converter",
+    name: "Image Converter",
+    description: "Convert, compress, and optimize images with bulk processing support",
+    category: "Image",
+    icon: ImageIcon,
+    path: "/tools/image-converter",
     featured: true,
   },
 ]
