@@ -2,18 +2,17 @@ version: '3.8'
 
 services:
   webtools:
-    image: tatsuyakari/webtools:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
     container_name: webtools-app
     restart: unless-stopped
     ports:
-      - "5005:5005"
-    environment:
-      - NODE_ENV=production
-      - PORT=5005
+      - "5005:80"
     networks:
       - webtools-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5005"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
