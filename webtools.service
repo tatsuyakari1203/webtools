@@ -1,0 +1,19 @@
+[Unit]
+Description=WebTools Next.js Application
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=kari
+WorkingDirectory=/home/kari/webtools
+ExecStart=/usr/local/bin/bun run start:prod
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=PORT=5005
+StandardOutput=append:/home/kari/webtools/app.log
+StandardError=append:/home/kari/webtools/app.log
+
+[Install]
+WantedBy=multi-user.target
