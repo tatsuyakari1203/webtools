@@ -44,7 +44,7 @@ export function ToolCard({ tool }: ToolCardProps) {
         
         <Button asChild className="w-full group/button">
           <Link href={tool.path}>
-            Sử dụng công cụ
+            Use Tool
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/button:translate-x-1" />
           </Link>
         </Button>

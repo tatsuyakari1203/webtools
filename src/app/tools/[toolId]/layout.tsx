@@ -29,14 +29,14 @@ export default async function ToolLayout({ children, params }: ToolLayoutProps) 
               <BreadcrumbLink asChild>
                 <Link href="/" className="flex items-center gap-2">
                   <Home className="h-4 w-4" />
-                  Trang chủ
+                  Home
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/#tools">Công cụ</Link>
+                <Link href="/#tools">Tools</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />

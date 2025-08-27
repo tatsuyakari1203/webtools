@@ -6,40 +6,40 @@ export default function AboutPage() {
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold">About WebTools Platform</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Nền tảng tập hợp các công cụ web tiện ích, giúp bạn thực hiện các tác vụ hàng ngày một cách dễ dàng và hiệu quả.
+          A platform that brings together useful web tools, helping you perform daily tasks easily and efficiently.
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>🎯 Mục tiêu</CardTitle>
+            <CardTitle>🎯 Goal</CardTitle>
           </CardHeader>
           <CardContent>
             <CardDescription>
-              Tạo ra một nền tảng tập trung các webapp tools hữu ích, dễ sử dụng và có giao diện hiện đại.
-              Tiết kiệm thời gian cho người dùng khi không cần tìm kiếm nhiều trang web khác nhau.
+              Create a centralized platform for useful webapp tools that are easy to use with a modern interface.
+              Save users time by eliminating the need to search multiple different websites.
             </CardDescription>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>⚡ Tính năng</CardTitle>
+            <CardTitle>⚡ Features</CardTitle>
           </CardHeader>
           <CardContent>
             <CardDescription>
-              • Giao diện hiện đại với theme trắng đen<br/>
-              • Responsive design cho mọi thiết bị<br/>
-              • Tools được tổ chức theo danh mục<br/>
-              • Hoàn toàn miễn phí và không cần đăng ký
+              • Modern interface with light/dark theme<br/>
+              • Responsive design for all devices<br/>
+              • Tools organized by categories<br/>
+              • Completely free and no registration required
             </CardDescription>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>🛠️ Công nghệ</CardTitle>
+            <CardTitle>🛠️ Technology</CardTitle>
           </CardHeader>
           <CardContent>
             <CardDescription>

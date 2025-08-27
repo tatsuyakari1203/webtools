@@ -37,7 +37,7 @@ export default function ToolsGrid() {
           <div className="relative max-w-md mx-auto">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Tìm kiếm công cụ..."
+              placeholder="Search tools..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -52,7 +52,7 @@ export default function ToolsGrid() {
               className="rounded-full"
             >
               <Filter className="mr-2 h-4 w-4" />
-              Tất cả
+              All
             </Button>
             {categories.map((category) => (
               <Button
@@ -81,10 +81,10 @@ export default function ToolsGrid() {
             <div className="mx-auto max-w-md">
               <div className="rounded-lg bg-muted/50 p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Không tìm thấy công cụ nào
+                  No tools found
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc danh mục
+                  Try changing search keywords or category filters
                 </p>
                 <Button
                   variant="outline"
@@ -93,7 +93,7 @@ export default function ToolsGrid() {
                     setSelectedCategory("all")
                   }}
                 >
-                  Xóa bộ lọc
+                  Clear filters
                 </Button>
               </div>
             </div>
@@ -103,7 +103,7 @@ export default function ToolsGrid() {
         {/* Stats */}
         <div className="mt-16 text-center">
           <div className="inline-flex items-center rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
-            Hiển thị {filteredTools.length} trong tổng số {toolsRegistry.length} công cụ
+            Showing {filteredTools.length} of {toolsRegistry.length} tools
           </div>
         </div>
       </div>

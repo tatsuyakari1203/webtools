@@ -3,10 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "bun run next dev --turbopack",
+    "build": "bun run next build --turbopack",
+    "start": "bun run next start",
+    "install:prod": "bun install --production",
+    "start:prod": "PORT=5005 HOST=0.0.0.0 nohup bun run next start > app.log 2>&1 & echo $! > app.pid",
+    "stop:prod": "if [ -f app.pid ]; then kill $(cat app.pid) && rm app.pid; else echo 'No process found'; fi",
+    "restart:prod": "bun run stop:prod && bun run start:prod",
+    "deploy:prod": "bun install && bun run build && bun run start:prod",
+    "logs": "tail -f app.log",
+    "lint": "bun run eslint"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.3",

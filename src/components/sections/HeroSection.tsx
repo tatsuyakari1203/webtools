@@ -12,36 +12,36 @@ export default function HeroSection() {
             <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-muted-foreground ring-1 ring-border hover:ring-primary/20 transition-colors">
               <span className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-primary" />
-                Công cụ web hiện đại và tiện ích
+                Modern and useful web tools
               </span>
             </div>
           </div>
           
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
-            Tập hợp{" "}
+            Collection of{" "}
             <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              công cụ web
+              web tools
             </span>{" "}
-            trong một nền tảng
+            in one platform
           </h1>
           
           <p className="mt-6 text-lg leading-8 text-muted-foreground">
-            Khám phá bộ sưu tập các công cụ web mạnh mẽ được thiết kế để tăng năng suất 
-            và đơn giản hóa quy trình làm việc của bạn. Từ máy tính đến công cụ định dạng văn bản, 
-            tất cả đều có sẵn tại một nơi.
+            Discover a collection of powerful web tools designed to boost productivity 
+            and simplify your workflow. From calculators to text formatting tools, 
+            everything is available in one place.
           </p>
           
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Button asChild size="lg" className="group">
               <Link href="#tools">
-                Khám phá công cụ
+                Explore Tools
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
             
             <Button variant="outline" size="lg" asChild>
               <Link href="/about">
-                Tìm hiểu thêm
+                Learn More
               </Link>
             </Button>
           </div>

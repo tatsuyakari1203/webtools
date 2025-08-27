@@ -15,7 +15,7 @@ export const toolsRegistry: Tool[] = [
   {
     id: "calculator",
     name: "Calculator",
-    description: "Máy tính cơ bản với các phép toán số học",
+    description: "Basic calculator with arithmetic operations",
     category: "Math",
     icon: Calculator,
     path: "/tools/calculator",
@@ -24,7 +24,7 @@ export const toolsRegistry: Tool[] = [
   {
     id: "text-formatter",
     name: "Text Formatter",
-    description: "Định dạng và chuyển đổi văn bản theo nhiều cách khác nhau",
+    description: "Format and transform text in various ways",
     category: "Text",
     icon: Type,
     path: "/tools/text-formatter",
