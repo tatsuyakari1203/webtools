@@ -11,6 +11,7 @@
     "stop:prod": "if [ -f app.pid ]; then kill $(cat app.pid) && rm app.pid; else echo 'No process found'; fi",
     "restart:prod": "bun run stop:prod && bun run start:prod",
     "deploy:prod": "bun install && bun run build && bun run start:prod",
+    "deploy:update": "if [ -f app.pid ] && kill -0 $(cat app.pid) 2>/dev/null; then echo 'Server is running, stopping...'; bun run stop:prod; fi; echo 'Updating code...'; git pull && bun install && bun run build && echo 'Starting server...'; bun run start:prod",
     "logs": "tail -f app.log",
     "lint": "bun run eslint"
   },
