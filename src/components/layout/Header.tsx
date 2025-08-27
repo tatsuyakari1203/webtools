@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { Github } from 'lucide-react';
 
 export default function Header() {
   return (
@@ -24,6 +25,14 @@ export default function Header() {
           </nav>
           
           <div className="flex items-center space-x-2">
+            <Link
+              href="https://github.com/tatsuyakari1203/webtools"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+            >
+              <Github className="h-5 w-5" />
+            </Link>
             <ThemeToggle />
           </div>
         </div>
