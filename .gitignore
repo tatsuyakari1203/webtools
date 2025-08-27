@@ -43,3 +43,4 @@ ref/
 
 # trae directory
 .trae/
+app.log
