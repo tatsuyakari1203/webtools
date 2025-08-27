@@ -1,10 +1,6 @@
-version: '3.8'
-
 services:
   webtools:
-    build:
-      context: .
-      dockerfile: Dockerfile.nginx
+    image: tatsuyakari/webtools:latest
     container_name: webtools-app
     restart: unless-stopped
     ports:
