@@ -19,7 +19,7 @@ export const toolsRegistry: Tool[] = [
     category: "Math",
     icon: Calculator,
     path: "/tools/calculator",
-    featured: true,
+    featured: false,
   },
   {
     id: "text-formatter",
@@ -28,7 +28,7 @@ export const toolsRegistry: Tool[] = [
     category: "Text",
     icon: Type,
     path: "/tools/text-formatter",
-    featured: true,
+    featured: false,
   },
   {
     id: "image-name-processor",
@@ -46,7 +46,7 @@ export const toolsRegistry: Tool[] = [
     category: "Image",
     icon: ImageIcon,
     path: "/tools/image-converter",
-    featured: true,
+    featured: false,
   },
 ]
 

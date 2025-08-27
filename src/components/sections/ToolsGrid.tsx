@@ -13,12 +13,20 @@ export default function ToolsGrid() {
   
   const categories = getAllCategories()
   
-  const filteredTools = toolsRegistry.filter((tool: Tool) => {
-    const matchesCategory = selectedCategory === "all" || tool.category === selectedCategory
-    const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         tool.description.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
+  const filteredTools = toolsRegistry
+    .filter((tool: Tool) => {
+      const matchesCategory = selectedCategory === "all" || tool.category === selectedCategory
+      const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           tool.description.toLowerCase().includes(searchQuery.toLowerCase())
+      return matchesCategory && matchesSearch
+    })
+    .sort((a, b) => {
+      // Đưa featured tools lên đầu
+      if (a.featured && !b.featured) return -1
+      if (!a.featured && b.featured) return 1
+      // Sắp xếp alphabetically trong cùng nhóm
+      return a.name.localeCompare(b.name)
+    })
 
   return (
     <section id="tools" className="py-12 sm:py-16">
