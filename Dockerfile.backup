@@ -1,4 +1,4 @@
-# Multi-stage build siêu tối ưu - Minimal size
+# Multi-stage build để tối ưu kích thước image
 
 # Stage 1: Dependencies
 FROM oven/bun:1-alpine AS deps
@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy package files
 COPY package.json bun.lock* ./
 
-# Install dependencies
+# Install all dependencies (including devDependencies for build)
 RUN bun install --frozen-lockfile
 
 # Stage 2: Builder
@@ -18,22 +18,24 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build ứng dụng với standalone output
+# Build ứng dụng
 RUN bun run build
 
-# Stage 3: Minimal Runtime
-FROM alpine:3.19 AS runner
+# Stage 3: Runner (Production)
+FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
-# Install chỉ Node.js runtime (không có npm, yarn)
-RUN apk add --no-cache nodejs=~20 && \
-    addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
+# Tạo user non-root để bảo mật
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Copy chỉ những file cần thiết từ standalone build
+# Copy built application
+COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Copy package.json để có thể chạy scripts
+COPY --from=builder /app/package.json ./package.json
 
 # Switch to non-root user
 USER nextjs
@@ -42,9 +44,9 @@ USER nextjs
 EXPOSE 5005
 
 # Set environment variables
-ENV NODE_ENV=production \
-    PORT=5005 \
-    HOSTNAME="0.0.0.0"
+ENV NODE_ENV=production
+ENV PORT=5005
+ENV HOSTNAME="0.0.0.0"
 
 # Start the application
-CMD ["node", "server.js"]
+CMD ["bun", "server.js"]
