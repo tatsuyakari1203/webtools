@@ -6,6 +6,8 @@ import ImageNameProcessor from "@/tools/image-name-processor/ImageNameProcessor"
 import ImageConverter from "@/tools/image-converter"
 import GoogleDocsToMarkdown from "@/tools/google-docs-to-markdown/GoogleDocsToMarkdown"
 import ComingSoonTool from "@/components/tools/ComingSoonTool"
+import { ToolStructuredData } from "@/components/StructuredData"
+import type { Metadata } from "next"
 
 interface ToolPageProps {
   params: Promise<{ toolId: string }>
@@ -18,6 +20,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
   if (!tool) {
     notFound()
   }
+
+  const toolUrl = `https://webtools.example.com/tools/${toolId}`
 
   // Render specific tool component based on toolId
   const renderTool = () => {
@@ -37,7 +41,48 @@ export default async function ToolPage({ params }: ToolPageProps) {
     }
   }
 
-  return renderTool()
+  return (
+    <>
+      <ToolStructuredData tool={tool} url={toolUrl} />
+      {renderTool()}
+    </>
+  )
+}
+
+// Generate metadata for each tool
+export async function generateMetadata({ params }: ToolPageProps): Promise<Metadata> {
+  const { toolId } = await params
+  const tool = getToolById(toolId)
+  
+  if (!tool) {
+    return {
+      title: 'Tool Not Found',
+      description: 'The requested tool could not be found.',
+    }
+  }
+
+  const toolUrl = `https://webtools.example.com/tools/${toolId}`
+  
+  return {
+    title: `${tool.name} - WebTools Platform`,
+    description: tool.description,
+    keywords: [tool.name, tool.category, 'online tool', 'free tool', 'web tool'],
+    openGraph: {
+      title: `${tool.name} - WebTools Platform`,
+      description: tool.description,
+      url: toolUrl,
+      type: 'website',
+      siteName: 'WebTools Platform',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${tool.name} - WebTools Platform`,
+      description: tool.description,
+    },
+    alternates: {
+      canonical: toolUrl,
+    },
+  }
 }
 
 // Generate static params for known tools

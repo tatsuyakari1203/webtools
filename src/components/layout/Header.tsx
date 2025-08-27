@@ -30,6 +30,7 @@ export default function Header() {
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+              aria-label="Visit GitHub repository"
             >
               <Github className="h-5 w-5" />
             </Link>

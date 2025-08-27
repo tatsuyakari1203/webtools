@@ -308,6 +308,7 @@ export default function GoogleDocsToMarkdown() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             title="View source on GitHub"
+            aria-label="View mr0grog's google-docs-to-markdown repository on GitHub"
           >
             <Github className="h-4 w-4" />
             <span className="hidden sm:inline">mr0grog</span>
