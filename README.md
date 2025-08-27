@@ -1,5 +1,7 @@
 # WebTools - Tổng hợp công cụ tiện ích trực tuyến
 
+![WebTools Screenshot](screenshot.png)
+
 WebTools là một web application được xây dựng bằng Next.js, cung cấp tập hợp các công cụ tiện ích trực tuyến giúp người dùng thực hiện các tác vụ hàng ngày một cách nhanh chóng và hiệu quả.
 
 ## 🛠️ Các công cụ hiện có
