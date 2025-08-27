@@ -1,4 +1,4 @@
-import { Calculator, Type, Image, ImageIcon } from "lucide-react"
+import { Calculator, Type, Image, ImageIcon, FileText } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -47,6 +47,15 @@ export const toolsRegistry: Tool[] = [
     icon: ImageIcon,
     path: "/tools/image-converter",
     featured: false,
+  },
+  {
+    id: "google-docs-to-markdown",
+    name: "Google Docs to Markdown",
+    description: "Convert Google Docs content to Markdown format with advanced formatting support",
+    category: "Text",
+    icon: FileText,
+    path: "/tools/google-docs-to-markdown",
+    featured: true,
   },
 ]
 

@@ -4,6 +4,7 @@ import CalculatorTool from "@/components/tools/CalculatorTool"
 import TextFormatterTool from "@/components/tools/TextFormatterTool"
 import ImageNameProcessor from "@/tools/image-name-processor/ImageNameProcessor"
 import ImageConverter from "@/tools/image-converter"
+import GoogleDocsToMarkdown from "@/tools/google-docs-to-markdown/GoogleDocsToMarkdown"
 import ComingSoonTool from "@/components/tools/ComingSoonTool"
 
 interface ToolPageProps {
@@ -29,6 +30,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <ImageNameProcessor />
       case "image-converter":
         return <ImageConverter />
+      case "google-docs-to-markdown":
+        return <GoogleDocsToMarkdown />
       default:
         return <ComingSoonTool tool={tool} />
     }
