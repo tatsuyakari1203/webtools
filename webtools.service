@@ -5,7 +5,8 @@ Wants=network.target
 
 [Service]
 Type=simple
-User=kari
+User=root
+Group=root
 WorkingDirectory=/home/kari/webtools
 ExecStart=/usr/local/bin/bun run start:prod
 Restart=always
