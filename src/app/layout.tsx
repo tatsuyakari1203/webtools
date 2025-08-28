@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
+import { InventoryProvider } from "@/components/providers/InventoryProvider"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import { Toaster } from "sonner"
@@ -105,12 +106,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <div className="flex-1">{children}</div>
-            <Footer />
-          </div>
-          <Toaster richColors position="top-right" />
+          <InventoryProvider>
+            <div className="relative flex min-h-screen flex-col">
+              <Header />
+              <div className="flex-1">{children}</div>
+              <Footer />
+            </div>
+            <Toaster richColors position="top-right" />
+          </InventoryProvider>
         </ThemeProvider>
       </body>
     </html>

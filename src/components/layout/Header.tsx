@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { Github } from 'lucide-react';
+import { InventoryDialog } from '@/components/inventory/InventoryDialog';
+import { ThrowButton } from '@/components/inventory/ThrowButton';
+import { Button } from '@/components/ui/button';
+import { Github, Package } from 'lucide-react';
 
 const ToolCaseIcon = () => (
   <svg 
@@ -46,6 +49,21 @@ export default function Header() {
           </nav>
           
           <div className="flex items-center space-x-2">
+            {/* Inventory and Throw buttons */}
+            <InventoryDialog>
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                <span className="hidden sm:inline">Inventory</span>
+              </Button>
+            </InventoryDialog>
+            
+            <ThrowButton 
+              source="WebTools Header"
+              variant="outline"
+              size="sm"
+              showTooltip={true}
+            />
+            
             <Link
               href="https://github.com/tatsuyakari1203/webtools"
               target="_blank"
