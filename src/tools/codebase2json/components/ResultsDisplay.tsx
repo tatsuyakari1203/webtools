@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { countTokens, formatTokenCount } from '../utils/tokenCounter';
+import { getLanguageBackgroundStyle } from '../utils/languageColors';
 
 interface ProcessingResult {
   files: Array<{
@@ -73,24 +74,9 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result, onReset }) => {
   // Calculate total tokens
   const totalTokens = result.files.reduce((sum, file) => sum + countTokens(file.content), 0);
 
-  // Get language color
-  const getLanguageColor = (language: string): string => {
-    const colorMap: Record<string, string> = {
-      javascript: 'bg-yellow-500',
-      typescript: 'bg-blue-500',
-      python: 'bg-green-500',
-      java: 'bg-orange-500',
-      cpp: 'bg-blue-600',
-      c: 'bg-gray-600',
-      html: 'bg-orange-400',
-      css: 'bg-blue-400',
-      json: 'bg-gray-500',
-      markdown: 'bg-gray-700',
-      sql: 'bg-purple-500',
-      bash: 'bg-green-600',
-      text: 'bg-gray-400'
-    };
-    return colorMap[language] || 'bg-gray-400';
+  // Get language color using GitHub's official colors from colors.json
+  const getLanguageColor = (language: string) => {
+    return getLanguageBackgroundStyle(language);
   };
 
   // Generate JSON output
@@ -250,7 +236,17 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result, onReset }) => {
                     <div key={lang.language} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${getLanguageColor(lang.language)}`} />
+                          <div 
+                            className={`w-3 h-3 rounded-full ${
+                              typeof getLanguageColor(lang.language) === 'string' 
+                                ? getLanguageColor(lang.language) 
+                                : ''
+                            }`}
+                            style={typeof getLanguageColor(lang.language) === 'object' 
+                              ? getLanguageColor(lang.language) as React.CSSProperties
+                              : {}
+                            }
+                          />
                           <span className="font-medium capitalize">{lang.language}</span>
                           <Badge variant="secondary">{lang.fileCount} files</Badge>
                         </div>
@@ -261,7 +257,17 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result, onReset }) => {
                           </p>
                         </div>
                       </div>
-                      <Progress value={(langTokens / totalTokens) * 100} className="h-2" />
+                      <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <div 
+                          className="h-full transition-all rounded-full"
+                          style={{
+                            width: `${(langTokens / totalTokens) * 100}%`,
+                            ...(typeof getLanguageColor(lang.language) === 'object' 
+                              ? getLanguageColor(lang.language) as React.CSSProperties
+                              : {})
+                          }}
+                        />
+                      </div>
                     </div>
                   );
                 })
