@@ -1,17 +1,81 @@
-# WebTools - Online Utility Tools Collection
+<div align="center">
 
-![WebTools Screenshot](screenshot.png)
+# 🛠️ WebTools
+### *Online Utility Tools Collection*
 
-WebTools is a web application built with Next.js and Bun, providing a comprehensive collection of online utility tools to help users perform daily tasks quickly and efficiently.
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Bun](https://img.shields.io/badge/Bun-1.0-orange?style=for-the-badge&logo=bun)](https://bun.sh/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=for-the-badge&logo=docker)](https://hub.docker.com/r/tatsuyakari/webtools)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
-## 🛠️ Available Tools
+*A modern web application providing comprehensive utility tools to streamline your daily workflow*
 
-- **Calculator** - A scientific calculator with unit conversion and programmer modes.
-- **Text Formatter** - Text formatting and processing tool.
-- **Image Name Processor** ⭐ - Image filename processing tool (Featured).
-- **Image Converter** - Image conversion and compression tool with detailed statistics.
-- **Google Docs to Markdown** - Convert Google Docs to Markdown.
-- **OCR** - Extract text from images.
+![WebTools Main Interface](screenshot.png)
+
+</div>
+
+---
+
+## ✨ Features Overview
+
+<table>
+<tr>
+<td width="50%">
+
+### 🧮 **Calculator**
+- Scientific calculations
+- Unit conversions
+- Programmer modes (Hex, Binary, Octal)
+- History tracking
+
+### 🖼️ **Image Tools**
+- **Image Converter** - Format conversion & compression
+- **Image Name Processor** ⭐ *Featured*
+- **OCR** - Text extraction from images
+
+</td>
+<td width="50%">
+
+### 📝 **Text Processing**
+- **Text Formatter** - Advanced text manipulation
+- **Google Docs to Markdown** - Document conversion
+
+### 🚀 **Performance**
+- Built with Next.js 14 & Bun
+- Docker-ready deployment
+- Responsive design
+- Fast & lightweight
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📸 Tool Showcase
+
+<div align="center">
+
+### 🧮 Scientific Calculator
+<img src="screenshot-calculator.png" alt="Advanced Calculator with multiple modes" width="700" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); margin: 20px 0;">
+
+*Full-featured scientific calculator with unit conversion and programmer modes*
+
+---
+
+### 🖼️ Image Converter
+<img src="screenshot-imageconverter.png" alt="Image Converter Tool" width="700" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); margin: 20px 0;">
+
+*Professional image conversion with compression and detailed statistics*
+
+---
+
+### 📄 Google Docs to Markdown
+<img src="screenshot-ggdocs2md.png" alt="Google Docs to Markdown Converter" width="700" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); margin: 20px 0;">
+
+*Seamlessly convert Google Docs to clean, formatted Markdown*
+
+</div>
 
 ## 🐳 Docker Deployment
 
@@ -194,45 +258,109 @@ bun run lint
 bunx shadcn-ui@latest add [component-name]
 ```
 
-## 📦 Deployment
+## 📦 Deployment Options
 
-### Vercel
-1. Push code to GitHub.
-2. Connect repository with Vercel.
-3. Automatic deployment.
+<table>
+<tr>
+<td width="50%">
 
-### Manual Build
+### 🚀 **Vercel (Recommended)**
 ```bash
-# Build the application
-bun run build
+# 1. Push to GitHub
+git push origin main
 
-# Start the server
+# 2. Connect with Vercel
+# Auto-deployment enabled
+```
+
+### 🏗️ **Manual Build**
+```bash
+bun run build
 bun start
 ```
 
-## 🤝 Contributing
+</td>
+<td width="50%">
 
-1. Fork repository
-2. Create feature branch
-3. Implement tool following defined patterns
-4. Test thoroughly
-5. Submit pull request
+### 🐳 **Docker Hub**
+```bash
+docker pull tatsuyakari/webtools:latest
+docker run -p 5005:3000 tatsuyakari/webtools
+```
 
-## 📝 Docker Image Optimization Details
+### 🔧 **Local Development**
+```bash
+bun install
+bun run dev
+```
 
-The primary Docker image (`webtools:minimal`) is highly optimized for production using a multi-stage build process:
-
-- **Stage 1 (Dependencies)**: Uses `oven/bun:1-alpine` to install dependencies.
-- **Stage 2 (Builder)**: Copies source code and builds the Next.js application using `bun run build`. This creates a standalone output.
-- **Stage 3 (Runner)**: Uses a minimal `alpine:3.19` image, installs only the Node.js runtime, and copies only the necessary standalone artifacts from the builder stage. This results in a very small and secure final image.
-
-**Key Optimizations:**
-- **Bun Runtime**: Uses the fast `bun` runtime for dependency installation and builds.
-- **Multi-stage build**: Separates build-time dependencies from the final runtime image.
-- **Alpine Linux Base**: Minimal footprint for the final stage.
-- **Standalone Next.js Output**: Reduces the number of files and dependencies needed in the final image.
-- **Non-root user**: Enhances security by running the application as a non-root user.
+</td>
+</tr>
+</table>
 
 ---
 
-**WebTools** - Making daily work easier! 🚀
+## 🤝 Contributing
+
+<div align="center">
+
+### We welcome contributions! 🎉
+
+</div>
+
+| Step | Action | Description |
+|------|--------|-------------|
+| 1️⃣ | **Fork** | Fork this repository to your GitHub |
+| 2️⃣ | **Branch** | Create a feature branch (`git checkout -b feature/amazing-tool`) |
+| 3️⃣ | **Develop** | Implement your tool following our patterns |
+| 4️⃣ | **Test** | Ensure everything works perfectly |
+| 5️⃣ | **PR** | Submit a pull request with detailed description |
+
+---
+
+## 🔧 Technical Details
+
+<details>
+<summary><strong>🐳 Docker Image Optimization</strong></summary>
+
+### Multi-Stage Build Process
+
+Our Docker image is highly optimized using a sophisticated multi-stage build:
+
+**🏗️ Stage 1 - Dependencies**
+- Base: `oven/bun:1-alpine`
+- Installs production dependencies
+- Leverages Bun's speed
+
+**🔨 Stage 2 - Builder**
+- Copies source code
+- Builds Next.js application
+- Creates standalone output
+
+**🚀 Stage 3 - Runner**
+- Base: `alpine:3.19` (minimal)
+- Node.js runtime only
+- Non-root user security
+- Optimized file structure
+
+### Key Benefits
+- ⚡ **Fast builds** with Bun runtime
+- 🪶 **Lightweight** Alpine base
+- 🔒 **Secure** non-root execution
+- 📦 **Minimal** standalone output
+- 🎯 **Production-ready** optimization
+
+</details>
+
+---
+
+<div align="center">
+
+### 🌟 **WebTools** - *Streamlining your digital workflow* 🌟
+
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com)
+[![Docker Hub](https://img.shields.io/badge/Docker-Hub-blue?style=for-the-badge&logo=docker)](https://hub.docker.com/r/tatsuyakari/webtools)
+
+*Built with ❤️ using Next.js, Bun, and modern web technologies*
+
+</div>
