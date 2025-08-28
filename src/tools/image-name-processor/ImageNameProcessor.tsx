@@ -89,7 +89,7 @@ const ImageNameProcessor = () => {
           toast.success('Đã dán text và xử lý tự động!');
           return;
         }
-      } catch (textError) {
+      } catch {
         // Nếu không có text, thử đọc ảnh
       }
       

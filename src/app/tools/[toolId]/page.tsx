@@ -1,6 +1,6 @@
 import { getToolById } from "@/lib/tools-registry"
 import { notFound } from "next/navigation"
-import CalculatorTool from "@/components/tools/CalculatorTool"
+import Calculator from "@/tools/calculator/Calculator"
 import TextFormatterTool from "@/components/tools/TextFormatterTool"
 import ImageNameProcessor from "@/tools/image-name-processor/ImageNameProcessor"
 import ImageConverter from "@/tools/image-converter"
@@ -28,7 +28,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
   const renderTool = () => {
     switch (toolId) {
       case "calculator":
-        return <CalculatorTool />
+        return <Calculator />
       case "text-formatter":
         return <TextFormatterTool />
       case "image-name-processor":
