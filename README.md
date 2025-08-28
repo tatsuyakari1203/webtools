@@ -3,10 +3,12 @@
 # 🛠️ WebTools
 ### *Online Utility Tools Collection*
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![Bun](https://img.shields.io/badge/Bun-1.0-orange?style=for-the-badge&logo=bun)](https://bun.sh/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.1.0-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
+[![Bun](https://img.shields.io/badge/Bun-1.2.21-orange?style=for-the-badge&logo=bun)](https://bun.sh/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-22.18.0-green?style=for-the-badge&logo=node.js)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=for-the-badge&logo=docker)](https://hub.docker.com/r/tatsuyakari/webtools)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
 *A modern web application providing comprehensive utility tools to streamline your daily workflow*
 
@@ -41,10 +43,11 @@
 - **Google Docs to Markdown** - Document conversion
 
 ### 🚀 **Performance**
-- Built with Next.js 14 & Bun
+- Built with Next.js 15.5.2 & React 19
+- Powered by Bun 1.2.21 runtime
+- TypeScript 5 for type safety
 - Docker-ready deployment
-- Responsive design
-- Fast & lightweight
+- Responsive design & fast loading
 
 </td>
 </tr>
