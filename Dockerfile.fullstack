@@ -24,8 +24,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Copy environment variables for build time (if they exist)
-COPY .env* ./
+# Environment variables should be passed at runtime, not baked into image
+# COPY .env* ./  # REMOVED: Security risk - API keys should not be in image
 
 # Build the application
 RUN \
@@ -55,8 +55,8 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy environment files
-COPY --from=builder --chown=nextjs:nodejs /app/.env* ./
+# Environment variables should be passed at runtime via docker run -e or docker-compose
+# COPY --from=builder --chown=nextjs:nodejs /app/.env* ./  # REMOVED: Security risk
 
 USER nextjs
 
