@@ -58,14 +58,6 @@ if ! docker build -f "$DOCKERFILE" -t "$DOCKER_USERNAME/$IMAGE_NAME:latest" .; t
 fi
 echo -e "${GREEN}✅ Build Docker image thành công${NC}"
 
-# Tag image với tag fullstack
-echo -e "${YELLOW}🏷️  Đang tag image...${NC}"
-if ! docker tag "$DOCKER_USERNAME/$IMAGE_NAME:latest" "$DOCKER_USERNAME/$IMAGE_NAME:fullstack"; then
-    echo -e "${RED}❌ Tag image thất bại${NC}"
-    exit 1
-fi
-echo -e "${GREEN}✅ Tag image thành công${NC}"
-
 # Push image với tag latest
 echo -e "${YELLOW}📤 Đang push image với tag 'latest'...${NC}"
 if ! docker push "$DOCKER_USERNAME/$IMAGE_NAME:latest"; then
@@ -74,21 +66,12 @@ if ! docker push "$DOCKER_USERNAME/$IMAGE_NAME:latest"; then
 fi
 echo -e "${GREEN}✅ Push image với tag 'latest' thành công${NC}"
 
-# Push image với tag fullstack
-echo -e "${YELLOW}📤 Đang push image với tag 'fullstack'...${NC}"
-if ! docker push "$DOCKER_USERNAME/$IMAGE_NAME:fullstack"; then
-    echo -e "${RED}❌ Push image với tag 'fullstack' thất bại${NC}"
-    exit 1
-fi
-echo -e "${GREEN}✅ Push image với tag 'fullstack' thành công${NC}"
-
 # Thông báo hoàn thành
 echo ""
 echo "================================================"
 echo -e "${GREEN}🎉 HOÀN THÀNH! Docker image đã được build và push thành công${NC}"
-echo -e "${BLUE}📦 Images đã được push:${NC}"
+echo -e "${BLUE}📦 Image đã được push:${NC}"
 echo -e "   • $DOCKER_USERNAME/$IMAGE_NAME:latest"
-echo -e "   • $DOCKER_USERNAME/$IMAGE_NAME:fullstack"
 echo ""
 echo -e "${BLUE}💡 Để sử dụng image:${NC}"
 echo -e "   docker pull $DOCKER_USERNAME/$IMAGE_NAME:latest"
