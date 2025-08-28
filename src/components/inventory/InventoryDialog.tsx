@@ -318,7 +318,7 @@ export function InventoryDialog({ children }: InventoryDialogProps) {
         <DialogTrigger asChild>
           {children}
         </DialogTrigger>
-        <DialogContent className="max-w-none w-[95vw] sm:w-[90vw] lg:w-[85vw] h-[90vh] flex flex-col">
+        <DialogContent className="max-w-none w-[98vw] lg:w-[40vw] h-[95vh] flex flex-col" style={{ maxWidth: 'none', overflow: 'hidden' }}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Package className="w-5 h-5" />
@@ -463,16 +463,16 @@ export function InventoryDialog({ children }: InventoryDialogProps) {
                         : 'No items in inventory'}
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-4 p-1">
+                    <div className="flex flex-col gap-4 p-2" style={{ overflow: 'hidden', width: '100%', maxWidth: '100%', minWidth: '0' }}>
                       {displayItems.map((item) => (
-                        <Card key={item.id} className="group hover:shadow-md transition-all duration-200 border-border/50 hover:border-border w-full">
-                          <CardContent className="p-4">
+                        <Card key={item.id} className="group hover:shadow-md transition-all duration-200 border-border/50 hover:border-border w-full max-w-full overflow-hidden" style={{ overflow: 'hidden', width: '100%', maxWidth: '100%', minWidth: '0', boxSizing: 'border-box' }}>
+                          <CardContent className="p-4 min-w-0" style={{ overflow: 'hidden', wordBreak: 'break-word', overflowWrap: 'break-word', width: '100%', maxWidth: '100%', minWidth: '0', boxSizing: 'border-box' }}>
                             {/* Header với title và action buttons */}
-                            <div className="flex items-start justify-between gap-3 mb-3">
-                              <div className="flex items-center gap-2 flex-1 min-w-0">
-                                {getTypeIcon(item.type)}
+                            <div className="flex items-start justify-between gap-3 mb-3 min-w-0 w-full max-w-full">
+                              <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden max-w-full">
+                                <div className="flex-shrink-0">{getTypeIcon(item.type)}</div>
                                 <h3 
-                                  className="font-medium text-sm cursor-pointer hover:text-primary transition-colors truncate"
+                                  className="font-medium text-sm cursor-pointer hover:text-primary transition-colors truncate flex-1 min-w-0 max-w-full overflow-hidden"
                                   onClick={() => {
                                     const newTitle = prompt('Enter new title:', item.title);
                                     if (newTitle && newTitle !== item.title) {
@@ -480,13 +480,14 @@ export function InventoryDialog({ children }: InventoryDialogProps) {
                                     }
                                   }}
                                   title={`${item.title} - Click to edit`}
+                                  style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}
                                 >
                                   {item.title}
                                 </h3>
                               </div>
                               
                               {/* Action buttons - luôn hiển thị */}
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 flex-shrink-0">
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -538,16 +539,16 @@ export function InventoryDialog({ children }: InventoryDialogProps) {
                             </div>
                             
                             {/* Metadata */}
-                            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-3">
-                              <span className="flex items-center gap-1">
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-3 min-w-0">
+                              <span className="flex items-center gap-1 flex-shrink-0">
                                 <Calendar className="h-3 w-3" />
                                 {new Date(item.updatedAt).toLocaleDateString('vi-VN')}
                               </span>
-                              <span>{formatSize(item.size)}</span>
+                              <span className="flex-shrink-0">{formatSize(item.size)}</span>
                               {item.source && (
-                                <span className="flex items-center gap-1 truncate" title={item.source}>
+                                <span className="flex items-center gap-1 min-w-0 overflow-hidden" title={item.source}>
                                   <Globe className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate max-w-[100px]">{item.source}</span>
+                                  <span className="truncate max-w-[120px]">{item.source}</span>
                                 </span>
                               )}
                             </div>
@@ -569,8 +570,8 @@ export function InventoryDialog({ children }: InventoryDialogProps) {
                             )}
                             
                             {/* Content preview */}
-                            <div className="text-sm border-t pt-3">
-                              <p className="text-muted-foreground text-xs line-clamp-2">
+                            <div className="text-sm border-t pt-3 min-w-0">
+                              <p className="text-muted-foreground text-xs line-clamp-2 break-words overflow-hidden" style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>
                                 {item.content.length > 100 ? `${item.content.substring(0, 100)}...` : item.content}
                               </p>
                               {item.content.length > 100 && (
@@ -595,10 +596,10 @@ export function InventoryDialog({ children }: InventoryDialogProps) {
                             
                              {/* Expanded content modal */}
                               {expandedItems.has(item.id) && (
-                               <div className="mt-3 border-t pt-3">
-                                 <div className="bg-muted/30 rounded-lg p-3 max-h-60 overflow-y-auto">
+                               <div className="mt-3 border-t pt-3 min-w-0 w-full" style={{ minWidth: '0', width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
+                                 <div className="bg-muted/30 rounded-lg p-3 max-h-60 overflow-y-auto overflow-x-hidden min-w-0 w-full max-w-full" style={{ minWidth: '0', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
                                    {item.type === 'json' ? (
-                                     <pre className="text-xs font-mono whitespace-pre-wrap">
+                                     <pre className="text-xs font-mono whitespace-pre-wrap break-all w-full min-w-0 max-w-full overflow-hidden" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', maxWidth: '100%', minWidth: '0', width: '100%', overflow: 'hidden', boxSizing: 'border-box'}}>
                                        {(() => {
                                          try {
                                            return JSON.stringify(JSON.parse(item.content), null, 2);
@@ -608,23 +609,23 @@ export function InventoryDialog({ children }: InventoryDialogProps) {
                                        })()}
                                      </pre>
                                    ) : item.type === 'code' ? (
-                                     <pre className="text-xs font-mono whitespace-pre-wrap">
+                                     <pre className="text-xs font-mono whitespace-pre-wrap break-all w-full min-w-0 max-w-full overflow-hidden" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', maxWidth: '100%', minWidth: '0', width: '100%', overflow: 'hidden', boxSizing: 'border-box'}}>
                                        {item.content}
                                      </pre>
                                    ) : item.type === 'markdown' ? (
-                                     <div className="text-xs font-mono whitespace-pre-wrap">
+                                     <div className="text-xs font-mono whitespace-pre-wrap break-all w-full min-w-0 max-w-full overflow-hidden" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', maxWidth: '100%', minWidth: '0', width: '100%', overflow: 'hidden', boxSizing: 'border-box'}}>
                                        {item.content}
                                      </div>
                                    ) : item.type === 'html' ? (
-                                     <div className="text-xs">
+                                     <div className="text-xs w-full min-w-0 max-w-full overflow-hidden">
                                        <div className="font-mono text-xs mb-2 text-muted-foreground">HTML Preview:</div>
-                                       <div className="mb-2 p-2 bg-background rounded border" dangerouslySetInnerHTML={{ __html: item.content }} />
+                                       <div className="mb-2 p-2 bg-background rounded border overflow-auto w-full min-w-0 max-w-full" dangerouslySetInnerHTML={{ __html: item.content }} />
                                        <Separator className="my-2" />
                                        <div className="font-mono text-xs text-muted-foreground mb-1">Source:</div>
-                                       <pre className="text-xs font-mono whitespace-pre-wrap">{item.content}</pre>
+                                       <pre className="text-xs font-mono whitespace-pre-wrap break-all w-full min-w-0 max-w-full overflow-hidden" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', maxWidth: '100%', minWidth: '0', width: '100%', overflow: 'hidden', boxSizing: 'border-box'}}>{item.content}</pre>
                                      </div>
                                    ) : (
-                                     <div className="whitespace-pre-wrap text-xs">{item.content}</div>
+                                     <div className="whitespace-pre-wrap text-xs break-all w-full min-w-0 max-w-full overflow-hidden" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', maxWidth: '100%', minWidth: '0', width: '100%', overflow: 'hidden', boxSizing: 'border-box'}}>{item.content}</div>
                                    )}
                                  </div>
                                  <Button
