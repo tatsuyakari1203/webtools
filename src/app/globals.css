@@ -120,3 +120,28 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Container Queries for Inventory Manager */
+@layer utilities {
+  .inventory-container {
+    container-type: inline-size;
+  }
+  
+  @container (min-width: 768px) {
+    .inventory-grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  @container (min-width: 1280px) {
+    .inventory-grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  
+  @container (min-width: 320px) {
+    .inventory-source-wide {
+      max-width: 120px;
+    }
+  }
+}
