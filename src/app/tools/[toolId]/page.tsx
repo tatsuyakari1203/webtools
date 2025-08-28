@@ -7,6 +7,7 @@ import ImageConverter from "@/tools/image-converter"
 import GoogleDocsToMarkdown from "@/tools/google-docs-to-markdown/GoogleDocsToMarkdown"
 import OCRTool from "@/tools/ocr/OCRTool"
 import Codebase2Json from "@/tools/codebase2json"
+import PomodoroTimer from "@/tools/pomodoro/PomodoroTimer"
 import ComingSoonTool from "@/components/tools/ComingSoonTool"
 import { ToolStructuredData } from "@/components/StructuredData"
 import type { Metadata } from "next"
@@ -42,6 +43,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <OCRTool />
       case "codebase2json":
         return <Codebase2Json />
+      case "pomodoro":
+        return <PomodoroTimer />
       default:
         return <ComingSoonTool tool={tool} />
     }

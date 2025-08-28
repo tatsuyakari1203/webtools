@@ -1,4 +1,4 @@
-import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode } from "lucide-react"
+import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode, Timer } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -73,6 +73,15 @@ export const toolsRegistry: Tool[] = [
     category: "Developer",
     icon: FileCode,
     path: "/tools/codebase2json",
+    featured: false,
+  },
+  {
+    id: "pomodoro",
+    name: "Pomodoro Timer",
+    description: "Focus timer using the Pomodoro Technique for productivity",
+    category: "Productivity",
+    icon: Timer,
+    path: "/tools/pomodoro",
     featured: false,
   },
 ]
