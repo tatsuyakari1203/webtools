@@ -32,8 +32,8 @@ export const toolsRegistry: Tool[] = [
   },
   {
     id: "image-name-processor",
-    name: "Xử lý tên ảnh",
-    description: "Xử lý và tối ưu hóa tên file ảnh để dễ tìm kiếm trong Lightroom",
+    name: "Image Name Processor",
+    description: "Process and optimize image file names for easy searching in Lightroom",
     category: "Image",
     icon: Image,
     path: "/tools/image-name-processor",
@@ -60,7 +60,7 @@ export const toolsRegistry: Tool[] = [
   {
     id: "ocr",
     name: "OCR Tool",
-    description: "Trích xuất văn bản từ hình ảnh bằng AI",
+    description: "Extract text from images using AI",
     category: "AI",
     icon: ScanText,
     path: "/tools/ocr",

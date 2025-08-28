@@ -85,20 +85,20 @@ export default function TextFormatterTool() {
     const charactersNoSpaces = inputText.replace(/\s/g, '').length
     const lines = inputText.split('\n').length
     
-    const stats = `Thống kê văn bản:
-- Từ: ${words.length}
-- Ký tự: ${characters}
-- Ký tự (không khoảng trắng): ${charactersNoSpaces}
-- Dòng: ${lines}`
+    const stats = `Text Statistics:
+- Words: ${words.length}
+- Characters: ${characters}
+- Characters (no spaces): ${charactersNoSpaces}
+- Lines: ${lines}`
     setOutputText(stats)
   }
 
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(outputText)
-      toast.success("Đã sao chép vào clipboard!")
+      toast.success("Copied to clipboard!")
     } catch {
-      toast.error("Không thể sao chép văn bản")
+      toast.error("Failed to copy text")
     }
   }
 
@@ -115,10 +115,10 @@ export default function TextFormatterTool() {
     { label: "PascalCase", action: formatToPascalCase, icon: Type },
     { label: "kebab-case", action: formatToKebabCase, icon: Type },
     { label: "snake_case", action: formatToSnakeCase, icon: Type },
-    { label: "Xóa khoảng trắng thừa", action: removeExtraSpaces, icon: FileText },
-    { label: "Xóa tất cả khoảng trắng", action: removeAllSpaces, icon: FileText },
-    { label: "Đảo ngược văn bản", action: reverseText, icon: FileText },
-    { label: "Đếm từ & ký tự", action: countWords, icon: FileText },
+    { label: "Remove Extra Spaces", action: removeExtraSpaces, icon: FileText },
+    { label: "Remove All Spaces", action: removeAllSpaces, icon: FileText },
+    { label: "Reverse Text", action: reverseText, icon: FileText },
+    { label: "Count Words & Characters", action: countWords, icon: FileText },
   ]
 
   return (
@@ -131,11 +131,11 @@ export default function TextFormatterTool() {
           {/* Input Section */}
           <div className="space-y-2">
             <Label htmlFor="input-text" className="text-sm font-medium">
-              Văn bản đầu vào
+              Input Text
             </Label>
             <Textarea
               id="input-text"
-              placeholder="Nhập văn bản cần format..."
+              placeholder="Enter text to format..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               className="min-h-[120px] resize-y"
@@ -144,7 +144,7 @@ export default function TextFormatterTool() {
 
           {/* Format Options */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Tùy chọn format</Label>
+            <Label className="text-sm font-medium">Format Options</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               {formatOptions.map((option, index) => {
                 const IconComponent = option.icon
@@ -169,7 +169,7 @@ export default function TextFormatterTool() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="output-text" className="text-sm font-medium">
-                Kết quả
+                Result
               </Label>
               <div className="flex gap-2">
                 <Button
@@ -179,7 +179,7 @@ export default function TextFormatterTool() {
                   disabled={!outputText}
                 >
                   <Copy className="mr-2 h-3 w-3" />
-                  Sao chép
+                  Copy
                 </Button>
                 <Button
                   onClick={clearAll}
@@ -187,13 +187,13 @@ export default function TextFormatterTool() {
                   size="sm"
                 >
                   <RotateCcw className="mr-2 h-3 w-3" />
-                  Xóa tất cả
+                  Clear All
                 </Button>
               </div>
             </div>
             <Textarea
               id="output-text"
-              placeholder="Kết quả sẽ hiển thị ở đây..."
+              placeholder="Result will be displayed here..."
               value={outputText}
               readOnly
               className="min-h-[120px] resize-y bg-muted/50"
@@ -202,7 +202,7 @@ export default function TextFormatterTool() {
 
           {/* Instructions */}
           <div className="text-center text-sm text-muted-foreground">
-            <p>Nhập văn bản và chọn định dạng mong muốn. Kết quả sẽ hiển thị bên dưới.</p>
+            <p>Enter text and select the desired format. The result will be displayed below.</p>
           </div>
       </div>
     </div>

@@ -134,33 +134,33 @@ export default function Calculator() {
   // Unit conversion data
   const unitData = {
     length: {
-      name: 'Độ dài',
+      name: 'Length',
       icon: Ruler,
       units: {
-        mm: { name: 'Milimét', factor: 1 },
-        cm: { name: 'Centimét', factor: 10 },
-        m: { name: 'Mét', factor: 1000 },
-        km: { name: 'Kilomét', factor: 1000000 },
+        mm: { name: 'Millimeter', factor: 1 },
+        cm: { name: 'Centimeter', factor: 10 },
+        m: { name: 'Meter', factor: 1000 },
+        km: { name: 'Kilometer', factor: 1000000 },
         inch: { name: 'Inch', factor: 25.4 },
         ft: { name: 'Feet', factor: 304.8 },
         yard: { name: 'Yard', factor: 914.4 },
-        mile: { name: 'Dặm', factor: 1609344 }
+        mile: { name: 'Mile', factor: 1609344 }
       }
     },
     weight: {
-      name: 'Khối lượng',
+      name: 'Weight',
       icon: Weight,
       units: {
-        mg: { name: 'Miligam', factor: 1 },
-        g: { name: 'Gam', factor: 1000 },
+        mg: { name: 'Milligram', factor: 1 },
+        g: { name: 'Gram', factor: 1000 },
         kg: { name: 'Kilogram', factor: 1000000 },
         oz: { name: 'Ounce', factor: 28349.5 },
         lb: { name: 'Pound', factor: 453592 },
-        ton: { name: 'Tấn', factor: 1000000000 }
+        ton: { name: 'Ton', factor: 1000000000 }
       }
     },
     temperature: {
-      name: 'Nhiệt độ',
+      name: 'Temperature',
       icon: Thermometer,
       units: {
         celsius: { name: 'Celsius (°C)', factor: 1 },
@@ -487,14 +487,14 @@ export default function Calculator() {
   const renderHistoryPanel = () => (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <h3 className="font-semibold">Lịch sử tính toán</h3>
+        <h3 className="font-semibold">Calculation History</h3>
         <Button variant="outline" size="sm" onClick={clearHistory}>
-          Xóa tất cả
+          Clear All
         </Button>
       </div>
       <div className="max-h-60 overflow-y-auto space-y-1">
         {history.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Chưa có phép tính nào</p>
+          <p className="text-muted-foreground text-sm">No calculations yet</p>
         ) : (
           history.map((entry, index) => (
             <div 
@@ -518,7 +518,7 @@ export default function Calculator() {
     <div className="max-w-md mx-auto">
       <div className="space-y-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-semibold">Máy tính</h1>
+          <h1 className="text-xl font-semibold">Calculator</h1>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">Math</Badge>
             <Button 
@@ -547,19 +547,19 @@ export default function Calculator() {
            <TabsList className="grid w-full grid-cols-4">
              <TabsTrigger value="basic" className="flex items-center gap-1">
                <CalcIcon className="h-4 w-4" />
-               Cơ bản
+               Basic
              </TabsTrigger>
              <TabsTrigger value="scientific" className="flex items-center gap-1">
                <Sigma className="h-4 w-4" />
-               Khoa học
+               Scientific
              </TabsTrigger>
              <TabsTrigger value="programmer" className="flex items-center gap-1">
                <Code className="h-4 w-4" />
-               Lập trình
+               Programmer
              </TabsTrigger>
              <TabsTrigger value="converter" className="flex items-center gap-1">
                <ArrowLeftRight className="h-4 w-4" />
-               Chuyển đổi
+               Converter
              </TabsTrigger>
            </TabsList>
             
@@ -721,7 +721,7 @@ export default function Calculator() {
                      className="h-10 text-sm font-semibold"
                    >
                      <Ruler className="h-4 w-4 mr-1" />
-                     Độ dài
+                     Length
                    </Button>
                    <Button 
                      variant={converterCategory === 'weight' ? 'default' : 'outline'} 
@@ -729,7 +729,7 @@ export default function Calculator() {
                      className="h-10 text-sm font-semibold"
                    >
                      <Weight className="h-4 w-4 mr-1" />
-                     Khối lượng
+                     Weight
                    </Button>
                    <Button 
                      variant={converterCategory === 'temperature' ? 'default' : 'outline'} 
@@ -737,23 +737,23 @@ export default function Calculator() {
                      className="h-10 text-sm font-semibold"
                    >
                      <Thermometer className="h-4 w-4 mr-1" />
-                     Nhiệt độ
+                     Temperature
                    </Button>
                    <Button 
                      variant="outline" 
                      disabled 
                      className="h-10 text-sm font-semibold opacity-50"
                    >
-                     Thể tích
+                     Volume
                    </Button>
                  </div>
                  
                  <div className="grid grid-cols-2 gap-4">
                    <div>
-                     <Label htmlFor="from-unit" className="text-sm font-medium mb-2 block">Từ</Label>
+                     <Label htmlFor="from-unit" className="text-sm font-medium mb-2 block">From</Label>
                      <Select value={fromUnit} onValueChange={setFromUnit}>
                        <SelectTrigger>
-                         <SelectValue placeholder="Chọn đơn vị" />
+                         <SelectValue placeholder="Select unit" />
                        </SelectTrigger>
                        <SelectContent>
                          {Object.entries(unitData[converterCategory as keyof typeof unitData].units).map(([key, unit]) => (
@@ -766,10 +766,10 @@ export default function Calculator() {
                    </div>
                    
                    <div>
-                     <Label htmlFor="to-unit" className="text-sm font-medium mb-2 block">Sang</Label>
+                     <Label htmlFor="to-unit" className="text-sm font-medium mb-2 block">To</Label>
                      <Select value={toUnit} onValueChange={setToUnit}>
                        <SelectTrigger>
-                         <SelectValue placeholder="Chọn đơn vị" />
+                         <SelectValue placeholder="Select unit" />
                        </SelectTrigger>
                        <SelectContent>
                          {Object.entries(unitData[converterCategory as keyof typeof unitData].units).map(([key, unit]) => (

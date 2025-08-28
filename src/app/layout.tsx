@@ -20,7 +20,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://webtools.example.com'),
   title: {
-    default: "WebTools Platform - Công cụ web tiện ích miễn phí",
+    default: "WebTools Platform - Free Web Utilities",
     template: "%s | WebTools Platform"
   },
   icons: {
@@ -28,8 +28,8 @@ export const metadata: Metadata = {
     shortcut: '/tool-case.svg',
     apple: '/tool-case.svg',
   },
-  description: "Tập hợp các công cụ web tiện ích miễn phí: chuyển đổi hình ảnh, định dạng văn bản, máy tính, và nhiều công cụ khác trong một nền tảng thống nhất",
-  keywords: ["công cụ web", "tiện ích online", "chuyển đổi hình ảnh", "định dạng văn bản", "máy tính online", "công cụ miễn phí", "webtools", "utilities"],
+  description: "Collection of free web utilities: image conversion, text formatting, calculator, and many other tools in a unified platform",
+  keywords: ["web tools", "online utilities", "image conversion", "text formatting", "online calculator", "free tools", "webtools", "utilities"],
   authors: [{ name: "WebTools Platform" }],
   creator: "WebTools Platform",
   publisher: "WebTools Platform",
@@ -46,24 +46,24 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "vi_VN",
+    locale: "en_US",
     url: "https://webtools.example.com",
-    title: "WebTools Platform - Công cụ web tiện ích miễn phí",
-    description: "Tập hợp các công cụ web tiện ích miễn phí: chuyển đổi hình ảnh, định dạng văn bản, máy tính, và nhiều công cụ khác trong một nền tảng thống nhất",
+    title: "WebTools Platform - Free Web Utilities",
+    description: "Collection of free web utilities: image conversion, text formatting, calculator, and many other tools in a unified platform",
     siteName: "WebTools Platform",
     images: [
       {
         url: "/images/og-image.png",
         width: 1200,
         height: 630,
-        alt: "WebTools Platform - Công cụ web tiện ích",
+        alt: "WebTools Platform - Web Utilities",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "WebTools Platform - Công cụ web tiện ích miễn phí",
-    description: "Tập hợp các công cụ web tiện ích miễn phí: chuyển đổi hình ảnh, định dạng văn bản, máy tính, và nhiều công cụ khác",
+    title: "WebTools Platform - Free Web Utilities",
+    description: "Collection of free web utilities: image conversion, text formatting, calculator, and many other tools",
     images: ["/images/twitter-image.png"],
     creator: "@webtools_platform",
   },
@@ -75,8 +75,8 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://webtools.example.com",
     languages: {
-      "vi-VN": "https://webtools.example.com",
-      "en-US": "https://webtools.example.com/en",
+      "en-US": "https://webtools.example.com",
+      "vi-VN": "https://webtools.example.com/vi",
     },
   },
   category: "technology",
@@ -88,12 +88,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <WebsiteStructuredData
           url="https://webtools.example.com"
-          name="WebTools Platform - Công cụ web tiện ích miễn phí"
-          description="Tập hợp các công cụ web tiện ích miễn phí: chuyển đổi hình ảnh, định dạng văn bản, máy tính, và nhiều công cụ khác trong một nền tảng thống nhất"
+          name="WebTools Platform - Free Web Utilities"
+          description="Collection of free web utilities: image conversion, text formatting, calculator, and many other tools in a unified platform"
         />
         <OrganizationStructuredData
           name="WebTools Platform"

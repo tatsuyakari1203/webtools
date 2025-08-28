@@ -25,36 +25,36 @@ export default function OCRTool() {
     accuracy: 'standard'
   });
 
-  // Xử lý drag & drop
+  // Handle drag & drop
   // Validate file
   const validateFile = (file: File): boolean => {
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      toast.error('Định dạng file không được hỗ trợ. Vui lòng chọn JPG, PNG, GIF hoặc WebP.');
+      toast.error('Unsupported file format. Please select JPG, PNG, GIF or WebP.');
       return false;
     }
     
     if (file.size > MAX_FILE_SIZE) {
-      toast.error('File quá lớn. Kích thước tối đa là 10MB.');
+      toast.error('File too large. Maximum size is 10MB.');
       return false;
     }
     
     return true;
   };
 
-  // Xử lý chọn file
+  // Handle file selection
   const handleFileSelect = useCallback((file: File) => {
     if (!validateFile(file)) return;
     
     setSelectedFile(file);
     
-    // Tạo preview
+    // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
       setImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
     
-    // Reset các state khác
+    // Reset other states
     setOcrResult(null);
     setImageRotation(0);
     setImageZoom(1);
@@ -73,10 +73,10 @@ export default function OCRTool() {
     }
   }, [handleFileSelect]);
 
-  // Xử lý OCR
+  // Handle OCR processing
   const handleOCRProcess = async () => {
     if (!selectedFile) {
-      toast.error('Vui lòng chọn hình ảnh trước.');
+      toast.error('Please select an image first.');
       return;
     }
 
@@ -109,7 +109,7 @@ export default function OCRTool() {
       setProgress(100);
 
       if (!response.ok) {
-        throw new Error('Lỗi khi xử lý OCR');
+        throw new Error('Error processing OCR');
       }
 
       const result: OCRResponse = await response.json();
@@ -121,12 +121,12 @@ export default function OCRTool() {
           processingTime: result.processingTime,
           timestamp: new Date()
         });
-        toast.success('Trích xuất văn bản thành công!');
+        toast.success('Text extraction successful!');
       } else {
-        throw new Error(result.error || 'Lỗi không xác định');
+        throw new Error(result.error || 'Unknown error');
       }
     } catch {
-      toast.error('Lỗi khi xử lý OCR');
+      toast.error('Error processing OCR');
     } finally {
       setIsProcessing(false);
       setProgress(0);
@@ -139,9 +139,9 @@ export default function OCRTool() {
     
     try {
       await navigator.clipboard.writeText(ocrResult.extractedText);
-      toast.success('Đã sao chép văn bản!');
+      toast.success('Text copied to clipboard!');
     } catch {
-      toast.error('Không thể sao chép văn bản');
+      toast.error('Unable to copy text');
     }
   };
 
@@ -159,7 +159,7 @@ export default function OCRTool() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    toast.success('Đã tải xuống file văn bản!');
+    toast.success('Text file downloaded successfully!');
   };
 
   // Image controls
@@ -180,10 +180,10 @@ export default function OCRTool() {
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Công cụ OCR - Trích xuất Văn bản
+          OCR Tool - Text Extraction
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Sử dụng AI của Google Gemini để trích xuất văn bản từ hình ảnh một cách chính xác
+          Use Google Gemini AI to accurately extract text from images
         </p>
       </div>
 
@@ -195,7 +195,7 @@ export default function OCRTool() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Upload className="h-5 w-5" />
-                Tải lên Hình ảnh
+                Upload Image
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -206,10 +206,10 @@ export default function OCRTool() {
                 onClick={() => document.getElementById('file-input')?.click()}
               >
                 <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-lg font-medium mb-2">Kéo thả hình ảnh vào đây</p>
-                <p className="text-sm text-gray-500 mb-4">hoặc click để chọn file</p>
+                <p className="text-lg font-medium mb-2">Drag and drop image here</p>
+                <p className="text-sm text-gray-500 mb-4">or click to select file</p>
                 <p className="text-xs text-gray-400">
-                  Hỗ trợ: JPG, PNG, GIF, WebP (tối đa 10MB)
+                  Supported: JPG, PNG, GIF, WebP (max 10MB)
                 </p>
                 <input
                   id="file-input"
@@ -230,7 +230,7 @@ export default function OCRTool() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>Xem trước Hình ảnh</span>
+                  <span>Image Preview</span>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={zoomOut}>
                       <ZoomOut className="h-4 w-4" />
@@ -270,12 +270,12 @@ export default function OCRTool() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="h-5 w-5" />
-                Cài đặt OCR
+                OCR Settings
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="language">Ngôn ngữ</Label>
+                <Label htmlFor="language">Language</Label>
                 <Select
                   value={settings.language}
                   onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}
@@ -294,7 +294,7 @@ export default function OCRTool() {
               </div>
               
               <div>
-                <Label htmlFor="accuracy">Độ chính xác</Label>
+                <Label htmlFor="accuracy">Accuracy</Label>
                 <Select
                   value={settings.accuracy}
                   onValueChange={(value: 'standard' | 'high') => 
@@ -322,12 +322,12 @@ export default function OCRTool() {
                 {isProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Đang xử lý...
+                    Processing...
                   </>
                 ) : (
                   <>
                     <FileText className="h-4 w-4 mr-2" />
-                    Trích xuất Văn bản
+                    Extract Text
                   </>
                 )}
               </Button>
@@ -336,7 +336,7 @@ export default function OCRTool() {
                 <div className="space-y-2">
                   <Progress value={progress} className="w-full" />
                   <p className="text-sm text-center text-gray-500">
-                    {progress}% hoàn thành
+                    {progress}% complete
                   </p>
                 </div>
               )}
@@ -348,7 +348,7 @@ export default function OCRTool() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>Kết quả OCR</span>
+                  <span>OCR Results</span>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={handleCopyText}>
                       <Copy className="h-4 w-4" />
@@ -367,13 +367,13 @@ export default function OCRTool() {
                     extractedText: e.target.value
                   } : null)}
                   className="min-h-32 resize-y"
-                  placeholder="Văn bản được trích xuất sẽ hiển thị ở đây..."
+                  placeholder="Extracted text will appear here..."
                 />
                 
                 <div className="flex justify-between text-sm text-gray-500">
-                  <span>Độ tin cậy: {Math.round(ocrResult.confidence * 100)}%</span>
-                  <span>Thời gian: {ocrResult.processingTime}ms</span>
-                  <span>Số từ: {ocrResult.extractedText.split(/\s+/).filter(word => word.length > 0).length}</span>
+                  <span>Confidence: {Math.round(ocrResult.confidence * 100)}%</span>
+                  <span>Time: {ocrResult.processingTime}ms</span>
+                  <span>Words: {ocrResult.extractedText.split(/\s+/).filter(word => word.length > 0).length}</span>
                 </div>
               </CardContent>
             </Card>

@@ -13,38 +13,38 @@ export default function TextFormatter() {
     {
       name: 'Uppercase',
       action: () => setResult(text.toUpperCase()),
-      description: 'Chuyển tất cả chữ thành chữ hoa'
+      description: 'Convert all text to uppercase'
     },
     {
       name: 'Lowercase',
       action: () => setResult(text.toLowerCase()),
-      description: 'Chuyển tất cả chữ thành chữ thường'
+      description: 'Convert all text to lowercase'
     },
     {
       name: 'Title Case',
       action: () => setResult(text.replace(/\w\S*/g, (txt) => 
         txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())),
-      description: 'Viết hoa chữ cái đầu mỗi từ'
+      description: 'Capitalize the first letter of each word'
     },
     {
       name: 'Sentence Case',
       action: () => setResult(text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()),
-      description: 'Viết hoa chữ cái đầu câu'
+      description: 'Capitalize the first letter of the sentence'
     },
     {
       name: 'Remove Spaces',
       action: () => setResult(text.replace(/\s+/g, '')),
-      description: 'Xóa tất cả khoảng trắng'
+      description: 'Remove all spaces'
     },
     {
       name: 'Remove Extra Spaces',
       action: () => setResult(text.replace(/\s+/g, ' ').trim()),
-      description: 'Xóa khoảng trắng thừa'
+      description: 'Remove extra spaces'
     },
     {
       name: 'Reverse Text',
       action: () => setResult(text.split('').reverse().join('')),
-      description: 'Đảo ngược văn bản'
+      description: 'Reverse the text'
     },
     {
       name: 'Word Count',
@@ -54,14 +54,14 @@ export default function TextFormatter() {
         const charsNoSpaces = text.replace(/\s/g, '').length;
         setResult(`Words: ${words.length}\nCharacters: ${chars}\nCharacters (no spaces): ${charsNoSpaces}`);
       },
-      description: 'Đếm số từ và ký tự'
+      description: 'Count words and characters'
     }
   ];
 
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(result);
-      alert('Đã sao chép vào clipboard!');
+      alert('Copied to clipboard!');
     } catch (err) {
       console.error('Failed to copy: ', err);
     }
@@ -84,7 +84,7 @@ export default function TextFormatter() {
               <label className="text-sm font-medium">Input Text</label>
               <textarea
                 className="w-full h-40 p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Nhập văn bản cần định dạng..."
+                placeholder="Enter text to format..."
                 value={text}
                 onChange={(e) => setText(e.target.value)}
               />
@@ -93,7 +93,7 @@ export default function TextFormatter() {
               <label className="text-sm font-medium">Result</label>
               <textarea
                 className="w-full h-40 p-3 border rounded-lg resize-none bg-gray-50 dark:bg-gray-800"
-                placeholder="Kết quả sẽ hiển thị ở đây..."
+                placeholder="Result will be displayed here..."
                 value={result}
                 readOnly
               />

@@ -42,7 +42,7 @@ const ImageNameProcessor = () => {
   const handleCopy = () => {
     if (output) {
       navigator.clipboard.writeText(output);
-      toast.success('Đã sao chép kết quả!');
+      toast.success('Result copied!');
     }
   };
 
@@ -86,7 +86,7 @@ const ImageNameProcessor = () => {
           setCount(sortedValidNumbers.length);
           setInvalidNumbers(currentInvalidNumbers);
           
-          toast.success('Đã dán text và xử lý tự động!');
+          toast.success('Text pasted and processed automatically!');
           return;
         }
       } catch {
@@ -109,7 +109,7 @@ const ImageNameProcessor = () => {
       }
       
       if (!imageFile) {
-        toast.error('Không tìm thấy text hoặc ảnh trong clipboard.');
+        toast.error('No text or image found in clipboard.');
         return;
       }
       
@@ -125,7 +125,7 @@ const ImageNameProcessor = () => {
       });
       
       if (!response.ok) {
-        throw new Error('Lỗi khi xử lý OCR');
+        throw new Error('Error processing OCR');
       }
       
       const result = await response.json();
@@ -158,19 +158,19 @@ const ImageNameProcessor = () => {
            setCount(sortedValidNumbers.length);
            setInvalidNumbers(currentInvalidNumbers);
            
-           toast.success('Đã trích xuất văn bản từ ảnh và xử lý tự động!');
+           toast.success('Text extracted from image and processed automatically!');
          } else {
-           toast.warning('Không tìm thấy văn bản trong ảnh.');
+           toast.warning('No text found in image.');
          }
        } else {
-         throw new Error(result.error || 'Lỗi không xác định');
+         throw new Error(result.error || 'Unknown error');
        }
     } catch (error) {
       console.error('Smart Paste Error:', error);
       if (error instanceof Error && error.name === 'NotAllowedError') {
-        toast.error('Không có quyền truy cập clipboard. Vui lòng cho phép truy cập.');
+        toast.error('No clipboard access permission. Please allow access.');
       } else {
-        toast.error('Lỗi khi xử lý từ clipboard.');
+        toast.error('Error processing from clipboard.');
       }
     } finally {
       setIsOCRProcessing(false);
@@ -185,19 +185,19 @@ const ImageNameProcessor = () => {
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Terminal className="h-5 w-5" />
-              Dữ liệu đầu vào
+              Input Data
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="input-text" className="text-sm font-medium">
-                Dán danh sách tên file hoặc bất kỳ đoạn văn bản nào:
+                Paste file name list or any text:
               </Label>
               <Textarea
                 id="input-text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder="Ví dụ:\nIMG_123.jpg\nDSC0456.arw\nP1010789.rw2\n124 457 9999"
+                placeholder="Example:\nIMG_123.jpg\nDSC0456.arw\nP1010789.rw2\n124 457 9999"
                 rows={8}
                 className="font-mono text-sm resize-none"
               />
@@ -205,7 +205,7 @@ const ImageNameProcessor = () => {
             <div className="flex gap-2">
               <Button onClick={handleProcess} className="flex-1">
                 <FileText className="h-4 w-4 mr-2" />
-                Xử lý
+                Process
               </Button>
               <Button 
                 onClick={handleSmartPaste} 
@@ -216,7 +216,7 @@ const ImageNameProcessor = () => {
                 {isOCRProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Xử lý...
+                    Processing...
                   </>
                 ) : (
                   <>
@@ -238,11 +238,11 @@ const ImageNameProcessor = () => {
             <CardTitle className="flex items-center justify-between text-lg">
               <div className="flex items-center gap-2">
                 <Copy className="h-5 w-5" />
-                Kết quả
+                Result
               </div>
               {count > 0 && (
                 <Badge variant="secondary" className="ml-2">
-                  {count} số hợp lệ
+                  {count} valid numbers
                 </Badge>
               )}
             </CardTitle>
@@ -250,13 +250,13 @@ const ImageNameProcessor = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="output-text" className="text-sm font-medium">
-                Các số đã được định dạng:
+                Formatted numbers:
               </Label>
               <Textarea
                 id="output-text"
                 value={output}
                 readOnly
-                placeholder="Các số có 3 hoặc 4 chữ số sẽ xuất hiện ở đây, được sắp xếp và cách nhau bằng dấu cách."
+                placeholder="Numbers with 3 or 4 digits will appear here, sorted and separated by spaces."
                 rows={6}
                 className="bg-muted/50 font-mono text-sm resize-none"
               />
@@ -268,7 +268,7 @@ const ImageNameProcessor = () => {
               variant={output ? "default" : "secondary"}
             >
               <Copy className="h-4 w-4 mr-2" />
-              Sao chép kết quả
+              Copy Result
             </Button>
           </CardContent>
         </Card>
@@ -278,11 +278,11 @@ const ImageNameProcessor = () => {
       {invalidNumbers.length > 0 && (
         <Alert variant="destructive">
           <Terminal className="h-4 w-4" />
-          <AlertTitle>Cảnh báo: Đã tìm thấy các số không hợp lệ</AlertTitle>
+          <AlertTitle>Warning: Invalid numbers found</AlertTitle>
           <AlertDescription className="mt-2">
-            <p className="mb-2">Các số có độ dài 1, 2, hoặc từ 5 chữ số trở lên sẽ bị loại bỏ.</p>
+            <p className="mb-2">Numbers with 1, 2, or 5+ digits will be excluded.</p>
             <div className="flex flex-wrap gap-1">
-              <span className="font-medium">Các số không hợp lệ:</span>
+              <span className="font-medium">Invalid numbers:</span>
               {invalidNumbers.map((num, index) => (
                 <Badge key={index} variant="destructive" className="text-xs">
                   {num}
@@ -296,50 +296,50 @@ const ImageNameProcessor = () => {
       {/* Info Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Cách thức hoạt động</CardTitle>
+          <CardTitle className="text-lg">How it works</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
             <div className="space-y-3">
-              <h4 className="font-semibold text-primary">Quy tắc xử lý:</h4>
+              <h4 className="font-semibold text-primary">Processing rules:</h4>
               <ul className="space-y-2 text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  Chỉ giữ lại số có 3 hoặc 4 chữ số
+                  Keep only numbers with 3 or 4 digits
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  Tự động thêm số 0 vào trước số có 3 chữ số
+                  Automatically add 0 prefix to 3-digit numbers
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  Loại bỏ số trùng lặp
+                  Remove duplicates
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  Sắp xếp theo thứ tự tăng dần
+                  Sort in ascending order
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-500 mt-0.5">🔍</span>
-                  Hỗ trợ OCR từ ảnh trong clipboard
+                  Support OCR from clipboard images
                 </li>
               </ul>
             </div>
             <div className="space-y-3">
-              <h4 className="font-semibold text-primary">Ví dụ:</h4>
+              <h4 className="font-semibold text-primary">Example:</h4>
               <div className="space-y-2 text-muted-foreground">
                 <div className="bg-muted/50 p-3 rounded-md">
-                  <div className="font-medium text-foreground mb-1">Đầu vào:</div>
+                  <div className="font-medium text-foreground mb-1">Input:</div>
                   <code className="text-xs">IMG_123.jpg DSC0456.arw P1010789.rw2</code>
                 </div>
                 <div className="bg-muted/50 p-3 rounded-md">
-                  <div className="font-medium text-foreground mb-1">Đầu ra:</div>
+                  <div className="font-medium text-foreground mb-1">Output:</div>
                   <code className="text-xs">0123 0456 0789 1010</code>
                 </div>
                 <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-md border border-blue-200 dark:border-blue-800">
-                   <div className="font-medium text-blue-700 dark:text-blue-300 mb-1">Tính năng OCR:</div>
+                   <div className="font-medium text-blue-700 dark:text-blue-300 mb-1">OCR Feature:</div>
                    <p className="text-xs text-blue-600 dark:text-blue-400">
-                     Copy text hoặc ảnh chứa tên file → Click &ldquo;Smart Paste&rdquo; → Tự động trích xuất và xử lý
+                     Copy text or image containing filenames → Click &ldquo;Smart Paste&rdquo; → Automatically extract and process
                    </p>
                  </div>
               </div>

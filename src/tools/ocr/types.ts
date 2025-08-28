@@ -25,8 +25,8 @@ export interface OCRResult {
 }
 
 export const SUPPORTED_LANGUAGES = [
-  { value: 'auto', label: 'Tự động phát hiện' },
-  { value: 'vi', label: 'Tiếng Việt' },
+  { value: 'auto', label: 'Auto Detect' },
+  { value: 'vi', label: 'Vietnamese' },
   { value: 'en', label: 'English' },
   { value: 'zh', label: '中文' },
   { value: 'ja', label: '日本語' },
@@ -37,8 +37,8 @@ export const SUPPORTED_LANGUAGES = [
 ] as const;
 
 export const ACCURACY_OPTIONS = [
-  { value: 'standard', label: 'Tiêu chuẩn' },
-  { value: 'high', label: 'Cao' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'high', label: 'High' },
 ] as const;
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
