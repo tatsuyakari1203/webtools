@@ -64,7 +64,7 @@ export const toolsRegistry: Tool[] = [
     category: "AI",
     icon: ScanText,
     path: "/tools/ocr",
-    featured: true,
+    featured: false,
   },
 ]
 
