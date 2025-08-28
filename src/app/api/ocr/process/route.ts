@@ -35,7 +35,7 @@ function getMimeType(file: File): string {
 }
 
 // Hàm tạo prompt tối ưu cho OCR
-function createPrompt(language: string, accuracy: string): string {
+function createPrompt(language: string): string {
   // Chỉ thêm ngôn ngữ cụ thể nếu không phải auto
   const langHint = language !== 'auto' ? ` in ${language}` : '';
   
@@ -62,11 +62,9 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('image') as File;
     const language = (formData.get('language') as string) || 'auto';
-    const accuracy = (formData.get('accuracy') as string) || 'balanced';
 
     console.log(`[OCR-${requestId}] Request parameters:`, {
       language,
-      accuracy,
       hasFile: !!file
     });
 
@@ -120,8 +118,8 @@ export async function POST(request: NextRequest) {
       });
 
       // Tạo prompt
-      console.log(`[OCR-${requestId}] Creating prompt for language: ${language}, accuracy: ${accuracy}`);
-      const prompt = createPrompt(language, accuracy);
+      console.log(`[OCR-${requestId}] Creating prompt for language: ${language}`);
+      const prompt = createPrompt(language);
 
       // Gọi API để xử lý OCR với streaming và timeout
       console.log(`[OCR-${requestId}] Sending streaming request to GenAI with model: models/gemini-2.5-flash-lite`);
@@ -148,7 +146,7 @@ export async function POST(request: NextRequest) {
         ]
       });
       
-      const stream = await Promise.race([genAIPromise, timeoutPromise]);
+      const stream = await Promise.race([genAIPromise, timeoutPromise]) as AsyncIterable<{ text?: string }>;
 
       console.log(`[OCR-${requestId}] GenAI streaming request initiated`);
       let extractedText = '';
@@ -175,7 +173,7 @@ export async function POST(request: NextRequest) {
       let confidence = 0.85; // Base confidence
       if (extractedText.length > 100) confidence += 0.1;
       if (processingTime < 3000) confidence += 0.05;
-      if (accuracy === 'accurate') confidence += 0.05;
+      // Remove accuracy-based confidence adjustment
       confidence = Math.min(confidence, 0.99);
 
       const ocrResponse: OCRResponse = {

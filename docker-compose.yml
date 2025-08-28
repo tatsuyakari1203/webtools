@@ -1,17 +1,17 @@
 services:
   webtools:
     image: tatsuyakari/webtools:latest
-    container_name: webtools-app
+    container_name: webtools-fullstack-app
     restart: unless-stopped
     ports:
-      - "5005:80"
+      - "5005:3000"
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - NEXT_TELEMETRY_DISABLED=1
     networks:
       - webtools-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3

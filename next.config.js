@@ -3,7 +3,7 @@ const nextConfig = {
   // Cấu hình logging để giảm noise
   logging: {
     fetches: {
-      fullUrl: false
+      fullUrl: true
     }
   },
   // Tối ưu bundle size
@@ -12,6 +12,7 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // Cấu hình cho static export
   trailingSlash: true,
+  output: 'standalone',
   images: {
     unoptimized: true,
     formats: ['image/webp', 'image/avif'],
