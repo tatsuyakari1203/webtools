@@ -1,0 +1,55 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@custom-variant",
+      "description": "Define custom variants in Tailwind CSS v4. Allows creating reusable variant conditions.",
+      "references": [
+        {
+          "name": "Tailwind CSS v4 Custom Variants",
+          "url": "https://tailwindcss.com/docs/custom-variants"
+        }
+      ]
+    },
+    {
+      "name": "@theme",
+      "description": "Define theme configuration inline in Tailwind CSS v4. Replaces the need for separate config files.",
+      "references": [
+        {
+          "name": "Tailwind CSS v4 Theme Configuration",
+          "url": "https://tailwindcss.com/docs/theme"
+        }
+      ]
+    },
+    {
+      "name": "@apply",
+      "description": "Apply Tailwind utility classes within CSS rules. Useful for component styling.",
+      "references": [
+        {
+          "name": "Tailwind CSS Apply Directive",
+          "url": "https://tailwindcss.com/docs/functions-and-directives#apply"
+        }
+      ]
+    },
+    {
+      "name": "@layer",
+      "description": "Organize CSS into layers (base, components, utilities) for proper cascade order.",
+      "references": [
+        {
+          "name": "Tailwind CSS Layer Directive",
+          "url": "https://tailwindcss.com/docs/functions-and-directives#layer"
+        }
+      ]
+    },
+    {
+      "name": "@container",
+      "description": "CSS Container Queries for responsive design based on container size.",
+      "references": [
+        {
+          "name": "CSS Container Queries",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Container_Queries"
+        }
+      ]
+    }
+  ]
+}
