@@ -5,8 +5,8 @@
  * Removes unnecessary data like URLs and keeps only language names and colors
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Paths
 const inputPath = path.join(__dirname, '../workers/colors.json');

@@ -7,6 +7,10 @@ export interface ProcessedFile {
   lines: number;
   language: string;
   lastModified?: number;
+  relativePath: string;
+  directory: string;
+  sizeFormatted: string;
+  linesPercentage: number;
 }
 
 export interface FileNode {

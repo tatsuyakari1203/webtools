@@ -37,7 +37,7 @@ interface FileNode {
   content?: string;
 }
 
-import type { ProcessedFile } from '../types';
+import type { ProcessedFile } from '../types/index';
 
 interface FileExplorerProps {
   files: ProcessedFile[];
