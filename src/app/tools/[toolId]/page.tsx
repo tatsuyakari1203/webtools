@@ -5,6 +5,7 @@ import TextFormatterTool from "@/components/tools/TextFormatterTool"
 import ImageNameProcessor from "@/tools/image-name-processor/ImageNameProcessor"
 import ImageConverter from "@/tools/image-converter"
 import GoogleDocsToMarkdown from "@/tools/google-docs-to-markdown/GoogleDocsToMarkdown"
+import OCRTool from "@/tools/ocr/OCRTool"
 import ComingSoonTool from "@/components/tools/ComingSoonTool"
 import { ToolStructuredData } from "@/components/StructuredData"
 import type { Metadata } from "next"
@@ -36,6 +37,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <ImageConverter />
       case "google-docs-to-markdown":
         return <GoogleDocsToMarkdown />
+      case "ocr":
+        return <OCRTool />
       default:
         return <ComingSoonTool tool={tool} />
     }

@@ -5,6 +5,9 @@ services:
     restart: unless-stopped
     ports:
       - "5005:80"
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - NEXT_TELEMETRY_DISABLED=1
     networks:
       - webtools-network
     healthcheck:

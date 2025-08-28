@@ -1,4 +1,4 @@
-import { Calculator, Type, Image, ImageIcon, FileText } from "lucide-react"
+import { Calculator, Type, Image, ImageIcon, FileText, ScanText } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -55,6 +55,15 @@ export const toolsRegistry: Tool[] = [
     category: "Text",
     icon: FileText,
     path: "/tools/google-docs-to-markdown",
+    featured: true,
+  },
+  {
+    id: "ocr",
+    name: "OCR Tool",
+    description: "Trích xuất văn bản từ hình ảnh bằng AI",
+    category: "AI",
+    icon: ScanText,
+    path: "/tools/ocr",
     featured: true,
   },
 ]

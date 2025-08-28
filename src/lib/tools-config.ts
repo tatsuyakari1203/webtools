@@ -37,6 +37,15 @@ export const TOOLS_REGISTRY: ToolConfig[] = [
     category: 'image',
     path: '/tools/image-converter',
     component: lazy(() => import('@/tools/image-converter'))
+  },
+  {
+    id: 'ocr',
+    name: 'OCR Tool',
+    description: 'Trích xuất văn bản từ hình ảnh bằng AI',
+    icon: 'ScanText',
+    category: 'ai',
+    path: '/tools/ocr',
+    component: lazy(() => import('@/tools/ocr'))
   }
 ];
 
@@ -58,6 +67,12 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     name: 'Hình ảnh',
     description: 'Công cụ xử lý hình ảnh',
     tools: TOOLS_REGISTRY.filter(tool => tool.category === 'image')
+  },
+  {
+    id: 'ai',
+    name: 'AI & Machine Learning',
+    description: 'Công cụ sử dụng trí tuệ nhân tạo',
+    tools: TOOLS_REGISTRY.filter(tool => tool.category === 'ai')
   }
 ];
 

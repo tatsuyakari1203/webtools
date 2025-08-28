@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
   // Cấu hình logging để giảm noise
   logging: {
     fetches: {
