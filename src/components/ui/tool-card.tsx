@@ -13,7 +13,7 @@ export function ToolCard({ tool }: ToolCardProps) {
   const IconComponent = tool.icon
 
   return (
-    <Card className="group relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1">
+    <Card className="group relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 h-full">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
@@ -37,8 +37,8 @@ export function ToolCard({ tool }: ToolCardProps) {
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0">
-        <CardDescription className="text-sm text-muted-foreground mb-4 line-clamp-2">
+      <CardContent className="pt-0 flex flex-col flex-1">
+        <CardDescription className="text-sm text-muted-foreground mb-4 line-clamp-2 mt-auto">
           {tool.description}
         </CardDescription>
         
