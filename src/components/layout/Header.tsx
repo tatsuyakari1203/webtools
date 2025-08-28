@@ -5,6 +5,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { InventoryDialog } from '@/components/inventory/InventoryDialog';
 import { ThrowButton } from '@/components/inventory/ThrowButton';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Github, Package } from 'lucide-react';
 
 const ToolCaseIcon = () => (
@@ -38,7 +39,34 @@ export default function Header() {
           </Link>
         </div>
         
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+        {/* Center buttons */}
+        <div className="flex-1 flex justify-center items-center space-x-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <InventoryDialog>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <Package className="h-4 w-4" />
+                    <span className="text-xs">Space</span>
+                  </Button>
+                </InventoryDialog>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Inventory Manager</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <ThrowButton 
+            source="WebTools Header"
+            variant="outline"
+            size="icon"
+            showTooltip={true}
+          />
+        </div>
+        
+        {/* Right side navigation and controls */}
+        <div className="flex items-center space-x-2">
           <nav className="flex items-center space-x-6">
             <Link href="/" className="text-sm font-medium transition-colors hover:text-primary">
               Home
@@ -48,33 +76,16 @@ export default function Header() {
             </Link>
           </nav>
           
-          <div className="flex items-center space-x-2">
-            {/* Inventory and Throw buttons */}
-            <InventoryDialog>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                <span className="hidden sm:inline">Inventory</span>
-              </Button>
-            </InventoryDialog>
-            
-            <ThrowButton 
-              source="WebTools Header"
-              variant="outline"
-              size="sm"
-              showTooltip={true}
-            />
-            
-            <Link
-              href="https://github.com/tatsuyakari1203/webtools"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-              aria-label="Visit GitHub repository"
-            >
-              <Github className="h-5 w-5" />
-            </Link>
-            <ThemeToggle />
-          </div>
+          <Link
+            href="https://github.com/tatsuyakari1203/webtools"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+            aria-label="Visit GitHub repository"
+          >
+            <Github className="h-5 w-5" />
+          </Link>
+          <ThemeToggle />
         </div>
       </div>
     </header>

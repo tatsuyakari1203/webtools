@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useInventory } from '@/components/providers/InventoryProvider';
-import { Package2, Loader2 } from 'lucide-react';
+import { Clipboard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ThrowButtonProps {
@@ -74,7 +74,7 @@ export function ThrowButton({
       {isLoading ? (
         <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
-        <Package2 className="w-4 h-4" />
+        <Clipboard className="w-4 h-4" />
       )}
       {size !== 'icon' && (
         <span className="ml-2">
