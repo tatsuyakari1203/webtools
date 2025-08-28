@@ -1,4 +1,4 @@
-import { Calculator, Type, Image, ImageIcon, FileText, ScanText } from "lucide-react"
+import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -64,6 +64,15 @@ export const toolsRegistry: Tool[] = [
     category: "AI",
     icon: ScanText,
     path: "/tools/ocr",
+    featured: false,
+  },
+  {
+    id: "codebase2json",
+    name: "Codebase to JSON",
+    description: "Convert codebase structure and content to JSON format for analysis",
+    category: "Developer",
+    icon: FileCode,
+    path: "/tools/codebase2json",
     featured: false,
   },
 ]
