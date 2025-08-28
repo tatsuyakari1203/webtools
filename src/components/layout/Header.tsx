@@ -5,7 +5,6 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { InventoryDialog } from '@/components/inventory/InventoryDialog';
 import { ThrowButton } from '@/components/inventory/ThrowButton';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Github, Package } from 'lucide-react';
 
 const ToolCaseIcon = () => (
@@ -41,21 +40,12 @@ export default function Header() {
         
         {/* Center buttons */}
         <div className="flex-1 flex justify-center items-center space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <InventoryDialog>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    <Package className="h-4 w-4" />
-                    <span className="text-xs">Space</span>
-                  </Button>
-                </InventoryDialog>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Inventory Manager</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <InventoryDialog>
+            <Button variant="outline" size="sm" className="flex items-center gap-2" title="Inventory Manager">
+              <Package className="h-4 w-4" />
+              <span className="text-xs">Store</span>
+            </Button>
+          </InventoryDialog>
           
           <ThrowButton 
             source="WebTools Header"
