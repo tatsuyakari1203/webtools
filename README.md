@@ -2,81 +2,118 @@
 
 ![WebTools Screenshot](screenshot.png)
 
-WebTools is a web application built with Next.js that provides a comprehensive collection of online utility tools to help users perform daily tasks quickly and efficiently.
+WebTools is a web application built with Next.js and Bun, providing a comprehensive collection of online utility tools to help users perform daily tasks quickly and efficiently.
 
 ## 🛠️ Available Tools
 
-- **Calculator** - Basic calculator with user-friendly interface
-- **Text Formatter** - Text formatting and processing tool
-- **Image Name Processor** ⭐ - Image filename processing tool (Featured)
-- **Image Converter** - Image conversion and compression tool with detailed statistics
+- **Calculator** - A scientific calculator with unit conversion and programmer modes.
+- **Text Formatter** - Text formatting and processing tool.
+- **Image Name Processor** ⭐ - Image filename processing tool (Featured).
+- **Image Converter** - Image conversion and compression tool with detailed statistics.
+- **Google Docs to Markdown** - Convert Google Docs to Markdown.
+- **OCR** - Extract text from images.
 
 ## 🐳 Docker Deployment
 
-### Docker Hub Image
+This project offers two main Docker configurations for flexibility and performance.
 
-WebTools is available as an optimized Docker image on Docker Hub:
+### 1. Full-Stack Image (Flexible)
 
-```bash
-# Pull the latest optimized image (141MB)
-docker pull tatsuyakari/webtools:latest
-```
+This image is built using `Dockerfile.fullstack` and is available on Docker Hub as `tatsuyakari/webtools:latest`. It's designed for compatibility, automatically detecting and using `bun`, `pnpm`, `yarn`, or `npm`.
 
-**Image Details:**
-- **Size**: 141MB (optimized from 187MB - 25% reduction)
-- **Base**: Alpine Linux with Node.js runtime
-- **Architecture**: Multi-stage build with standalone Next.js output
 - **Registry**: [tatsuyakari/webtools](https://hub.docker.com/r/tatsuyakari/webtools)
+- **Base**: `node:22-alpine`
+- **Pull Command**:
+  ```bash
+  docker pull tatsuyakari/webtools:latest
+  ```
+
+### 2. Optimized Image (Recommended)
+
+This image is built using the primary `Dockerfile` and is highly optimized for production. It leverages multi-stage builds with `oven/bun:1-alpine` for a minimal footprint.
+
+- **Image Name**: `webtools:minimal`
+- **Size**: ~141MB
+- **Base**: `oven/bun:1-alpine`
+- **Build Command**:
+  ```bash
+  docker build -t webtools:minimal .
+  ```
+
+---
 
 ### Quick Start with Docker
 
+#### Option A: Run the Full-Stack Image from Docker Hub
+
 ```bash
-# Run directly with Docker
-docker run -d -p 5005:5005 --name webtools tatsuyakari/webtools:latest
+# Run the image from Docker Hub, mapping host port 5005 to container port 3000
+# Remember to provide your GOOGLE_API_KEY if needed
+docker run -d -p 5005:3000 --name webtools-app -e GOOGLE_API_KEY="YOUR_API_KEY" tatsuyakari/webtools:latest
 
 # Access the application
 open http://localhost:5005
 ```
 
-### Docker Compose (Recommended)
+#### Option B: Build and Run the Optimized Image Locally
 
 ```bash
-# Clone the repository
-git clone https://github.com/tatsuyakari/webtools.git
-cd webtools
+# 1. Build the optimized image
+docker build -t webtools:minimal .
+
+# 2. Run the locally built image
+docker run -d -p 5005:5005 --name webtools-app-minimal webtools:minimal
+
+# Access the application
+open http://localhost:5005
+```
+
+---
+
+### Docker Compose (Recommended for Development)
+
+The `docker-compose.yml` file is configured to run the `tatsuyakari/webtools:latest` image.
+
+**`docker-compose.yml` Configuration:**
+```yaml
+services:
+  webtools:
+    image: tatsuyakari/webtools:latest
+    container_name: webtools-fullstack-app
+    restart: unless-stopped
+    ports:
+      - "5005:3000"
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - NEXT_TELEMETRY_DISABLED=1
+    networks:
+      - webtools-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  webtools-network:
+    driver: bridge
+```
+
+**Usage:**
+```bash
+# Create a .env file from the example
+cp .env.example .env
+# Add your GOOGLE_API_KEY to the .env file
 
 # Start with Docker Compose
 docker-compose up -d
 
-# Pull latest image and restart
-docker-compose up -d --pull always
+# Pull the latest image and restart
+docker-compose pull && docker-compose up -d --force-recreate
 
-# Force recreate with latest image
-docker-compose up -d --pull always --force-recreate
-```
-
-### Docker Compose Configuration
-
-```yaml
-version: '3.8'
-services:
-  webtools:
-    image: webtools:minimal  # or tatsuyakari/webtools:latest
-    ports:
-      - "5005:5005"
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=production
-```
-
-### Building from Source
-
-```bash
-# Build optimized image locally
-docker build -t webtools:local .
-
-# Run local build
-docker run -d -p 5005:5005 webtools:local
+# Stop and remove containers
+docker-compose down
 ```
 
 ## 🏗️ Project Structure
@@ -86,213 +123,107 @@ src/
 ├── app/
 │   ├── tools/
 │   │   └── [toolId]/
-│   │       └── page.tsx          # Dynamic routing cho tools
+│   │       └── page.tsx          # Dynamic routing for tools
 │   └── ...
 ├── components/
 │   ├── landing/
-│   │   └── ToolsGrid.tsx          # Hiển thị danh sách tools
-│   ├── sections/
+│   │   └── ToolsGrid.tsx          # Displays the list of tools
 │   └── ui/                        # Shadcn/ui components
 ├── lib/
-│   └── tools-registry.ts          # Đăng ký và quản lý tools
+│   └── tools-registry.ts          # Tool registration and management
 └── tools/
     ├── calculator/
-    ├── text-formatter/
-    ├── image-name-processor/
     ├── image-converter/
-    └── index.ts                   # Export tổng hợp
+    └── ...                        # Each tool in its own directory
 ```
 
 ## 🚀 Adding New Tools Guide
 
-### Step 1: Create Directory Structure
+Follow these steps to add a new tool to the WebTools collection.
 
-Create a new directory in `/src/tools/` with the following structure:
+### Step 1: Create the Tool Component
+Create a new directory for your tool inside `src/tools/`. For example, for a tool named "My Awesome Tool":
+`src/tools/my-awesome-tool/MyAwesomeTool.tsx`
 
-```
-src/tools/your-tool-name/
-├── YourToolName.tsx              # Component chính
-├── index.tsx                     # Export pattern
-├── types.ts                      # TypeScript interfaces (tùy chọn)
-├── components/                   # Sub-components (tùy chọn)
-│   └── SubComponent.tsx
-├── utils/                        # Utility functions (tùy chọn)
-│   └── helpers.ts
-└── workers/                      # Web Workers (tùy chọn)
-    └── processor.worker.ts
-```
-
-### Step 2: Create Main Component
-
-Create `YourToolName.tsx` file:
-
-```tsx
-import React from 'react';
-
-const YourToolName: React.FC = () => {
-  return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Your Tool Name</h1>
-      {/* Your tool content */}
-    </div>
-  );
-};
-
-export default YourToolName;
-```
-
-### Step 3: Create Export File
-
-Create `index.tsx` file with export pattern:
-
-```tsx
-// Pattern 1: Simple export (recommended for simple tools)
-import YourToolName from './YourToolName';
-export default YourToolName;
-
-// Pattern 2: Re-export with types (for complex tools)
-export { default } from './YourToolName';
-export * from './types';
-```
-
-### Step 4: Register Tool in Registry
-
-Add tool to `/src/lib/tools-registry.ts`:
+### Step 2: Register Your Tool
+Open `/src/lib/tools-registry.ts` and add a new entry to the `toolsRegistry` array.
 
 ```typescript
-export const toolsRegistry = [
-  // ... existing tools
+// src/lib/tools-registry.ts
+import { YourLucideIcon } from 'lucide-react';
+
+export const toolsRegistry: Tool[] = [
+  // ... other tools
   {
-    id: 'your-tool-id',
-    name: 'Your Tool Name',
-    description: 'Brief description of your tool',
-    category: 'productivity', // or 'utility', 'media', etc.
-    icon: 'IconName', // Lucide React icon
-    path: '/tools/your-tool-id',
-    featured: false // true if you want to display at the top of the list
-  }
+    id: 'my-awesome-tool',
+    name: 'My Awesome Tool',
+    description: 'A short and clear description of what the tool does.',
+    category: 'Utility',
+    icon: YourLucideIcon,
+    path: '/tools/my-awesome-tool',
+    featured: false,
+  },
 ];
 ```
 
-### Step 5: Add Routing
-
-Update `/src/app/tools/[toolId]/page.tsx`:
+### Step 3: Add the Tool to the Router
+Open `/src/app/tools/[toolId]/page.tsx`, import your new tool, and add a new `case` to the `switch` statement inside the `renderTool` function.
 
 ```tsx
-// Import tool component
-import YourToolName from '@/tools/your-tool-name';
+// src/app/tools/[toolId]/page.tsx
+import MyAwesomeTool from '@/tools/my-awesome-tool/MyAwesomeTool';
+// ... other imports
 
-// Add new case in switch statement
-switch (tool.id) {
-  // ... existing cases
-  case 'your-tool-id':
-    return <YourToolName />;
-  default:
-    return <div>Tool not found</div>;
-}
+const renderTool = () => {
+  switch (toolId) {
+    // ... other cases
+    case 'my-awesome-tool':
+      return <MyAwesomeTool />;
+    default:
+      return <ComingSoonTool tool={tool} />;
+  }
+};
 ```
-
-### Step 6: Update Exports
-
-Add export to `/src/tools/index.ts`:
-
-```typescript
-export { default as YourToolName } from './your-tool-name';
-```
-
-## 🎯 Patterns and Best Practices
-
-### Dynamic Routing
-- Use Next.js App Router with dynamic segments `[toolId]`
-- Tool ID is extracted from URL and matched with registry
-- Each tool is rendered as a separate component
-
-### Component Organization
-- **Main Component**: Main logic and UI of the tool
-- **Sub-components**: Break down complex UI into smaller components
-- **Types**: Define TypeScript interfaces for type safety
-- **Utils**: Utility functions and business logic
-- **Workers**: Web Workers for heavy processing (like Image Converter)
-
-### Featured Tools
-- Use `featured: true` in registry for priority display
-- Featured tools are automatically sorted to the top of the list
-- Currently only Image Name Processor is marked as featured
-
-### Styling
-- Use Tailwind CSS for styling
-- Shadcn/ui components for UI consistency
-- Responsive design by default
 
 ## 🔧 Development
 
+This project uses **Bun** as the package manager and runtime.
+
 ### Install Dependencies
 ```bash
-npm install
+bun install
 ```
 
 ### Run Development Server
 ```bash
-npm run dev
+bun run dev
 ```
 
 ### Build and Check
 ```bash
-npm run build
-npm run lint
+bun run build
+bun run lint
 ```
 
 ### Add Shadcn/ui Components
 ```bash
-npx shadcn@latest add [component-name]
+bunx shadcn-ui@latest add [component-name]
 ```
 
 ## 📦 Deployment
 
-### Docker (Recommended)
-
-#### Using Docker Compose
-```bash
-# Production deployment
-docker-compose up -d --pull always
-
-# Development with local build
-docker-compose -f docker-compose.dev.yml up -d
-```
-
-#### Using Docker directly
-```bash
-# Pull and run latest image
-docker pull tatsuyakari/webtools:latest
-docker run -d -p 5005:5005 --name webtools tatsuyakari/webtools:latest
-
-# Build and run locally
-docker build -t webtools:local .
-docker run -d -p 5005:5005 webtools:local
-```
-
 ### Vercel
-1. Push code to GitHub
-2. Connect repository with Vercel
-3. Automatic deployment
+1. Push code to GitHub.
+2. Connect repository with Vercel.
+3. Automatic deployment.
 
 ### Manual Build
 ```bash
-npm run build
-npm start
-```
+# Build the application
+bun run build
 
-### Environment Variables
-
-For production deployment, you may need to set:
-
-```bash
-# Docker environment
-NODE_ENV=production
-PORT=5005
-
-# Next.js configuration
-NEXT_TELEMETRY_DISABLED=1
+# Start the server
+bun start
 ```
 
 ## 🤝 Contributing
@@ -303,35 +234,20 @@ NEXT_TELEMETRY_DISABLED=1
 4. Test thoroughly
 5. Submit pull request
 
-## 📝 Notes
+## 📝 Docker Image Optimization Details
 
-- All tools use TypeScript
-- UI components from Shadcn/ui to ensure consistency
-- Web Workers are encouraged for heavy processing tasks
-- Responsive design is mandatory
-- Code must pass lint checks before deployment
+The primary Docker image (`webtools:minimal`) is highly optimized for production using a multi-stage build process:
 
-## 🔧 Docker Image Optimization
+- **Stage 1 (Dependencies)**: Uses `oven/bun:1-alpine` to install dependencies.
+- **Stage 2 (Builder)**: Copies source code and builds the Next.js application using `bun run build`. This creates a standalone output.
+- **Stage 3 (Runner)**: Uses a minimal `alpine:3.19` image, installs only the Node.js runtime, and copies only the necessary standalone artifacts from the builder stage. This results in a very small and secure final image.
 
-The Docker image has been optimized for production use:
-
-- **Multi-stage build**: Separates build and runtime environments
-- **Alpine Linux base**: Minimal footprint with security updates
-- **Standalone Next.js**: Reduces dependencies and bundle size
-- **Layer optimization**: Efficient caching and minimal layers
-- **Size reduction**: From 187MB to 141MB (25% smaller)
-
-### Build Process
-
-```dockerfile
-# Build stage
-FROM node:18-alpine AS builder
-# ... build process
-
-# Production stage
-FROM node:18-alpine AS runner
-# ... optimized runtime
-```
+**Key Optimizations:**
+- **Bun Runtime**: Uses the fast `bun` runtime for dependency installation and builds.
+- **Multi-stage build**: Separates build-time dependencies from the final runtime image.
+- **Alpine Linux Base**: Minimal footprint for the final stage.
+- **Standalone Next.js Output**: Reduces the number of files and dependencies needed in the final image.
+- **Non-root user**: Enhances security by running the application as a non-root user.
 
 ---
 
