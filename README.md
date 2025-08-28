@@ -78,6 +78,8 @@
 
 *Seamlessly convert Google Docs to clean, formatted Markdown*
 
+> **📝 Attribution:** This tool is inspired by and based on the original work by **Rob Brackett** at [mr0grog/google-docs-to-markdown](https://github.com/mr0grog/google-docs-to-markdown). We've integrated and enhanced the functionality within our WebTools platform.
+
 </div>
 
 ## 🐳 Docker Deployment
