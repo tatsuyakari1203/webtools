@@ -463,9 +463,9 @@ export function InventoryDialog({ children }: InventoryDialogProps) {
                         : 'No items in inventory'}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-1">
+                    <div className="flex flex-col gap-4 p-1">
                       {displayItems.map((item) => (
-                        <Card key={item.id} className="group hover:shadow-md transition-all duration-200 border-border/50 hover:border-border">
+                        <Card key={item.id} className="group hover:shadow-md transition-all duration-200 border-border/50 hover:border-border w-full">
                           <CardContent className="p-4">
                             {/* Header với title và action buttons */}
                             <div className="flex items-start justify-between gap-3 mb-3">
