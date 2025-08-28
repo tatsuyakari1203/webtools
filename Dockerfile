@@ -1,69 +1,83 @@
 # Dockerfile for Next.js Full-Stack Application with API Routes
-# Multi-stage build for optimal image size
+# Optimized multi-stage build for minimal image size
 
-# Stage 1: Dependencies
-FROM node:22-alpine AS deps
-RUN apk add --no-cache libc6-compat
+# Stage 1: Dependencies (Base)
+FROM oven/bun:1-alpine AS deps
 WORKDIR /app
 
-# Copy package files
-COPY package.json bun.lock* package-lock.json* pnpm-lock.yaml* yarn.lock* ./
+# Copy package files for dependency installation
+COPY package.json bun.lock* ./
 
-# Install dependencies based on the preferred package manager
-RUN \
-  if [ -f bun.lock ]; then npm install -g bun && bun install --frozen-lockfile; \
-  elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+# Install dependencies with bun for faster builds
+RUN bun install --frozen-lockfile
 
 # Stage 2: Builder
-FROM node:22-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 WORKDIR /app
+
+# Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code
 COPY . .
 
-# Environment variables should be passed at runtime, not baked into image
-# COPY .env* ./  # REMOVED: Security risk - API keys should not be in image
+# Build the application with turbopack for faster builds
+RUN bun run build
 
-# Build the application
-RUN \
-  if [ -f bun.lock ]; then npm install -g bun && bun run build; \
-  elif [ -f yarn.lock ]; then yarn build; \
-  elif [ -f package-lock.json ]; then npm run build; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm build; \
-  else npm run build; \
-  fi
-
-# Stage 3: Runner
-FROM node:22-alpine AS runner
+# Stage 3: Runner (Ultra-lightweight)
+FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
 # Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-# Copy built application
-COPY --from=builder /app/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Copy standalone build
+# Copy only the standalone build (includes all dependencies)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+
+# Copy static files
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Environment variables should be passed at runtime via docker run -e or docker-compose
-# COPY --from=builder --chown=nextjs:nodejs /app/.env* ./  # REMOVED: Security risk
+# Copy public folder if it exists
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Switch to non-root user
 USER nextjs
 
+# Expose port
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
-# Start the application
+# Start the application directly with node (standalone includes everything)
 CMD ["node", "server.js"]
+
+# Alternative lightweight runner using Alpine
+# Uncomment this section and comment the distroless section above if you need shell access
+# FROM node:22-alpine AS runner-alpine
+# WORKDIR /app
+# 
+# # Create non-root user
+# RUN addgroup --system --gid 1001 nodejs && \
+#     adduser --system --uid 1001 nextjs
+# 
+# # Copy built application
+# COPY --from=builder /app/public ./public
+# COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# 
+# # Copy production dependencies
+# COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+# 
+# # Set environment variables
+# ENV NODE_ENV=production
+# ENV PORT=3000
+# ENV HOSTNAME="0.0.0.0"
+# 
+# USER nextjs
+# EXPOSE 3000
+# 
+# CMD ["node", "server.js"]
