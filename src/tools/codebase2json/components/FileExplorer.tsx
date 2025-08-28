@@ -37,35 +37,11 @@ interface FileNode {
   content?: string;
 }
 
+import type { ProcessedFile } from '../types';
+
 interface FileExplorerProps {
-  files: Array<{
-    path: string;
-    name: string;
-    extension: string;
-    content: string;
-    size: number;
-    lines: number;
-    language: string;
-    lastModified?: number;
-    relativePath: string;
-    directory: string;
-    sizeFormatted: string;
-    linesPercentage: number;
-  }>;
-  onFileSelect: (file: {
-    path: string;
-    name: string;
-    extension: string;
-    content: string;
-    size: number;
-    lines: number;
-    language: string;
-    lastModified?: number;
-    relativePath: string;
-    directory: string;
-    sizeFormatted: string;
-    linesPercentage: number;
-  }) => void;
+  files: ProcessedFile[];
+  onFileSelect: (file: ProcessedFile) => void;
   selectedFile: string | null;
 }
 

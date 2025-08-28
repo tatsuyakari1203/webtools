@@ -19,6 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { countTokens, formatTokenCount } from '../utils/tokenCounter';
 
 interface ProcessingResult {
   files: Array<{
@@ -68,6 +69,9 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result, onReset }) => {
 
   // Calculate total size
   const totalSize = result.files.reduce((sum, file) => sum + file.size, 0);
+
+  // Calculate total tokens
+  const totalTokens = result.files.reduce((sum, file) => sum + countTokens(file.content), 0);
 
   // Get language color
   const getLanguageColor = (language: string): string => {
@@ -185,8 +189,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result, onReset }) => {
             <div className="flex items-center gap-3">
               <Code2 className="h-8 w-8 text-green-500" />
               <div>
-                <p className="text-2xl font-bold">{result.totalLines.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">Lines of Code</p>
+                <p className="text-2xl font-bold">{formatTokenCount(totalTokens)}</p>
+                <p className="text-sm text-muted-foreground">Tokens</p>
               </div>
             </div>
           </CardContent>
@@ -238,24 +242,29 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result, onReset }) => {
             <CardContent className="space-y-4">
               {result.languages
                 .sort((a, b) => b.percentage - a.percentage)
-                .map((lang) => (
-                  <div key={lang.language} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${getLanguageColor(lang.language)}`} />
-                        <span className="font-medium capitalize">{lang.language}</span>
-                        <Badge variant="secondary">{lang.fileCount} files</Badge>
+                .map((lang) => {
+                  const langTokens = result.files
+                    .filter(file => file.language === lang.language)
+                    .reduce((sum, file) => sum + countTokens(file.content), 0);
+                  return (
+                    <div key={lang.language} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${getLanguageColor(lang.language)}`} />
+                          <span className="font-medium capitalize">{lang.language}</span>
+                          <Badge variant="secondary">{lang.fileCount} files</Badge>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-medium">{((langTokens / totalTokens) * 100).toFixed(1)}%</span>
+                          <p className="text-sm text-muted-foreground">
+                            {formatTokenCount(langTokens)} tokens
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span className="font-medium">{lang.percentage.toFixed(1)}%</span>
-                        <p className="text-sm text-muted-foreground">
-                          {lang.lineCount.toLocaleString()} lines
-                        </p>
-                      </div>
+                      <Progress value={(langTokens / totalTokens) * 100} className="h-2" />
                     </div>
-                    <Progress value={lang.percentage} className="h-2" />
-                  </div>
-                ))
+                  );
+                })
               }
             </CardContent>
           </Card>
@@ -285,7 +294,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result, onReset }) => {
                           </div>
                         </div>
                         <div className="text-right text-sm text-muted-foreground">
-                          <p>{file.lines} lines</p>
+                          <p>{formatTokenCount(countTokens(file.content))} tokens</p>
                           <p>{formatFileSize(file.size)}</p>
                         </div>
                       </div>
