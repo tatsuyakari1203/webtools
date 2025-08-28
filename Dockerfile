@@ -1,50 +1,69 @@
-# Multi-stage build siêu tối ưu - Minimal size
+# Dockerfile for Next.js Full-Stack Application with API Routes
+# Multi-stage build for optimal image size
 
 # Stage 1: Dependencies
-FROM oven/bun:1-alpine AS deps
+FROM node:22-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
-COPY package.json bun.lock* ./
+COPY package.json bun.lock* package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 
-# Install dependencies
-RUN bun install --frozen-lockfile
+# Install dependencies based on the preferred package manager
+RUN \
+  if [ -f bun.lock ]; then npm install -g bun && bun install --frozen-lockfile; \
+  elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
 
 # Stage 2: Builder
-FROM oven/bun:1-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
-
-# Copy dependencies từ stage trước
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build ứng dụng với standalone output
-RUN bun run build
+# Environment variables should be passed at runtime, not baked into image
+# COPY .env* ./  # REMOVED: Security risk - API keys should not be in image
 
-# Stage 3: Minimal Runtime
-FROM alpine:3.19 AS runner
+# Build the application
+RUN \
+  if [ -f bun.lock ]; then npm install -g bun && bun run build; \
+  elif [ -f yarn.lock ]; then yarn build; \
+  elif [ -f package-lock.json ]; then npm run build; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm build; \
+  else npm run build; \
+  fi
+
+# Stage 3: Runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
-# Install chỉ Node.js runtime (không có npm, yarn)
-RUN apk add --no-cache nodejs=~20 && \
-    addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Copy chỉ những file cần thiết từ standalone build
+# Copy built application
+COPY --from=builder /app/public ./public
+
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Copy standalone build
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Switch to non-root user
+# Environment variables should be passed at runtime via docker run -e or docker-compose
+# COPY --from=builder --chown=nextjs:nodejs /app/.env* ./  # REMOVED: Security risk
+
 USER nextjs
 
-# Expose port
-EXPOSE 5005
+EXPOSE 3000
 
-# Set environment variables
-ENV NODE_ENV=production \
-    PORT=5005 \
-    HOSTNAME="0.0.0.0"
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
 
 # Start the application
 CMD ["node", "server.js"]

@@ -15,11 +15,11 @@ WebTools is a web application built with Next.js and Bun, providing a comprehens
 
 ## 🐳 Docker Deployment
 
-This project offers two main Docker configurations for flexibility and performance.
+This project uses Docker for easy deployment. The primary configuration is available on Docker Hub and can be built from the `Dockerfile` in the root directory.
 
-### 1. Full-Stack Image (Flexible)
+### Docker Hub Image
 
-This image is built using `Dockerfile.fullstack` and is available on Docker Hub as `tatsuyakari/webtools:latest`. It's designed for compatibility, automatically detecting and using `bun`, `pnpm`, `yarn`, or `npm`.
+The image is available on Docker Hub as `tatsuyakari/webtools:latest`. It's designed for compatibility, automatically detecting and using `bun`, `pnpm`, `yarn`, or `npm`.
 
 - **Registry**: [tatsuyakari/webtools](https://hub.docker.com/r/tatsuyakari/webtools)
 - **Base**: `node:22-alpine`
@@ -28,23 +28,7 @@ This image is built using `Dockerfile.fullstack` and is available on Docker Hub 
   docker pull tatsuyakari/webtools:latest
   ```
 
-### 2. Optimized Image (Recommended)
-
-This image is built using the primary `Dockerfile` and is highly optimized for production. It leverages multi-stage builds with `oven/bun:1-alpine` for a minimal footprint.
-
-- **Image Name**: `webtools:minimal`
-- **Size**: ~141MB
-- **Base**: `oven/bun:1-alpine`
-- **Build Command**:
-  ```bash
-  docker build -t webtools:minimal .
-  ```
-
----
-
 ### Quick Start with Docker
-
-#### Option A: Run the Full-Stack Image from Docker Hub
 
 ```bash
 # Run the image from Docker Hub, mapping host port 5005 to container port 3000
@@ -55,24 +39,24 @@ docker run -d -p 5005:3000 --name webtools-app -e GOOGLE_API_KEY="YOUR_API_KEY" 
 open http://localhost:5005
 ```
 
-#### Option B: Build and Run the Optimized Image Locally
+### Building Locally
+
+If you need to build the image yourself:
 
 ```bash
-# 1. Build the optimized image
-docker build -t webtools:minimal .
+# 1. Build the image from the Dockerfile
+docker build -t webtools:local .
 
 # 2. Run the locally built image
-docker run -d -p 5005:5005 --name webtools-app-minimal webtools:minimal
+docker run -d -p 5005:3000 --name webtools-app-local webtools:local
 
 # Access the application
 open http://localhost:5005
 ```
 
----
-
 ### Docker Compose (Recommended for Development)
 
-The `docker-compose.yml` file is configured to run the `tatsuyakari/webtools:latest` image.
+The `docker-compose.yml` file is configured to run the `tatsuyakari/webtools:latest` image and provides a convenient way to manage the application container.
 
 **`docker-compose.yml` Configuration:**
 ```yaml

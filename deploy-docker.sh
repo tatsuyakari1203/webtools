@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # Thông tin Docker Hub
 DOCKER_USERNAME="tatsuyakari"
 IMAGE_NAME="webtools"
-DOCKERFILE="Dockerfile.fullstack"
+DOCKERFILE="Dockerfile"
 
 echo -e "${BLUE}🚀 Bắt đầu quá trình build và deploy Docker image${NC}"
 echo "================================================"
