@@ -23,6 +23,11 @@ export const metadata: Metadata = {
     default: "WebTools Platform - Công cụ web tiện ích miễn phí",
     template: "%s | WebTools Platform"
   },
+  icons: {
+    icon: '/tool-case.svg',
+    shortcut: '/tool-case.svg',
+    apple: '/tool-case.svg',
+  },
   description: "Tập hợp các công cụ web tiện ích miễn phí: chuyển đổi hình ảnh, định dạng văn bản, máy tính, và nhiều công cụ khác trong một nền tảng thống nhất",
   keywords: ["công cụ web", "tiện ích online", "chuyển đổi hình ảnh", "định dạng văn bản", "máy tính online", "công cụ miễn phí", "webtools", "utilities"],
   authors: [{ name: "WebTools Platform" }],
