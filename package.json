@@ -34,6 +34,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@types/dompurify": "^3.0.5",
+    "@types/howler": "^2.2.12",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/turndown": "^5.0.5",
     "browser-image-compression": "^2.0.2",
@@ -65,7 +66,8 @@
     "turndown": "^7.2.1",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
-    "unist-util-visit-parents": "^6.0.1"
+    "unist-util-visit-parents": "^6.0.1",
+    "use-sound": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -46,6 +46,15 @@ export const TOOLS_REGISTRY: ToolConfig[] = [
     category: 'ai',
     path: '/tools/ocr',
     component: lazy(() => import('@/tools/ocr'))
+  },
+  {
+    id: 'pomodoro',
+    name: 'Pomodoro Timer',
+    description: 'Bộ đếm thời gian tập trung sử dụng kỹ thuật Pomodoro để tăng năng suất',
+    icon: 'Timer',
+    category: 'productivity',
+    path: '/tools/pomodoro',
+    component: lazy(() => import('@/tools/pomodoro'))
   }
 ];
 
@@ -73,6 +82,12 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     name: 'AI & Machine Learning',
     description: 'Công cụ sử dụng trí tuệ nhân tạo',
     tools: TOOLS_REGISTRY.filter(tool => tool.category === 'ai')
+  },
+  {
+    id: 'productivity',
+    name: 'Năng suất',
+    description: 'Công cụ tăng năng suất làm việc',
+    tools: TOOLS_REGISTRY.filter(tool => tool.category === 'productivity')
   }
 ];
 
