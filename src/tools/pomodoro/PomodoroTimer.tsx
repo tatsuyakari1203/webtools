@@ -198,31 +198,140 @@ export default function PomodoroTimer() {
     }
   };
 
-  // Focus Mode UI
+  // Focus Mode UI - True Fullscreen
   if (focusMode) {
+    // Calculate progress for visual elements
+    const getSessionDuration = (type: 'work' | 'shortBreak' | 'longBreak'): number => {
+      switch (type) {
+        case 'work': return settings.workDuration * 60;
+        case 'shortBreak': return settings.shortBreakDuration * 60;
+        case 'longBreak': return settings.longBreakDuration * 60;
+      }
+    };
+
+    const totalDuration = getSessionDuration(currentSession);
+    const progress = ((totalDuration - timeRemaining) / totalDuration) * 100;
+    
+    // Get colors based on session type
+    const getSessionColors = (type: 'work' | 'shortBreak' | 'longBreak') => {
+      switch (type) {
+        case 'work': return { bg: 'from-slate-500/10 to-slate-600/5', accent: 'text-slate-400', glow: 'shadow-slate-500/20' };
+        case 'shortBreak': return { bg: 'from-emerald-500/10 to-emerald-600/5', accent: 'text-emerald-400', glow: 'shadow-emerald-500/20' };
+        case 'longBreak': return { bg: 'from-blue-500/10 to-blue-600/5', accent: 'text-blue-400', glow: 'shadow-blue-500/20' };
+      }
+    };
+
+    const colors = getSessionColors(currentSession);
+    const currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const currentTask = selectedTask ? tasks.find(t => t.id === selectedTask)?.text : undefined;
+
     return (
-      <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center p-8">
-        {/* Exit hint */}
-        <div className="absolute top-4 right-4 text-muted-foreground text-sm">
-          Press ESC to exit focus mode
+      <div className={`fixed inset-0 z-50 bg-gradient-to-br ${colors.bg} backdrop-blur-sm overflow-hidden`}>
+        {/* Ambient background pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-current rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-current rounded-full blur-3xl" />
         </div>
-        
-        {/* Centered Timer Display */}
-        <div className="flex-1 flex flex-col items-center justify-center space-y-8">
-          <TimerDisplay
-            timeRemaining={timeRemaining}
-            sessionType={currentSession}
-            isRunning={isRunning}
-            currentTask={selectedTask ? tasks.find(t => t.id === selectedTask)?.text : undefined}
-          />
-          
-          {/* Clock Panel */}
-          <div className="mt-8">
-            <CombinedClockPanel />
+
+        {/* Exit hint and shortcuts */}
+        <div className="absolute top-6 right-6 text-muted-foreground/60 text-sm font-medium tracking-wide">
+          <div className="text-right space-y-1">
+            <div>ESC to exit</div>
+            <div className="text-xs opacity-75">SPACE play/pause • R reset • S skip • F focus</div>
           </div>
         </div>
-        
-        {/* Click to exit */}
+
+        {/* Main content area */}
+        <div className="relative h-full flex flex-col items-center justify-center px-8">
+          {/* Session type indicator */}
+          <div className="mb-8 flex justify-center">
+             <div className={`inline-flex items-center px-6 py-2 rounded-full bg-background/10 backdrop-blur-md border border-white/10 ${colors.glow} shadow-2xl`}>
+               <span className="text-lg font-medium text-foreground/90 tracking-wide">
+                 {currentSession === 'work' ? 'Focus Time' : currentSession === 'shortBreak' ? 'Short Break' : 'Long Break'}
+               </span>
+             </div>
+           </div>
+
+          {/* Giant timer display */}
+          <div className="relative mb-12">
+            {/* Circular progress background */}
+            <div className="relative">
+              <svg className="transform -rotate-90 drop-shadow-2xl" width="400" height="400">
+                {/* Background circle */}
+                <circle
+                  cx="200"
+                  cy="200"
+                  r="180"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  className="text-white/10"
+                />
+                {/* Progress circle */}
+                <circle
+                  cx="200"
+                  cy="200"
+                  r="180"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  className={colors.accent}
+                  strokeLinecap="round"
+                  strokeDasharray={`${180 * 2 * Math.PI}`}
+                  strokeDashoffset={`${180 * 2 * Math.PI - (progress / 100) * 180 * 2 * Math.PI}`}
+                  style={{ filter: 'drop-shadow(0 0 20px currentColor)' }}
+                />
+              </svg>
+              
+              {/* Timer text overlay */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="text-8xl font-mono font-bold text-foreground mb-4 tracking-wider drop-shadow-2xl">
+                  {Math.floor(timeRemaining / 60).toString().padStart(2, '0')}:{(timeRemaining % 60).toString().padStart(2, '0')}
+                </div>
+                
+                {/* Status indicator */}
+                 <div className="flex items-center gap-3">
+                   <div className={`w-4 h-4 rounded-full transition-all duration-300 ${isRunning ? `${colors.accent} shadow-lg` : 'bg-muted-foreground/50'}`} />
+                   <span className={`text-xl font-medium tracking-wide ${isRunning ? 'text-foreground' : 'text-muted-foreground'}`}>
+                     {isRunning ? 'Running' : 'Paused'}
+                   </span>
+                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Current task display */}
+          {currentTask && (
+            <div className="mb-8 text-center max-w-2xl">
+              <div className="text-sm text-muted-foreground/70 mb-2 tracking-wide uppercase">Current Task</div>
+              <div className="text-2xl font-medium text-foreground/90 leading-relaxed">{currentTask}</div>
+            </div>
+          )}
+
+          {/* Bottom section with time and progress */}
+          <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 text-center">
+            {/* Current time */}
+            <div className="mb-4">
+              <div className="text-3xl font-mono font-bold text-foreground/80 mb-1">{currentTime}</div>
+              <div className="text-sm text-muted-foreground/60 tracking-wide">{currentDate}</div>
+            </div>
+            
+            {/* Progress indicator */}
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-muted-foreground/60">Progress</div>
+              <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full ${colors.accent} transition-all duration-1000 ease-out`}
+                  style={{ width: `${progress}%`, filter: 'drop-shadow(0 0 8px currentColor)' }}
+                />
+              </div>
+              <div className="text-sm text-muted-foreground/60 font-mono">{Math.round(progress)}%</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Click to exit overlay */}
         <div 
           className="absolute inset-0 cursor-pointer" 
           onClick={() => setFocusMode(false)}
