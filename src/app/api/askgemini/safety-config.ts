@@ -120,11 +120,12 @@ export function getSafetySettings(environment: 'production' | 'development' | 's
 /**
  * Kiểm tra xem response có bị chặn bởi safety filter không
  */
-export function isSafetyBlocked(error: any): boolean {
+export function isSafetyBlocked(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
   
-  const errorMessage = error.message || '';
-  const errorCode = error.code || '';
+  const errorObj = error as Record<string, unknown>;
+  const errorMessage = (typeof errorObj.message === 'string' ? errorObj.message : '') || '';
+  const errorCode = (typeof errorObj.code === 'string' ? errorObj.code : '') || '';
   
   // Kiểm tra các pattern thường gặp khi bị safety filter chặn
   const safetyPatterns = [

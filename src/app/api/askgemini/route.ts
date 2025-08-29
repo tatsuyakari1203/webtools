@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AskGeminiRequest, AskGeminiResponse, AskGeminiHealthResponse, validateAskGeminiRequest } from './types';
+import { AskGeminiRequest, AskGeminiHealthResponse, validateAskGeminiRequest } from './types';
 import { GeminiService } from './gemini.service';
 import { checkRateLimit } from './rate-limiter';
-import { selectModel, getModelConfig } from './model-router';
 
 export const dynamic = 'force-dynamic';
 
@@ -169,7 +168,6 @@ export async function POST(request: NextRequest) {
       
       return response;
     } catch (error) {
-      const processingTime = Date.now() - startTime;
       console.error(`[AskGemini-${requestId}] Processing error:`, error);
       
       return createErrorResponse(

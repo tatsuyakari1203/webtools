@@ -199,7 +199,7 @@ export default function PomodoroTimer() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isRunning, start, pause, reset, skip, toggleFocusMode]);
+  }, [isRunning, start, pause, reset, skip, toggleFocusMode, focusMode]);
 
   // Request notification permission on mount
   useEffect(() => {

@@ -34,7 +34,7 @@ function isOriginAllowed(origin: string): boolean {
         return true;
       }
     }
-  } catch (error) {
+  } catch {
     console.error('[Security] Invalid origin URL:', origin);
   }
   
@@ -99,7 +99,7 @@ export function middleware(request: NextRequest) {
       if (isOriginAllowed(refererOrigin)) {
         return NextResponse.next();
       }
-    } catch (error) {
+    } catch {
       console.error('[Security] Invalid referer URL:', referer);
     }
   }
