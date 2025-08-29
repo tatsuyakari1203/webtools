@@ -13,24 +13,24 @@ export function ToolCard({ tool }: ToolCardProps) {
   const IconComponent = tool.icon
 
   return (
-    <Card className="group relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 h-full">
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 border-white/20 dark:border-white/10 bg-white/10 dark:bg-black/10 backdrop-blur-sm hover:border-primary/30 hover:bg-white/20 dark:hover:bg-black/20 h-full">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
-            <div className="rounded-lg bg-primary/10 p-2 group-hover:bg-primary/20 transition-colors">
+            <div className="rounded-lg bg-primary/20 backdrop-blur-sm p-2 group-hover:bg-primary/30 transition-colors border border-white/20 dark:border-white/10">
               <IconComponent className="h-5 w-5 text-primary" />
             </div>
             <div>
               <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">
                 {tool.name}
               </CardTitle>
-              <Badge variant="secondary" className="mt-1 text-xs">
+              <Badge variant="secondary" className="mt-1 text-xs bg-white/20 dark:bg-black/20 backdrop-blur-sm border border-white/20 dark:border-white/10">
                 {tool.category}
               </Badge>
             </div>
           </div>
           {tool.featured && (
-            <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
+            <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground backdrop-blur-sm">
               Featured
             </Badge>
           )}
@@ -50,8 +50,8 @@ export function ToolCard({ tool }: ToolCardProps) {
         </Button>
       </CardContent>
       
-      {/* Hover effect overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+      {/* Glassmorphism hover effect overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-white/5 to-transparent dark:via-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
     </Card>
   )
 }
