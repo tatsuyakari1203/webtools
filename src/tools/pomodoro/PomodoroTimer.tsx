@@ -6,19 +6,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-  Settings, 
-  BarChart3, 
-  Volume2,
-  VolumeX
-} from 'lucide-react';
+import { BarChart3, Volume2, VolumeX } from 'lucide-react';
 
 // Import all components
 import TimerDisplay from './components/TimerDisplay';
 import ControlPanel from './components/ControlPanel';
 import CycleTracker from './components/CycleTracker';
-import SettingsPanel from './components/SettingsPanel';
-import TaskManager from './components/TaskManager';
+
+import Todo from './components/Todo';
 import Statistics from './components/Statistics';
 
 // Import hooks and types
@@ -82,7 +77,7 @@ export default function PomodoroTimer() {
   }, [currentSession, cycleCount, settings.pomodorosBeforeLongBreak]);
   const { playNotificationSound, setVolume, volume } = useAudio();
   const { requestPermission, showNotification } = useNotifications();
-  const { tasks, currentTask, addTask, selectTask, completeTask, deleteTask, updateTaskPomodoros } = useTasks();
+  const { tasks, currentTask, addTask, selectTask, completeTask, deleteTask, updateTaskPomodoros, editTask } = useTasks();
   const { statistics, recordCompletedPomodoro } = useStatistics();
   
   // Use currentTask as selectedTask for compatibility
@@ -222,17 +217,19 @@ export default function PomodoroTimer() {
               onPause={pause}
               onReset={reset}
               onSkip={skip}
+              settings={settings}
+              onSettingsChange={handleSettingsChange}
             />
+          </div>
 
+          {/* Right Column - Progress, Quick Actions and Tasks */}
+          <div className="space-y-6">
             {/* Cycle Tracker */}
             <CycleTracker
               completedPomodoros={cycleCount}
               totalPomodoros={settings.pomodorosBeforeLongBreak}
             />
-          </div>
 
-          {/* Right Column - Tasks and Quick Actions */}
-          <div className="space-y-6">
             {/* Quick Actions */}
             <Card className="p-6 w-full max-w-md mx-auto">
               <div className="flex items-center justify-between mb-6">
@@ -251,24 +248,6 @@ export default function PomodoroTimer() {
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="w-full flex items-center justify-center gap-2 py-3">
-                      <Settings className="w-4 h-4" />
-                      Settings
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Pomodoro Settings</DialogTitle>
-                    </DialogHeader>
-                    <SettingsPanel
-                      settings={settings}
-                      onSettingsChange={handleSettingsChange}
-                    />
-                  </DialogContent>
-                </Dialog>
-
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full flex items-center justify-center gap-2 py-3">
                       <BarChart3 className="w-4 h-4" />
                       Stats
                     </Button>
@@ -283,8 +262,8 @@ export default function PomodoroTimer() {
               </div>
             </Card>
 
-            {/* Task Manager */}
-            <TaskManager
+            {/* Todo List */}
+            <Todo
               tasks={tasks}
               currentTask={selectedTask}
               onTaskAdd={addTask}
@@ -306,28 +285,12 @@ export default function PomodoroTimer() {
 
             <TabsContent value="timer" className="mt-6">
               <div className="space-y-6">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="w-full" variant="outline">
-                      <Settings className="w-4 h-4 mr-2" />
-                      Open Settings
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Pomodoro Settings</DialogTitle>
-                    </DialogHeader>
-                    <SettingsPanel
-                      settings={settings}
-                      onSettingsChange={handleSettingsChange}
-                    />
-                  </DialogContent>
-                </Dialog>
+
               </div>
             </TabsContent>
 
             <TabsContent value="tasks" className="mt-6">
-              <TaskManager
+              <Todo
                 tasks={tasks}
                 currentTask={selectedTask}
                 onTaskAdd={addTask}

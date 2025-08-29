@@ -45,6 +45,8 @@ export interface Statistics {
   currentStreak: number;
 }
 
+
+
 // Component Props Interfaces
 export interface TimerDisplayProps {
   timeRemaining: number;
@@ -59,6 +61,8 @@ export interface ControlPanelProps {
   onPause: () => void;
   onSkip: () => void;
   onReset: () => void;
+  settings: PomodoroSettings;
+  onSettingsChange: (settings: PomodoroSettings) => void;
 }
 
 export interface CycleTrackerProps {
@@ -71,18 +75,13 @@ export interface SettingsPanelProps {
   onSettingsChange: (settings: PomodoroSettings) => void;
 }
 
-export interface TaskManagerProps {
+export interface TodoProps {
   tasks: Task[];
   currentTask?: string;
-  selectedTaskId?: string;
   onTaskAdd: (task: string, estimatedPomodoros?: number) => void;
   onTaskSelect: (taskId: string) => void;
   onTaskComplete: (taskId: string) => void;
   onTaskDelete: (taskId: string) => void;
-  onTaskEdit?: (taskId: string, newTitle: string) => void;
-  onTaskUpdate?: (taskId: string, updates: Partial<Task>) => void;
-  onUpdatePomodoros?: (taskId: string, count: number) => void;
-  onTaskUpdatePomodoros?: (taskId: string, count: number) => void;
 }
 
 export interface StatisticsProps {

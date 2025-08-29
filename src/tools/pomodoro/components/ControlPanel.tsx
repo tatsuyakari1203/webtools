@@ -1,136 +1,386 @@
 'use client';
 
-// Control Panel Component with Timer Controls
-import React from 'react';
-import { Button } from '@/components/ui/button';
+// Control Panel Component with Timer Controls and Settings
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Play, Pause, SkipForward, RotateCcw } from 'lucide-react';
-import { ControlPanelProps } from '../types';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Play, 
+  Pause, 
+  RotateCcw, 
+  SkipForward, 
+  Keyboard,
+  Settings,
+  Clock,
+  Volume2,
+  VolumeX,
+  Bell
+} from 'lucide-react';
+import { ControlPanelProps, PomodoroSettings } from '../types';
+import { useAudio } from '../hooks';
 
 export default function ControlPanel({
   isRunning,
   onStart,
   onPause,
+  onSkip,
   onReset,
-  onSkip
+  settings,
+  onSettingsChange
 }: ControlPanelProps) {
+  const [localSettings, setLocalSettings] = useState<PomodoroSettings>(settings);
+  const [hasChanges, setHasChanges] = useState(false);
+  const { playNotificationSound, setVolume } = useAudio();
+
+  // Handle settings change
+  const handleSettingChange = (key: keyof PomodoroSettings, value: number | boolean) => {
+    const newSettings = { ...localSettings, [key]: value };
+    setLocalSettings(newSettings);
+    setHasChanges(true);
+    
+    // Update volume in real-time
+    if (key === 'volume') {
+      setVolume(value as number);
+    }
+  };
+
+  // Save settings
+  const handleSave = () => {
+    onSettingsChange(localSettings);
+    setHasChanges(false);
+  };
+
+  // Test sound function
+  const testSound = async () => {
+    if (localSettings.notificationSoundEnabled) {
+      try {
+        await playNotificationSound('work');
+      } catch (error) {
+        console.error('Error playing test sound:', error);
+      }
+    }
+  };
 
 
   return (
     <Card className="p-6">
-      {/* Session Info */}
-      <div className="text-center mb-6">
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          Timer Controls
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {isRunning ? 'Timer is running' : 'Timer is paused'}
-        </p>
-      </div>
-
-      {/* Main Control Buttons */}
-      <div className="flex justify-center gap-4 mb-6">
-        {/* Start/Pause Button */}
-        {!isRunning ? (
-          <Button
-            onClick={onStart}
-            size="lg"
-            className="px-8 py-3 text-lg font-medium"
-          >
-            <Play className="w-5 h-5 mr-2" />
-            Start
-          </Button>
-        ) : (
-          <Button
-            onClick={onPause}
-            size="lg"
-            variant="outline"
-            className="px-8 py-3 text-lg font-medium"
-          >
-            <Pause className="w-5 h-5 mr-2" />
-            Pause
-          </Button>
-        )}
-
-
-      </div>
-
-      {/* Secondary Control Buttons */}
-      <div className="flex justify-center gap-3">
-        {/* Reset Button */}
-        <Button
-          onClick={onReset}
-          variant="outline"
-          size="sm"
-        >
-          <RotateCcw className="w-4 h-4 mr-2" />
-          Reset
-        </Button>
-
-        {/* Skip Button */}
-        <Button
-          onClick={onSkip}
-          variant="secondary"
-          size="sm"
-        >
-          <SkipForward className="w-4 h-4 mr-2" />
-          Skip
-        </Button>
-      </div>
-
-      {/* Control Instructions */}
-      <div className="mt-6 p-4 bg-muted rounded-lg">
-        <h4 className="text-sm font-medium text-foreground mb-2">Controls:</h4>
-        <div className="text-xs text-muted-foreground space-y-1">
-          <div className="flex justify-between">
-            <span>• Start/Pause:</span>
-            <span>Begin or pause the current session</span>
+      <div className="space-y-6">
+        {/* Timer Controls Section */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-foreground">Timer Controls</h3>
+          
+          {/* Main Control Buttons */}
+          <div className="flex gap-3">
+            <Button
+              onClick={isRunning ? onPause : onStart}
+              size="lg"
+              className="flex-1"
+            >
+              {isRunning ? (
+                <>
+                  <Pause className="w-4 h-4 mr-2" />
+                  Pause
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  Start
+                </>
+              )}
+            </Button>
+            
+            <Button
+              onClick={onReset}
+              variant="outline"
+              size="lg"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset
+            </Button>
+            
+            <Button
+              onClick={onSkip}
+              variant="outline"
+              size="lg"
+            >
+              <SkipForward className="w-4 h-4 mr-2" />
+              Skip
+            </Button>
           </div>
 
-          <div className="flex justify-between">
-            <span>• Reset:</span>
-            <span>Reset current session to full duration</span>
-          </div>
-          <div className="flex justify-between">
-            <span>• Skip:</span>
-            <span>Move to next session type</span>
+          {/* Keyboard Shortcuts */}
+          <div className="bg-muted/50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Keyboard className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Keyboard Shortcuts</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Start/Pause:</span>
+                <kbd className="px-2 py-1 bg-background rounded border text-foreground">Space</kbd>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Reset:</span>
+                <kbd className="px-2 py-1 bg-background rounded border text-foreground">R</kbd>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Skip:</span>
+                <kbd className="px-2 py-1 bg-background rounded border text-foreground">S</kbd>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Keyboard Shortcuts Info */}
-      <div className="mt-4 p-3 bg-accent rounded-lg">
-        <h4 className="text-xs font-medium text-accent-foreground mb-2">Keyboard Shortcuts:</h4>
-        <div className="text-xs text-accent-foreground space-y-1">
-          <div className="flex justify-between">
-            <span>Space:</span>
-            <span>Start/Pause</span>
+        <Separator />
+
+        {/* Settings Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Settings className="w-5 h-5 text-muted-foreground" />
+            <h3 className="text-lg font-semibold text-foreground">Settings</h3>
           </div>
-          <div className="flex justify-between">
-            <span>R:</span>
-            <span>Reset</span>
+
+          <Tabs defaultValue="timing" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="timing" className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Timing
+              </TabsTrigger>
+              <TabsTrigger value="audio" className="flex items-center gap-2">
+                <Volume2 className="w-4 h-4" />
+                Audio
+              </TabsTrigger>
+              <TabsTrigger value="behavior" className="flex items-center gap-2">
+                <Bell className="w-4 h-4" />
+                Behavior
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Timing Settings */}
+            <TabsContent value="timing" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                <h4 className="font-medium text-foreground">Session Durations</h4>
+                
+                {/* Grid Layout for Session Durations */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Work Duration */}
+                  <div className="space-y-2">
+                    <Label htmlFor="work-duration" className="text-sm font-medium">Work Session</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="work-duration"
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={localSettings.workDuration}
+                        onChange={(e) => handleSettingChange('workDuration', parseInt(e.target.value))}
+                        className="w-16 text-center"
+                      />
+                      <Badge variant="outline" className="text-xs">{localSettings.workDuration}m</Badge>
+                    </div>
+                  </div>
+
+                  {/* Short Break Duration */}
+                  <div className="space-y-2">
+                    <Label htmlFor="short-break-duration" className="text-sm font-medium">Short Break</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="short-break-duration"
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={localSettings.shortBreakDuration}
+                        onChange={(e) => handleSettingChange('shortBreakDuration', parseInt(e.target.value))}
+                        className="w-16 text-center"
+                      />
+                      <Badge variant="outline" className="text-xs">{localSettings.shortBreakDuration}m</Badge>
+                    </div>
+                  </div>
+
+                  {/* Long Break Duration */}
+                  <div className="space-y-2">
+                    <Label htmlFor="long-break-duration" className="text-sm font-medium">Long Break</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="long-break-duration"
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={localSettings.longBreakDuration}
+                        onChange={(e) => handleSettingChange('longBreakDuration', parseInt(e.target.value))}
+                        className="w-16 text-center"
+                      />
+                      <Badge variant="outline" className="text-xs">{localSettings.longBreakDuration}m</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Cycles Before Long Break - Full Width */}
+                <div className="space-y-2">
+                  <Label htmlFor="pomodoros-before-long-break" className="text-sm font-medium">Pomodoros before long break</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="pomodoros-before-long-break"
+                      type="number"
+                      min="2"
+                      max="10"
+                      value={localSettings.pomodorosBeforeLongBreak}
+                      onChange={(e) => handleSettingChange('pomodorosBeforeLongBreak', parseInt(e.target.value))}
+                      className="w-20"
+                    />
+                    <Badge variant="outline">{localSettings.pomodorosBeforeLongBreak} cycles</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    After {localSettings.pomodorosBeforeLongBreak} work sessions, you&apos;ll get a long break
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Audio Settings */}
+            <TabsContent value="audio" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                <h4 className="font-medium text-foreground">Sound Settings</h4>
+                
+                {/* Sound Enabled */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Enable Sounds</Label>
+                    <p className="text-sm text-muted-foreground">Play sounds when sessions start/end</p>
+                  </div>
+                  <Switch
+                    checked={localSettings.notificationSoundEnabled}
+                    onCheckedChange={(checked) => handleSettingChange('notificationSoundEnabled', checked)}
+                  />
+                </div>
+
+                {/* Tick Sound */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Tick Sound</Label>
+                    <p className="text-sm text-muted-foreground">Play ticking sound during work sessions</p>
+                  </div>
+                  <Switch
+                    checked={localSettings.tickSoundEnabled}
+                    onCheckedChange={(checked) => handleSettingChange('tickSoundEnabled', checked)}
+                    disabled={!localSettings.notificationSoundEnabled}
+                  />
+                </div>
+
+                {/* Volume Control */}
+                <div className="space-y-2">
+                  <Label htmlFor="volume">Volume</Label>
+                  <div className="flex items-center gap-3">
+                    <VolumeX className="w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="volume"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={localSettings.volume}
+                      onChange={(e) => handleSettingChange('volume', parseFloat(e.target.value))}
+                      className="flex-1"
+                      disabled={!localSettings.notificationSoundEnabled}
+                    />
+                    <Volume2 className="w-4 h-4 text-muted-foreground" />
+                    <Badge variant="outline" className="w-12 text-center">
+                      {Math.round(localSettings.volume * 100)}%
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Test Sound Button */}
+                <Button
+                  onClick={testSound}
+                  variant="outline"
+                  size="sm"
+                  disabled={!localSettings.notificationSoundEnabled}
+                  className="w-full"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Test Sound
+                </Button>
+              </div>
+            </TabsContent>
+
+            {/* Behavior Settings */}
+            <TabsContent value="behavior" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                <h4 className="font-medium text-foreground">Auto-Start Settings</h4>
+                
+                {/* Auto Start Breaks */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Auto-start Breaks</Label>
+                    <p className="text-sm text-muted-foreground">Automatically start break sessions</p>
+                  </div>
+                  <Switch
+                    checked={localSettings.autoStartBreaks}
+                    onCheckedChange={(checked) => handleSettingChange('autoStartBreaks', checked)}
+                  />
+                </div>
+
+                {/* Auto Start Pomodoros */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Auto-start Pomodoros</Label>
+                    <p className="text-sm text-muted-foreground">Automatically start work sessions after breaks</p>
+                  </div>
+                  <Switch
+                    checked={localSettings.autoStartPomodoros}
+                    onCheckedChange={(checked) => handleSettingChange('autoStartPomodoros', checked)}
+                  />
+                </div>
+
+                <Separator />
+
+                <h4 className="font-medium text-foreground">Notifications</h4>
+                
+                {/* Notifications Enabled */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Browser Notifications</Label>
+                    <p className="text-sm text-muted-foreground">Show notifications when sessions end</p>
+                  </div>
+                  <Switch
+                    checked={localSettings.notificationSoundEnabled}
+                    onCheckedChange={(checked) => handleSettingChange('notificationSoundEnabled', checked)}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {/* Save Button */}
+          <div className="flex justify-end pt-4 border-t">
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges}
+              className="px-6"
+            >
+              Save Changes
+            </Button>
           </div>
-          <div className="flex justify-between">
-            <span>S:</span>
-            <span>Skip</span>
-          </div>
-          <div className="flex justify-between">
-            <span>M:</span>
-            <span>Mute/Unmute</span>
-          </div>
+
+          {/* Changes Indicator */}
+          {hasChanges && (
+            <div className="text-center">
+              <Badge variant="outline" className="text-destructive border-destructive">
+                You have unsaved changes
+              </Badge>
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Status Indicator */}
-      <div className="mt-4 flex items-center justify-center gap-2">
-        <div 
-          className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-            isRunning ? 'bg-primary animate-pulse' : 'bg-muted-foreground'
-          }`}
-        />
-        <span className="text-xs text-muted-foreground">
-          {isRunning ? 'Active' : 'Inactive'}
-        </span>
       </div>
     </Card>
   );

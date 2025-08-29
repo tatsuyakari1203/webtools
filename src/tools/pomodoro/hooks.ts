@@ -202,7 +202,7 @@ export function useTasks() {
   const addTask = useCallback((text: string, estimatedPomodoros: number = 1) => {
     const newTask: Task = {
       id: Date.now().toString(),
-      text: text.trim(),
+      text,
       completed: false,
       createdAt: new Date(),
       pomodorosSpent: 0,
@@ -217,11 +217,19 @@ export function useTasks() {
   }, []);
 
   const completeTask = useCallback((taskId: string) => {
-    const updatedTasks = tasks.map(task => 
-      task.id === taskId 
-        ? { ...task, completed: true, completedAt: new Date() }
-        : task
-    );
+    const updatedTasks = tasks.map(task => {
+      if (task.id === taskId) {
+        if (task.completed) {
+          // Resume task: mark as incomplete and remove completedAt
+          const { completedAt, ...taskWithoutCompletedAt } = task;
+          return { ...taskWithoutCompletedAt, completed: false };
+        } else {
+          // Complete task: mark as completed and set completedAt
+          return { ...task, completed: true, completedAt: new Date(), completedPomodoros: task.pomodorosSpent };
+        }
+      }
+      return task;
+    });
     saveTasks(updatedTasks);
   }, [tasks, saveTasks]);
 
@@ -242,6 +250,15 @@ export function useTasks() {
     saveTasks(updatedTasks);
   }, [tasks, saveTasks]);
 
+  const editTask = useCallback((taskId: string, updates: Partial<Task>) => {
+    const updatedTasks = tasks.map(task => 
+      task.id === taskId 
+        ? { ...task, ...updates }
+        : task
+    );
+    saveTasks(updatedTasks);
+  }, [tasks, saveTasks]);
+
   return {
     tasks,
     currentTask,
@@ -249,7 +266,8 @@ export function useTasks() {
     selectTask,
     completeTask,
     deleteTask,
-    updateTaskPomodoros
+    updateTaskPomodoros,
+    editTask
   };
 }
 
