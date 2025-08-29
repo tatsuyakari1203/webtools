@@ -18,7 +18,7 @@ const Todo: React.FC<TodoProps> = ({
 }) => {
   const handleResumeTask = (taskId: string) => {
     // Resume completed task by marking it as incomplete
-    const task = tasks.find(t => t.id === taskId);
+    const task = tasks.find((t: Task) => t.id === taskId);
     if (task && task.completed) {
       onTaskComplete(taskId); // This will toggle the completion status
     }
@@ -34,8 +34,8 @@ const Todo: React.FC<TodoProps> = ({
     }
   };
 
-  const activeTasks = tasks.filter(task => !task.completed);
-  const completedTasks = tasks.filter(task => task.completed);
+  const activeTasks = tasks.filter((task: Task) => !task.completed);
+  const completedTasks = tasks.filter((task: Task) => task.completed);
 
   return (
     <Card className="p-4 w-full">
@@ -90,7 +90,7 @@ const Todo: React.FC<TodoProps> = ({
       {activeTasks.length > 0 && (
         <div className="space-y-2 mb-4">
           <h4 className="text-sm font-medium text-muted-foreground">Active</h4>
-          {activeTasks.map((task) => (
+          {activeTasks.map((task: Task) => (
             <div
               key={task.id}
               className={`flex items-center gap-2 p-3 rounded-lg border transition-colors cursor-pointer ${
@@ -128,7 +128,7 @@ const Todo: React.FC<TodoProps> = ({
       {completedTasks.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-muted-foreground">Completed</h4>
-          {completedTasks.map((task) => (
+          {completedTasks.map((task: Task) => (
             <div
               key={task.id}
               className="flex items-center gap-2 p-3 rounded-lg border border-border bg-muted/30"

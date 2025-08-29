@@ -81,68 +81,7 @@ export function useSettings() {
   };
 }
 
-// Audio management hook using use-sound
-export function useAudio() {
-  const [volume, setVolumeState] = useState(0.5);
-  const [isClient, setIsClient] = useState(false);
-  const [soundsLoaded, setSoundsLoaded] = useState(false);
-  
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-  
-  // Create refs to store sound functions
-  const tickSoundRef = useRef<(() => void) | null>(null);
-  const workCompleteSoundRef = useRef<(() => void) | null>(null);
-  const breakCompleteSoundRef = useRef<(() => void) | null>(null);
-  
-  useEffect(() => {
-    if (isClient) {
-      import('use-sound').then((module) => {
-        const useSound = module.default;
-        
-        // Create sound instances
-        const [playTick] = useSound('/sounds/tick.mp3', { volume });
-        const [playWorkComplete] = useSound('/sounds/work-complete.mp3', { volume });
-        const [playBreakComplete] = useSound('/sounds/break-complete.mp3', { volume });
-        
-        // Store in refs
-        tickSoundRef.current = playTick;
-        workCompleteSoundRef.current = playWorkComplete;
-        breakCompleteSoundRef.current = playBreakComplete;
-        
-        setSoundsLoaded(true);
-      }).catch((error) => {
-        console.warn('Failed to load use-sound:', error);
-      });
-    }
-  }, [isClient, volume]);
 
-  const playTickSound = useCallback(() => {
-    if (tickSoundRef.current) {
-      tickSoundRef.current();
-    }
-  }, []);
-
-  const playNotificationSound = useCallback((type: 'work' | 'break') => {
-    if (type === 'work' && workCompleteSoundRef.current) {
-      workCompleteSoundRef.current();
-    } else if (type === 'break' && breakCompleteSoundRef.current) {
-      breakCompleteSoundRef.current();
-    }
-  }, []);
-
-  const setVolume = useCallback((newVolume: number) => {
-    setVolumeState(Math.max(0, Math.min(1, newVolume)));
-  }, []);
-
-  return {
-    playTickSound,
-    playNotificationSound,
-    setVolume,
-    volume
-  };
-}
 
 // Notification hook
 export function useNotifications() {

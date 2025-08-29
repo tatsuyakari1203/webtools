@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { BarChart3, Volume2, VolumeX } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 
 // Import all components
 import TimerDisplay from './components/TimerDisplay';
@@ -20,7 +20,6 @@ import Statistics from './components/Statistics';
 import { 
   useTimer, 
   useSettings, 
-  useAudio, 
   useNotifications, 
   useTasks,
   useStatistics 
@@ -75,7 +74,7 @@ export default function PomodoroTimer() {
       setCurrentSession('work');
     }
   }, [currentSession, cycleCount, settings.pomodorosBeforeLongBreak]);
-  const { playNotificationSound, setVolume, volume } = useAudio();
+
   const { requestPermission, showNotification } = useNotifications();
   const { tasks, currentTask, addTask, selectTask, completeTask, deleteTask, updateTaskPomodoros, editTask } = useTasks();
   const { statistics, recordCompletedPomodoro } = useStatistics();
@@ -87,10 +86,7 @@ export default function PomodoroTimer() {
   const handleSessionComplete = useCallback(async () => {
     const sessionType = currentSession;
     
-    // Play completion sound
     if (sessionType === 'work') {
-      await playNotificationSound('work');
-      
       // Update statistics for completed pomodoro
       recordCompletedPomodoro();
       
@@ -105,8 +101,6 @@ export default function PomodoroTimer() {
         'Time for a well-deserved break. Great job!'
       );
     } else {
-      await playNotificationSound('break');
-      
       // Show notification
       showNotification(
         'Break Complete!',
@@ -120,7 +114,7 @@ export default function PomodoroTimer() {
     } else if (settings.autoStartPomodoros && sessionType !== 'work') {
       setTimeout(() => start(), 1000);
     }
-  }, [currentSession, selectedTask, settings, playNotificationSound, showNotification, updateTaskPomodoros, start, recordCompletedPomodoro]);
+  }, [currentSession, selectedTask, settings, showNotification, updateTaskPomodoros, start, recordCompletedPomodoro]);
 
   // Handle timer completion
   useEffect(() => {
@@ -160,16 +154,13 @@ export default function PomodoroTimer() {
           event.preventDefault();
           skip();
           break;
-        case 'm':
-          event.preventDefault();
-          setVolume(volume > 0 ? 0 : 0.5);
-          break;
+
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isRunning, start, pause, reset, skip, setVolume, volume]);
+  }, [isRunning, start, pause, reset, skip]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -308,7 +299,7 @@ export default function PomodoroTimer() {
 
         {/* Footer */}
         <div className="text-center mt-12 text-muted-foreground text-sm">
-          <p>Use keyboard shortcuts: Space (start/pause), R (reset), S (skip), M (mute)</p>
+          <p>Use keyboard shortcuts: Space (start/pause), R (reset), S (skip)</p>
           <p className="mt-1">Built with ❤️ for productivity enthusiasts</p>
         </div>
       </div>

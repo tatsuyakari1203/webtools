@@ -8,9 +8,7 @@ export interface PomodoroSettings {
   pomodorosBeforeLongBreak: number; // default: 4
   autoStartBreaks: boolean; // default: false
   autoStartPomodoros: boolean; // default: false
-  tickSoundEnabled: boolean; // default: false
-  notificationSoundEnabled: boolean; // default: true
-  volume: number; // 0-1, default: 0.5
+  notificationsEnabled: boolean; // default: true
 }
 
 // Task Interface
@@ -96,9 +94,7 @@ export const DEFAULT_SETTINGS: PomodoroSettings = {
   pomodorosBeforeLongBreak: 4,
   autoStartBreaks: false,
   autoStartPomodoros: false,
-  tickSoundEnabled: false,
-  notificationSoundEnabled: true,
-  volume: 0.5,
+  notificationsEnabled: true,
 };
 
 // LocalStorage Keys
@@ -107,11 +103,4 @@ export const STORAGE_KEYS = {
   TASKS: 'pomodoro_tasks',
   STATISTICS: 'pomodoro_statistics',
   SESSION_STATE: 'pomodoro_session_state'
-} as const;
-
-// Audio Files Configuration
-export const AUDIO_FILES = {
-  TICK: '/sounds/tick.mp3',
-  WORK_COMPLETE: '/sounds/work-complete.mp3',
-  BREAK_COMPLETE: '/sounds/break-complete.mp3'
 } as const;
