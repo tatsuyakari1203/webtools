@@ -13,7 +13,7 @@ export function ToolCard({ tool }: ToolCardProps) {
   const IconComponent = tool.icon
 
   return (
-    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 border-white/20 dark:border-white/10 bg-white/10 dark:bg-black/10 backdrop-blur-sm hover:border-primary/30 hover:bg-white/20 dark:hover:bg-black/20 h-full">
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 border-white/20 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-sm hover:border-primary/30 hover:bg-white/50 dark:hover:bg-black/50 h-full">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">

@@ -5,7 +5,8 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { InventoryDialog } from '@/components/inventory/InventoryDialog';
 import { ThrowButton } from '@/components/inventory/ThrowButton';
 import { Button } from '@/components/ui/button';
-import { Github, Package } from 'lucide-react';
+import { Github, Package, ImageIcon } from 'lucide-react';
+import { WallpaperDialog } from './WallpaperDialog';
 
 const ToolCaseIcon = () => (
   <svg 
@@ -75,6 +76,12 @@ export default function Header() {
           >
             <Github className="h-5 w-5" />
           </Link>
+          <WallpaperDialog>
+            <Button variant="outline" size="sm" className="flex items-center gap-2" title="Custom Background">
+              <ImageIcon className="h-4 w-4" />
+              <span className="text-xs">Background</span>
+            </Button>
+          </WallpaperDialog>
           <ThemeToggle />
         </div>
       </div>

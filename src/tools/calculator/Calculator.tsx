@@ -499,7 +499,7 @@ export default function Calculator() {
           history.map((entry, index) => (
             <div 
               key={index} 
-              className="p-2 bg-muted/50 rounded cursor-pointer hover:bg-muted"
+              className="p-2 bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded cursor-pointer hover:bg-white/20 dark:hover:bg-black/20 border border-white/10 dark:border-white/5"
               onClick={() => selectHistoryResult(entry.result)}
             >
               <div className="text-sm text-muted-foreground">{entry.expression}</div>
@@ -531,7 +531,7 @@ export default function Calculator() {
           </div>
         </div>
         
-        <div className="bg-muted/50 rounded-lg p-4 border-2">
+        <div className="bg-white/10 dark:bg-black/10 backdrop-blur-md rounded-lg p-4 border border-white/20 dark:border-white/10">
           <div className="text-right">
             <div className="text-sm text-muted-foreground mb-1">
               {expression && <span>{expression}</span>}
@@ -544,7 +544,7 @@ export default function Calculator() {
           renderHistoryPanel()
         ) : (
           <Tabs value={mode} onValueChange={(value) => setMode(value as CalculatorMode)}>
-           <TabsList className="grid w-full grid-cols-4">
+           <TabsList className="bg-white/10 dark:bg-black/10 backdrop-blur-sm border border-white/20 dark:border-white/10 grid w-full grid-cols-4">
              <TabsTrigger value="basic" className="flex items-center gap-1">
                <CalcIcon className="h-4 w-4" />
                Basic
@@ -604,7 +604,7 @@ export default function Calculator() {
                    </Button>
                  </div>
                  
-                 <div className="bg-muted/50 p-3 rounded text-right font-mono border">
+                 <div className="bg-white/10 dark:bg-black/10 backdrop-blur-sm p-3 rounded text-right font-mono border border-white/20 dark:border-white/10">
                    <div className="text-sm text-muted-foreground">{programmerBase.toUpperCase()}</div>
                    <div className="text-lg">{programmerValue}</div>
                    <div className="text-xs text-muted-foreground">
@@ -633,7 +633,7 @@ export default function Calculator() {
                    </Button>
                  </div>
                  
-                 <div className="bg-muted/50 rounded-lg p-4 border-2">
+                 <div className="bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-white/10">
                    <div className="text-right">
                      <div className="text-2xl font-mono font-bold text-foreground break-all">
                        {converterValue || '0'}
@@ -782,7 +782,7 @@ export default function Calculator() {
                    </div>
                  </div>
                  
-                 <div className="bg-muted/50 rounded-lg p-4 border-2">
+                 <div className="bg-white/10 dark:bg-black/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-white/10">
                    <div className="text-right">
                      <div className="text-2xl font-mono font-bold text-foreground break-all">
                        {converterValue || '0'}

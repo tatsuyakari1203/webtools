@@ -61,7 +61,7 @@ export default async function ToolLayout({ children, params }: ToolLayoutProps) 
       </div>
 
       {/* Tool Content */}
-      <div className="bg-card rounded-lg border p-6">
+      <div className="bg-white/10 dark:bg-black/10 backdrop-blur-md rounded-lg border border-white/20 dark:border-white/10 p-6">
         {children}
       </div>
     </div>

@@ -2,13 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useWallpaper } from '../providers/WallpaperProvider';
 
-interface WallpaperBackgroundProps {
-  wallpaperUrl?: string;
-  enableBlur?: boolean;
-}
-
-export default function WallpaperBackground({ wallpaperUrl, enableBlur = false }: WallpaperBackgroundProps) {
+export default function WallpaperBackground() {
+  const { wallpaperUrl, enableBlur } = useWallpaper();
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 

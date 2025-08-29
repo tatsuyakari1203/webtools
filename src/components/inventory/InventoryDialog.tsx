@@ -328,7 +328,7 @@ export function InventoryDialog({ children }: InventoryDialogProps) {
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="bg-white/10 dark:bg-black/10 backdrop-blur-sm border border-white/20 dark:border-white/10 grid w-full grid-cols-3">
               <TabsTrigger value="items">Items</TabsTrigger>
               <TabsTrigger value="stats">Statistics</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -764,7 +764,7 @@ export function InventoryDialog({ children }: InventoryDialogProps) {
           
           <div className="flex-1 overflow-auto">
             <Tabs defaultValue="content" className="h-full flex flex-col">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsList className="bg-white/10 dark:bg-black/10 backdrop-blur-sm border border-white/20 dark:border-white/10 grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="content">Content</TabsTrigger>
                 <TabsTrigger value="metadata">Metadata</TabsTrigger>
               </TabsList>
