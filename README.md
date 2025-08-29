@@ -238,6 +238,120 @@ const renderTool = () => {
 };
 ```
 
+## 🤖 Gemini AI API Usage
+
+WebTools includes a powerful Gemini AI API endpoint that provides intelligent text generation with multiple model options and advanced features.
+
+### API Endpoint
+```
+POST /api/askgemini
+```
+
+### Request Format
+```typescript
+interface AskGeminiRequest {
+  prompt: string;           // Your text prompt
+  type?: PromptType;       // Optional: prompt type for model selection
+  streaming?: boolean;     // Optional: enable streaming response
+}
+
+type PromptType = 'simple' | 'general' | 'complex' | 'image';
+```
+
+### Model Selection
+The API automatically selects the optimal Gemini model based on your prompt type:
+
+| Prompt Type | Model | Best For | Cost |
+|-------------|-------|----------|---------|
+| `simple` | Gemini 2.5 Flash-Lite | Quick tasks, simple Q&A | $0.10/$0.40 |
+| `general` | Gemini 2.5 Flash | General purpose, balanced performance | $0.30/$2.50 |
+| `complex` | Gemini 2.5 Pro | Complex reasoning, coding, analysis | $1.25-2.50/$10.00-15.00 |
+| `image` | Gemini 2.5 Flash Image Preview | Image generation and editing | $0.30/$2.50 |
+
+### Usage Examples
+
+#### Basic Request
+```javascript
+const response = await fetch('/api/askgemini', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    prompt: 'Explain quantum computing in simple terms',
+    type: 'general'
+  })
+});
+
+const data = await response.json();
+console.log(data.response);
+```
+
+#### Streaming Response
+```javascript
+const response = await fetch('/api/askgemini', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    prompt: 'Write a detailed analysis of machine learning trends',
+    type: 'complex',
+    streaming: true
+  })
+});
+
+const reader = response.body?.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  
+  const chunk = decoder.decode(value);
+  console.log(chunk); // Process streaming data
+}
+```
+
+#### cURL Example
+```bash
+curl -X POST http://localhost:3000/api/askgemini \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Create a Python function to calculate fibonacci numbers",
+    "type": "complex"
+  }'
+```
+
+### Response Format
+```typescript
+interface AskGeminiResponse {
+  response: string;        // Generated text response
+  model: string;          // Model used for generation
+  promptType: PromptType; // Detected/specified prompt type
+  timestamp: string;      // Response timestamp
+  success: boolean;       // Request success status
+  error?: string;         // Error message if failed
+}
+```
+
+### Rate Limiting
+The API includes built-in rate limiting to prevent abuse:
+- **Development**: 100 requests per minute
+- **Production**: 50 requests per minute
+- **Strict**: 20 requests per minute
+
+### Safety Settings
+All requests are processed with comprehensive safety filters to ensure appropriate content generation.
+
+### Health Check
+```
+GET /api/askgemini/health
+```
+Returns API status and model availability.
+
+---
+
 ## 🔧 Development
 
 This project uses **Bun** as the package manager and runtime.
@@ -261,6 +375,15 @@ bun run lint
 ### Add Shadcn/ui Components
 ```bash
 bunx shadcn-ui@latest add [component-name]
+```
+
+### Environment Variables
+```bash
+# Required for Gemini AI API
+GOOGLE_API_KEY=your_gemini_api_key_here
+
+# Optional: Rate limiting configuration
+RATE_LIMIT_MODE=development # development | production | strict
 ```
 
 ## 📦 Deployment Options

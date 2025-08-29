@@ -7,9 +7,39 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:3000',
   'https://127.0.0.1:3000',
   // Thêm domain production của bạn ở đây
-  // 'https://yourdomain.com',
-  // 'https://www.yourdomain.com'
+  'https://tatsuyakari.com',
+  'https://www.tatsuyakari.com'
 ];
+
+// Wildcard domains
+const ALLOWED_WILDCARD_DOMAINS = [
+  'tatsuyakari.com'
+];
+
+// Hàm kiểm tra origin có được phép hay không
+function isOriginAllowed(origin: string): boolean {
+  // Kiểm tra exact match
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    return true;
+  }
+  
+  // Kiểm tra wildcard domains
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname;
+    
+    for (const domain of ALLOWED_WILDCARD_DOMAINS) {
+      // Kiểm tra subdomain của domain được phép
+      if (hostname === domain || hostname.endsWith(`.${domain}`)) {
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error('[Security] Invalid origin URL:', origin);
+  }
+  
+  return false;
+}
 
 // Các API routes cần bảo vệ
 const PROTECTED_API_ROUTES = [
@@ -57,16 +87,16 @@ export function middleware(request: NextRequest) {
     }
   }
   
-  // Kiểm tra với danh sách ALLOWED_ORIGINS
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+  // Kiểm tra với danh sách ALLOWED_ORIGINS và wildcard domains
+  if (origin && isOriginAllowed(origin)) {
     return NextResponse.next();
   }
   
-  // Kiểm tra referer với ALLOWED_ORIGINS nếu không có origin
+  // Kiểm tra referer với ALLOWED_ORIGINS và wildcard domains nếu không có origin
   if (!origin && referer) {
     try {
       const refererOrigin = new URL(referer).origin;
-      if (ALLOWED_ORIGINS.includes(refererOrigin)) {
+      if (isOriginAllowed(refererOrigin)) {
         return NextResponse.next();
       }
     } catch (error) {
@@ -94,7 +124,7 @@ export function middleware(request: NextRequest) {
     { 
       status: 403,
       headers: {
-        'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.includes(origin) ? origin : 'null',
+        'Access-Control-Allow-Origin': origin && isOriginAllowed(origin) ? origin : 'null',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       }
