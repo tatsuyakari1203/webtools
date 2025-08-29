@@ -23,6 +23,8 @@ import {
   useTasks,
   useStatistics 
 } from './hooks';
+// Import motivational quotes
+import { getRandomQuote, shouldShowQuote } from './data/motivationalQuotes';
 // Import types (SessionType not needed in this component)
 
 // Main Pomodoro Timer Component
@@ -33,6 +35,11 @@ export default function PomodoroTimer() {
   const [currentSession, setCurrentSession] = useState<'work' | 'shortBreak' | 'longBreak'>('work');
   const [cycleCount, setCycleCount] = useState(0);
   const [focusMode, setFocusMode] = useState(false);
+  
+  // Motivational quotes state
+  const [currentQuote, setCurrentQuote] = useState<string>('');
+  const [showQuote, setShowQuote] = useState(false);
+  const [sessionStartTime, setSessionStartTime] = useState<number>(Date.now());
   
   const getSessionDuration = useCallback((session: 'work' | 'shortBreak' | 'longBreak') => {
     switch (session) {
@@ -175,6 +182,17 @@ export default function PomodoroTimer() {
           event.preventDefault();
           toggleFocusMode();
           break;
+        case 'g':
+          // Easter egg: Trigger motivational quote immediately
+          event.preventDefault();
+          if (focusMode) {
+            setCurrentQuote(getRandomQuote());
+            setShowQuote(true);
+            setTimeout(() => {
+              setShowQuote(false);
+            }, 10000);
+          }
+          break;
 
       }
     };
@@ -187,6 +205,34 @@ export default function PomodoroTimer() {
   useEffect(() => {
     requestPermission();
   }, [requestPermission]);
+
+  // Handle motivational quotes display
+  useEffect(() => {
+    if (!isRunning || !focusMode) return;
+
+    const interval = setInterval(() => {
+      if (shouldShowQuote(sessionStartTime)) {
+        if (!showQuote) {
+          setCurrentQuote(getRandomQuote());
+          setShowQuote(true);
+          
+          // Hide quote after 10 seconds
+          setTimeout(() => {
+            setShowQuote(false);
+          }, 10000);
+        }
+      }
+    }, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, [isRunning, focusMode, sessionStartTime, showQuote]);
+
+  // Reset session start time when timer starts
+  useEffect(() => {
+    if (isRunning) {
+      setSessionStartTime(Date.now());
+    }
+  }, [isRunning]);
 
   // Handle settings changes that affect timer
   const handleSettingsChange = (newSettings: typeof settings) => {
@@ -227,7 +273,23 @@ export default function PomodoroTimer() {
     const currentTask = selectedTask ? tasks.find(t => t.id === selectedTask)?.text : undefined;
 
     return (
-      <div className={`fixed inset-0 z-50 bg-gradient-to-br ${colors.bg} backdrop-blur-sm overflow-hidden`}>
+      <>
+        <style jsx>{`
+           @keyframes fade-in {
+             0% {
+               opacity: 0;
+               transform: translateY(8px);
+             }
+             100% {
+               opacity: 1;
+               transform: translateY(0);
+             }
+           }
+           .animate-fade-in {
+             animation: fade-in 0.3s ease-out;
+           }
+         `}</style>
+        <div className={`fixed inset-0 z-50 bg-gradient-to-br ${colors.bg} backdrop-blur-sm overflow-hidden`}>
         {/* Ambient background pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-current rounded-full blur-3xl" />
@@ -246,18 +308,21 @@ export default function PomodoroTimer() {
         <div className="relative h-full flex flex-col items-center justify-center px-8">
           {/* Session type indicator */}
           <div className="mb-8 flex justify-center">
-             <div className={`inline-flex items-center px-6 py-2 rounded-full bg-background/10 backdrop-blur-md border border-white/10 ${colors.glow} shadow-2xl`}>
-               <span className="text-lg font-medium text-foreground/90 tracking-wide">
-                 {currentSession === 'work' ? 'Focus Time' : currentSession === 'shortBreak' ? 'Short Break' : 'Long Break'}
-               </span>
-             </div>
+              <div className="inline-flex items-center px-6 py-3 rounded-full bg-background/10 backdrop-blur-md border border-white/10 max-w-2xl">
+                 <span 
+                    key={showQuote ? currentQuote : currentSession}
+                    className="text-lg font-medium text-foreground/90 tracking-wide text-center leading-relaxed transition-all duration-300 ease-out transform opacity-100 animate-fade-in"
+                  >
+                      {showQuote ? currentQuote : (currentSession === 'work' ? 'Focus Time' : currentSession === 'shortBreak' ? 'Short Break' : 'Long Break')}
+                 </span>
+               </div>
            </div>
 
           {/* Giant timer display */}
           <div className="relative mb-12">
             {/* Circular progress background */}
             <div className="relative">
-              <svg className="transform -rotate-90 drop-shadow-2xl" width="400" height="400">
+              <svg className="transform -rotate-90" width="400" height="400">
                 {/* Background circle */}
                 <circle
                   cx="200"
@@ -280,19 +345,18 @@ export default function PomodoroTimer() {
                   strokeLinecap="round"
                   strokeDasharray={`${180 * 2 * Math.PI}`}
                   strokeDashoffset={`${180 * 2 * Math.PI - (progress / 100) * 180 * 2 * Math.PI}`}
-                  style={{ filter: 'drop-shadow(0 0 20px currentColor)' }}
                 />
               </svg>
               
               {/* Timer text overlay */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="text-8xl font-mono font-bold text-foreground mb-4 tracking-wider drop-shadow-2xl">
+                <div className="text-8xl font-mono font-bold text-foreground mb-4 tracking-wider">
                   {Math.floor(timeRemaining / 60).toString().padStart(2, '0')}:{(timeRemaining % 60).toString().padStart(2, '0')}
                 </div>
                 
                 {/* Status indicator */}
                  <div className="flex items-center gap-3">
-                   <div className={`w-4 h-4 rounded-full transition-all duration-300 ${isRunning ? `${colors.accent} shadow-lg` : 'bg-muted-foreground/50'}`} />
+                   <div className={`w-4 h-4 rounded-full ${isRunning ? colors.accent : 'bg-muted-foreground/50'}`} />
                    <span className={`text-xl font-medium tracking-wide ${isRunning ? 'text-foreground' : 'text-muted-foreground'}`}>
                      {isRunning ? 'Running' : 'Paused'}
                    </span>
@@ -322,8 +386,8 @@ export default function PomodoroTimer() {
               <div className="text-sm text-muted-foreground/60">Progress</div>
               <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                 <div 
-                  className={`h-full ${colors.accent} transition-all duration-1000 ease-out`}
-                  style={{ width: `${progress}%`, filter: 'drop-shadow(0 0 8px currentColor)' }}
+                  className={`h-full ${colors.accent}`}
+                  style={{ width: `${progress}%` }}
                 />
               </div>
               <div className="text-sm text-muted-foreground/60 font-mono">{Math.round(progress)}%</div>
@@ -338,6 +402,7 @@ export default function PomodoroTimer() {
           aria-label="Click to exit focus mode"
         />
       </div>
+      </>
     );
   }
 
