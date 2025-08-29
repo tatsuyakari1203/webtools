@@ -41,6 +41,13 @@ export interface Statistics {
   averageSessionLength: number; // in minutes
   longestStreak: number; // consecutive days
   currentStreak: number;
+  dailyStats?: Record<string, {
+    completedPomodoros: number;
+    completedBreaks: number;
+    completedTasks: number;
+    focusTime: number;
+    currentStreak: number;
+  }>;
 }
 
 

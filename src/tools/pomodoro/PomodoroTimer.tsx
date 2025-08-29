@@ -2,11 +2,9 @@
 
 // Main Pomodoro Timer Application Component
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { BarChart3 } from 'lucide-react';
+
 
 // Import all components
 import TimerDisplay from './components/TimerDisplay';
@@ -14,7 +12,7 @@ import ControlPanel from './components/ControlPanel';
 import CycleTracker from './components/CycleTracker';
 
 import Todo from './components/Todo';
-import Statistics from './components/Statistics';
+import StreakTracker from './components/StreakTracker';
 
 // Import hooks and types
 import { 
@@ -211,40 +209,11 @@ export default function PomodoroTimer() {
               settings={settings}
               onSettingsChange={handleSettingsChange}
             />
+
           </div>
 
           {/* Right Column - Progress, Quick Actions and Tasks */}
           <div className="space-y-6">
-            {/* Cycle Tracker */}
-            <CycleTracker
-              completedPomodoros={cycleCount}
-              totalPomodoros={settings.pomodorosBeforeLongBreak}
-            />
-
-            {/* Quick Actions */}
-            <Card className="p-6 w-full max-w-md mx-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-semibold text-foreground">Quick Actions</h3>
-              </div>
-              
-              <div className="flex flex-col gap-3">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full flex items-center justify-center gap-2 py-3">
-                      <BarChart3 className="w-4 h-4" />
-                      Stats
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Your Progress</DialogTitle>
-                    </DialogHeader>
-                    <Statistics statistics={statistics} />
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </Card>
-
             {/* Todo List */}
             <Todo
               tasks={tasks}
@@ -254,6 +223,15 @@ export default function PomodoroTimer() {
               onTaskComplete={completeTask}
               onTaskDelete={deleteTask}
             />
+
+            {/* Cycle Tracker */}
+            <CycleTracker
+              completedPomodoros={cycleCount}
+              totalPomodoros={settings.pomodorosBeforeLongBreak}
+            />
+
+            {/* Streak Tracker */}
+            <StreakTracker statistics={statistics} />
           </div>
         </div>
 
@@ -284,7 +262,7 @@ export default function PomodoroTimer() {
             </TabsContent>
 
             <TabsContent value="stats" className="mt-6">
-              <Statistics statistics={statistics} />
+              <StreakTracker statistics={statistics} />
             </TabsContent>
           </Tabs>
         </div>
