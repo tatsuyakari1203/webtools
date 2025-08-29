@@ -13,6 +13,7 @@ import CycleTracker from './components/CycleTracker';
 
 import Todo from './components/Todo';
 import StreakTracker from './components/StreakTracker';
+import { CombinedClockPanel } from './components/Clock';
 
 // Import hooks and types
 import { 
@@ -176,7 +177,7 @@ export default function PomodoroTimer() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -198,6 +199,9 @@ export default function PomodoroTimer() {
               isRunning={isRunning}
               currentTask={selectedTask ? tasks.find(t => t.id === selectedTask)?.text : undefined}
             />
+
+            {/* Combined Clock Panel */}
+            <CombinedClockPanel />
 
             {/* Control Panel */}
             <ControlPanel
@@ -268,10 +272,7 @@ export default function PomodoroTimer() {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-12 text-muted-foreground text-sm">
-          <p>Use keyboard shortcuts: Space (start/pause), R (reset), S (skip)</p>
-          <p className="mt-1">Built with ❤️ for productivity enthusiasts</p>
-        </div>
+
       </div>
     </div>
   );
