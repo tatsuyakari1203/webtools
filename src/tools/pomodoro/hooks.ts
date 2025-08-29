@@ -160,6 +160,7 @@ export function useTasks() {
       if (task.id === taskId) {
         if (task.completed) {
           // Resume task: mark as incomplete and remove completedAt
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { completedAt, ...taskWithoutCompletedAt } = task;
           return { ...taskWithoutCompletedAt, completed: false };
         } else {

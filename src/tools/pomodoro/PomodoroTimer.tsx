@@ -76,7 +76,7 @@ export default function PomodoroTimer() {
   }, [currentSession, cycleCount, settings.pomodorosBeforeLongBreak]);
 
   const { requestPermission, showNotification } = useNotifications();
-  const { tasks, currentTask, addTask, selectTask, completeTask, deleteTask, updateTaskPomodoros, editTask } = useTasks();
+  const { tasks, currentTask, addTask, selectTask, completeTask, deleteTask, updateTaskPomodoros } = useTasks();
   const { statistics, recordCompletedPomodoro } = useStatistics();
   
   // Use currentTask as selectedTask for compatibility
@@ -225,14 +225,6 @@ export default function PomodoroTimer() {
             <Card className="p-6 w-full max-w-md mx-auto">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-semibold text-foreground">Quick Actions</h3>
-                <Button
-                  onClick={() => setVolume(volume > 0 ? 0 : 0.5)}
-                  size="sm"
-                  variant="outline"
-                  className="h-8 w-8 p-0"
-                >
-                  {volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </Button>
               </div>
               
               <div className="flex flex-col gap-3">

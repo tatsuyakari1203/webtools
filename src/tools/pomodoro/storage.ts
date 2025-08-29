@@ -4,6 +4,7 @@ import { PomodoroSettings, Task, Statistics, SessionState, STORAGE_KEYS, DEFAULT
 // Storage Service Class
 export class StorageService {
   static setItem(key: string, value: unknown): void {
+    if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
@@ -12,6 +13,7 @@ export class StorageService {
   }
   // Settings Management
   static saveSettings(settings: PomodoroSettings): void {
+    if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
     } catch (error) {
@@ -20,6 +22,7 @@ export class StorageService {
   }
 
   static loadSettings(): PomodoroSettings {
+    if (typeof window === 'undefined') return DEFAULT_SETTINGS;
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (stored) {
@@ -35,6 +38,7 @@ export class StorageService {
 
   // Tasks Management
   static saveTasks(tasks: Task[]): void {
+    if (typeof window === 'undefined') return;
     try {
       const tasksToStore = tasks.map(task => ({
         ...task,
@@ -48,6 +52,7 @@ export class StorageService {
   }
 
   static loadTasks(): Task[] {
+    if (typeof window === 'undefined') return [];
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.TASKS);
       if (stored) {
@@ -66,6 +71,7 @@ export class StorageService {
 
   // Statistics Management
   static saveStatistics(stats: Statistics): void {
+    if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(STORAGE_KEYS.STATISTICS, JSON.stringify(stats));
     } catch (error) {
@@ -74,6 +80,16 @@ export class StorageService {
   }
 
   static loadStatistics(): Statistics {
+    if (typeof window === 'undefined') {
+      return {
+        dailyPomodoros: {},
+        totalPomodoros: 0,
+        totalFocusTime: 0,
+        averageSessionLength: 0,
+        longestStreak: 0,
+        currentStreak: 0
+      };
+    }
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.STATISTICS);
       if (stored) {
@@ -94,6 +110,7 @@ export class StorageService {
 
   // Session State Management
   static saveSessionState(state: SessionState): void {
+    if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(STORAGE_KEYS.SESSION_STATE, JSON.stringify(state));
     } catch (error) {
@@ -102,6 +119,7 @@ export class StorageService {
   }
 
   static loadSessionState(): SessionState | null {
+    if (typeof window === 'undefined') return null;
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.SESSION_STATE);
       if (stored) {
@@ -115,6 +133,7 @@ export class StorageService {
 
   // Clear all data
   static clearAllData(): void {
+    if (typeof window === 'undefined') return;
     try {
       Object.values(STORAGE_KEYS).forEach(key => {
         localStorage.removeItem(key);

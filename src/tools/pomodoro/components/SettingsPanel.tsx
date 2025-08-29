@@ -13,13 +13,9 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Settings, 
   Clock, 
-  Volume2, 
-  VolumeX, 
-  Bell, 
-  Play 
+  Bell 
 } from 'lucide-react';
 import { PomodoroSettings, SettingsPanelProps } from '../types';
-import { useAudio } from '../hooks';
 
 export default function SettingsPanel({
   settings,
@@ -27,18 +23,13 @@ export default function SettingsPanel({
 }: SettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<PomodoroSettings>(settings);
   const [hasChanges, setHasChanges] = useState(false);
-  const { playNotificationSound, setVolume } = useAudio();
+
 
   // Handle settings change
   const handleSettingChange = (key: keyof PomodoroSettings, value: number | boolean) => {
     const newSettings = { ...localSettings, [key]: value };
     setLocalSettings(newSettings);
     setHasChanges(true);
-    
-    // Update volume in real-time
-    if (key === 'volume') {
-      setVolume(value as number);
-    }
   };
 
   // Save settings
@@ -47,16 +38,7 @@ export default function SettingsPanel({
     setHasChanges(false);
   };
 
-  // Test sound function
-  const testSound = async () => {
-    if (localSettings.notificationSoundEnabled) {
-      try {
-        await playNotificationSound('work');
-      } catch (error) {
-        console.error('Error playing test sound:', error);
-      }
-    }
-  };
+
 
   return (
     <Card className="p-6 max-w-2xl mx-auto">
@@ -67,14 +49,10 @@ export default function SettingsPanel({
         </div>
 
       <Tabs defaultValue="timing" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="timing" className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
             Timing
-          </TabsTrigger>
-          <TabsTrigger value="audio" className="flex items-center gap-2">
-            <Volume2 className="w-4 h-4" />
-            Audio
           </TabsTrigger>
           <TabsTrigger value="behavior" className="flex items-center gap-2">
             <Bell className="w-4 h-4" />
@@ -162,72 +140,7 @@ export default function SettingsPanel({
           </div>
         </TabsContent>
 
-        {/* Audio Settings */}
-        <TabsContent value="audio" className="space-y-6">
-          <div className="space-y-4">
-            <h4 className="font-medium text-foreground">Sound Settings</h4>
-            
-            {/* Sound Enabled */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label>Enable Sounds</Label>
-                <p className="text-sm text-muted-foreground">Play sounds when sessions start/end</p>
-              </div>
-              <Switch
-                checked={localSettings.notificationSoundEnabled}
-                onCheckedChange={(checked) => handleSettingChange('notificationSoundEnabled', checked)}
-              />
-            </div>
 
-            {/* Tick Sound */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label>Tick Sound</Label>
-                <p className="text-sm text-muted-foreground">Play ticking sound during work sessions</p>
-              </div>
-              <Switch
-                checked={localSettings.tickSoundEnabled}
-                onCheckedChange={(checked) => handleSettingChange('tickSoundEnabled', checked)}
-                disabled={!localSettings.notificationSoundEnabled}
-              />
-            </div>
-
-            {/* Volume Control */}
-            <div className="space-y-2">
-              <Label htmlFor="volume">Volume</Label>
-              <div className="flex items-center gap-3">
-                <VolumeX className="w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="volume"
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={localSettings.volume}
-                  onChange={(e) => handleSettingChange('volume', parseFloat(e.target.value))}
-                  className="flex-1"
-                  disabled={!localSettings.notificationSoundEnabled}
-                />
-                <Volume2 className="w-4 h-4 text-muted-foreground" />
-                <Badge variant="outline" className="w-12 text-center">
-                  {Math.round(localSettings.volume * 100)}%
-                </Badge>
-              </div>
-            </div>
-
-            {/* Test Sound Button */}
-            <Button
-              onClick={testSound}
-              variant="outline"
-              size="sm"
-              disabled={!localSettings.notificationSoundEnabled}
-              className="w-full"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Test Sound
-            </Button>
-          </div>
-        </TabsContent>
 
         {/* Behavior Settings */}
         <TabsContent value="behavior" className="space-y-6">
@@ -269,8 +182,8 @@ export default function SettingsPanel({
                 <p className="text-sm text-muted-foreground">Show notifications when sessions end</p>
               </div>
               <Switch
-                checked={localSettings.notificationSoundEnabled}
-                onCheckedChange={(checked) => handleSettingChange('notificationSoundEnabled', checked)}
+                checked={localSettings.notificationsEnabled}
+                onCheckedChange={(checked) => handleSettingChange('notificationsEnabled', checked)}
               />
             </div>
           </div>
