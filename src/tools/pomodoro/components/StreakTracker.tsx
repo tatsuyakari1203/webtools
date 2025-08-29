@@ -23,7 +23,6 @@ function GitHubStyleCalendar({ statistics }: { statistics: Statistics }) {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
     
     // Start from Sunday of the week containing the first day
     const calendarStart = new Date(firstDay);
