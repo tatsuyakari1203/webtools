@@ -5,11 +5,12 @@ import Link from "next/link"
 export default function HeroSection() {
   return (
     <section 
-      className="relative overflow-hidden bg-background py-24 sm:py-32"
+      className="relative overflow-hidden py-24 sm:py-32"
       aria-labelledby="hero-heading"
       role="banner"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" aria-hidden="true" />
+      {/* Subtle gradient overlay on top of wallpaper for better text readability */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10" aria-hidden="true" />
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <header className="mx-auto max-w-2xl text-center">
           <div className="mb-8 flex justify-center">

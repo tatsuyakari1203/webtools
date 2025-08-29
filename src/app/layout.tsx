@@ -7,6 +7,7 @@ import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import { Toaster } from "sonner"
 import { WebsiteStructuredData, OrganizationStructuredData } from "@/components/StructuredData"
+import WallpaperBackground from "@/components/layout/WallpaperBackground"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -107,6 +108,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <InventoryProvider>
+            <WallpaperBackground 
+          wallpaperUrl={process.env.WALLPAPER_URL}
+          enableBlur={process.env.WALLPAPER_BLUR === 'true'}
+        />
             <div className="relative flex min-h-screen flex-col">
               <Header />
               <div className="flex-1">{children}</div>

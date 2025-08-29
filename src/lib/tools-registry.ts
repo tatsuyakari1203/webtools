@@ -82,7 +82,7 @@ export const toolsRegistry: Tool[] = [
     category: "Productivity",
     icon: Timer,
     path: "/tools/pomodoro",
-    featured: false,
+    featured: true,
   },
 ]
 
