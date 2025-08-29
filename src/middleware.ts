@@ -1,0 +1,113 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+// Danh sách các domain được phép truy cập API
+const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'https://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://127.0.0.1:3000',
+  // Thêm domain production của bạn ở đây
+  // 'https://yourdomain.com',
+  // 'https://www.yourdomain.com'
+];
+
+// Các API routes cần bảo vệ
+const PROTECTED_API_ROUTES = [
+  '/api/askgemini',
+  '/api/ocr/process'
+];
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Chỉ áp dụng middleware cho các API routes được bảo vệ
+  const isProtectedRoute = PROTECTED_API_ROUTES.some(route => 
+    pathname.startsWith(route)
+  );
+  
+  if (!isProtectedRoute) {
+    return NextResponse.next();
+  }
+
+  // Lấy origin từ request headers
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+  const host = request.headers.get('host');
+  
+  console.log(`[Security] ${pathname} - Origin: ${origin}, Referer: ${referer}, Host: ${host}`);
+  
+  // Cho phép requests từ cùng domain (same-origin)
+  if (host) {
+    const sameOriginUrls = [
+      `http://${host}`,
+      `https://${host}`
+    ];
+    
+    // Kiểm tra origin
+    if (origin && sameOriginUrls.includes(origin)) {
+      return NextResponse.next();
+    }
+    
+    // Kiểm tra referer nếu không có origin
+    if (!origin && referer) {
+      const refererOrigin = new URL(referer).origin;
+      if (sameOriginUrls.includes(refererOrigin)) {
+        return NextResponse.next();
+      }
+    }
+  }
+  
+  // Kiểm tra với danh sách ALLOWED_ORIGINS
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    return NextResponse.next();
+  }
+  
+  // Kiểm tra referer với ALLOWED_ORIGINS nếu không có origin
+  if (!origin && referer) {
+    try {
+      const refererOrigin = new URL(referer).origin;
+      if (ALLOWED_ORIGINS.includes(refererOrigin)) {
+        return NextResponse.next();
+      }
+    } catch (error) {
+      console.error('[Security] Invalid referer URL:', referer);
+    }
+  }
+  
+  // Cho phép requests từ development tools (Postman, curl, etc.) trong development
+  if (process.env.NODE_ENV === 'development') {
+    // Nếu không có origin và referer (như từ Postman, curl)
+    if (!origin && !referer) {
+      console.log('[Security] Allowing request without origin/referer in development mode');
+      return NextResponse.next();
+    }
+  }
+  
+  // Từ chối request không được phép
+  console.warn(`[Security] Blocked request to ${pathname} from origin: ${origin || 'unknown'}, referer: ${referer || 'unknown'}`);
+  
+  return NextResponse.json(
+    { 
+      success: false, 
+      error: 'Access denied. This API can only be accessed from authorized domains.' 
+    },
+    { 
+      status: 403,
+      headers: {
+        'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.includes(origin) ? origin : 'null',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      }
+    }
+  );
+}
+
+// Cấu hình matcher để chỉ áp dụng middleware cho các routes cần thiết
+export const config = {
+  matcher: [
+    // Áp dụng cho tất cả API routes
+    '/api/:path*',
+    // Loại trừ các static files và Next.js internals
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
+  ],
+};
