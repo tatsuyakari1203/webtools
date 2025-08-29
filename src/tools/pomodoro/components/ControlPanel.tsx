@@ -17,7 +17,8 @@ import {
   Keyboard,
   Settings,
   Clock,
-  Bell
+  Bell,
+  Focus
 } from 'lucide-react';
 import { ControlPanelProps, PomodoroSettings } from '../types';
 
@@ -28,7 +29,9 @@ export default function ControlPanel({
   onSkip,
   onReset,
   settings,
-  onSettingsChange
+  onSettingsChange,
+  focusMode = false,
+  onToggleFocusMode
 }: ControlPanelProps) {
   const [localSettings, setLocalSettings] = useState<PomodoroSettings>(settings);
   const [hasChanges, setHasChanges] = useState(false);
@@ -91,6 +94,17 @@ export default function ControlPanel({
             >
               <SkipForward className="w-4 h-4" />
             </Button>
+            
+            {onToggleFocusMode && (
+              <Button
+                onClick={onToggleFocusMode}
+                variant={focusMode ? "default" : "outline"}
+                size="default"
+                title="Focus Mode (F)"
+              >
+                <Focus className="w-4 h-4" />
+              </Button>
+            )}
           </div>
 
           {/* Keyboard Shortcuts */}
@@ -100,7 +114,7 @@ export default function ControlPanel({
               <span className="text-sm font-medium text-muted-foreground">Shortcuts</span>
             </div>
             
-            <div className="grid grid-cols-3 gap-2 text-xs">
+            <div className="grid grid-cols-4 gap-2 text-xs">
               <div className="text-center">
                 <kbd className="px-1.5 py-0.5 bg-background rounded border text-foreground text-xs">Space</kbd>
                 <div className="text-muted-foreground mt-1">Play/Pause</div>
@@ -112,6 +126,10 @@ export default function ControlPanel({
               <div className="text-center">
                 <kbd className="px-1.5 py-0.5 bg-background rounded border text-foreground text-xs">S</kbd>
                 <div className="text-muted-foreground mt-1">Skip</div>
+              </div>
+              <div className="text-center">
+                <kbd className="px-1.5 py-0.5 bg-background rounded border text-foreground text-xs">F</kbd>
+                <div className="text-muted-foreground mt-1">Focus</div>
               </div>
             </div>
           </div>

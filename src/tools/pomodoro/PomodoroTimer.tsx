@@ -32,6 +32,7 @@ export default function PomodoroTimer() {
   // Initialize timer state
   const [currentSession, setCurrentSession] = useState<'work' | 'shortBreak' | 'longBreak'>('work');
   const [cycleCount, setCycleCount] = useState(0);
+  const [focusMode, setFocusMode] = useState(false);
   
   const getSessionDuration = useCallback((session: 'work' | 'shortBreak' | 'longBreak') => {
     switch (session) {
@@ -80,6 +81,23 @@ export default function PomodoroTimer() {
   
   // Use currentTask as selectedTask for compatibility
   const selectedTask = currentTask;
+
+  // Focus mode handlers
+  const toggleFocusMode = useCallback(() => {
+    setFocusMode(prev => !prev);
+  }, []);
+
+  // ESC key listener to exit focus mode
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && focusMode) {
+        setFocusMode(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [focusMode]);
 
   // Handle session completion
   const handleSessionComplete = useCallback(async () => {
@@ -153,13 +171,17 @@ export default function PomodoroTimer() {
           event.preventDefault();
           skip();
           break;
+        case 'f':
+          event.preventDefault();
+          toggleFocusMode();
+          break;
 
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isRunning, start, pause, reset, skip]);
+  }, [isRunning, start, pause, reset, skip, toggleFocusMode]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -175,6 +197,40 @@ export default function PomodoroTimer() {
       setTime(getSessionDuration(currentSession));
     }
   };
+
+  // Focus Mode UI
+  if (focusMode) {
+    return (
+      <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center p-8">
+        {/* Exit hint */}
+        <div className="absolute top-4 right-4 text-muted-foreground text-sm">
+          Press ESC to exit focus mode
+        </div>
+        
+        {/* Centered Timer Display */}
+        <div className="flex-1 flex flex-col items-center justify-center space-y-8">
+          <TimerDisplay
+            timeRemaining={timeRemaining}
+            sessionType={currentSession}
+            isRunning={isRunning}
+            currentTask={selectedTask ? tasks.find(t => t.id === selectedTask)?.text : undefined}
+          />
+          
+          {/* Clock Panel */}
+          <div className="mt-8">
+            <CombinedClockPanel />
+          </div>
+        </div>
+        
+        {/* Click to exit */}
+        <div 
+          className="absolute inset-0 cursor-pointer" 
+          onClick={() => setFocusMode(false)}
+          aria-label="Click to exit focus mode"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-4">
@@ -212,6 +268,8 @@ export default function PomodoroTimer() {
               onSkip={skip}
               settings={settings}
               onSettingsChange={handleSettingsChange}
+              focusMode={focusMode}
+              onToggleFocusMode={toggleFocusMode}
             />
 
           </div>

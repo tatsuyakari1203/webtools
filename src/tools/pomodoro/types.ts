@@ -68,6 +68,8 @@ export interface ControlPanelProps {
   onReset: () => void;
   settings: PomodoroSettings;
   onSettingsChange: (settings: PomodoroSettings) => void;
+  focusMode?: boolean;
+  onToggleFocusMode?: () => void;
 }
 
 export interface CycleTrackerProps {
