@@ -8,6 +8,7 @@ import GoogleDocsToMarkdown from "@/tools/google-docs-to-markdown/GoogleDocsToMa
 import OCRTool from "@/tools/ocr/OCRTool"
 import Codebase2Json from "@/tools/codebase2json"
 import PomodoroTimer from "@/tools/pomodoro/PomodoroTimer"
+import NanoBanana from "@/tools/nano-banana/NanoBanana"
 import ComingSoonTool from "@/components/tools/ComingSoonTool"
 import { ToolStructuredData } from "@/components/StructuredData"
 import type { Metadata } from "next"
@@ -45,6 +46,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <Codebase2Json />
       case "pomodoro":
         return <PomodoroTimer />
+      case "nano-banana":
+        return <NanoBanana />
       default:
         return <ComingSoonTool tool={tool} />
     }

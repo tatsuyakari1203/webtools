@@ -1,4 +1,4 @@
-import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode, Timer } from "lucide-react"
+import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode, Timer, Banana } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -82,6 +82,15 @@ export const toolsRegistry: Tool[] = [
     category: "Productivity",
     icon: Timer,
     path: "/tools/pomodoro",
+    featured: true,
+  },
+  {
+    id: "nano-banana",
+    name: "Nano Banana",
+    description: "AI-powered image generation, editing and composition tool using Gemini AI",
+    category: "AI",
+    icon: Banana,
+    path: "/tools/nano-banana",
     featured: true,
   },
 ]
