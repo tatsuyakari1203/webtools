@@ -1,46 +1,51 @@
 #!/bin/bash
 
-# Script để khởi chạy backend Python với virtual environment
-# Kiểm tra và tạo venv nếu cần, sau đó chạy server
+# Script to start Python backend with virtual environment
+# Check and create venv if needed, then run server with nohup
 
-set -e  # Dừng script nếu có lỗi
+set -e  # Stop script on error
 
 echo "🚀 Starting WebTools Backend Server..."
 
-# Chuyển đến thư mục backend
+# Navigate to backend directory
 cd "$(dirname "$0")/backend"
 
-# Kiểm tra Python có tồn tại không
+# Check if Python exists
 if ! command -v python3 &> /dev/null; then
-    echo "❌ Python3 không được tìm thấy. Vui lòng cài đặt Python3."
+    echo "❌ Python3 not found. Please install Python3."
     exit 1
 fi
 
-echo "✅ Python3 đã được tìm thấy: $(python3 --version)"
+echo "✅ Python3 found: $(python3 --version)"
 
-# Kiểm tra virtual environment
+# Check virtual environment
 if [ ! -d "venv" ]; then
-    echo "📦 Tạo virtual environment..."
+    echo "📦 Creating virtual environment..."
     python3 -m venv venv
-    echo "✅ Virtual environment đã được tạo"
+    echo "✅ Virtual environment created"
 else
-    echo "✅ Virtual environment đã tồn tại"
+    echo "✅ Virtual environment already exists"
 fi
 
-# Kích hoạt virtual environment
-echo "🔧 Kích hoạt virtual environment..."
+# Activate virtual environment
+echo "🔧 Activating virtual environment..."
 source venv/bin/activate
 
-# Kiểm tra và cài đặt dependencies
+# Check and install dependencies
 if [ -f "requirements.txt" ]; then
-    echo "📋 Kiểm tra dependencies..."
+    echo "📋 Checking dependencies..."
     pip install -r requirements.txt --quiet
-    echo "✅ Dependencies đã được cài đặt/cập nhật"
+    echo "✅ Dependencies installed/updated"
 fi
 
-# Khởi chạy server
-echo "🌟 Khởi chạy backend server trên http://0.0.0.0:7777"
-echo "📝 Logs sẽ hiển thị bên dưới. Nhấn Ctrl+C để dừng server."
+# Start server with nohup
+echo "🌟 Starting backend server on http://0.0.0.0:7777"
+echo "📝 Server will run in background. Check nohup.out for logs."
+echo "💡 To stop the server, use: pkill -f 'uvicorn app.main:app'"
 echo "" 
 
-python -m uvicorn app.main:app --host 0.0.0.0 --port 7777 --reload
+nohup python -m uvicorn app.main:app --host 0.0.0.0 --port 7777 --reload > nohup.out 2>&1 &
+
+echo "✅ Backend server started successfully!"
+echo "📄 Log file: $(pwd)/nohup.out"
+echo "🔍 To view logs: tail -f $(pwd)/nohup.out"
