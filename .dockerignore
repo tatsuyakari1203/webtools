@@ -51,6 +51,9 @@ Thumbs.db
 .git
 .gitignore
 
+# Reference files (not needed for production)
+ref/
+
 # Docker
 Dockerfile*
 docker-compose*

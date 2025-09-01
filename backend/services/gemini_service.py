@@ -134,7 +134,7 @@ class GeminiImageService:
             
             # Prepare content with image and text using the new API
             contents = [
-                types.Part.from_text(enhanced_prompt),
+                types.Part.from_text(text=enhanced_prompt),
                 types.Part.from_bytes(
                     data=base64.b64decode(image_base64),
                     mime_type="image/png"

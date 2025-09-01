@@ -125,7 +125,8 @@ const NanoBanana: React.FC = () => {
         quality: 'ultra'
       }
 
-      const response = await fetch('http://localhost:8000/api/generate', {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+      const response = await fetch(`${backendUrl}/api/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +166,8 @@ const NanoBanana: React.FC = () => {
       formData.append('style', editStyle)
       formData.append('quality', 'ultra')
 
-      const response = await fetch('http://localhost:8000/api/edit', {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+      const response = await fetch(`${backendUrl}/api/edit`, {
         method: 'POST',
         body: formData
       })
@@ -212,7 +214,8 @@ const NanoBanana: React.FC = () => {
       formData.append('style', composeStyle)
       formData.append('quality', 'ultra')
 
-      const response = await fetch('http://localhost:8000/api/compose', {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+      const response = await fetch(`${backendUrl}/api/compose`, {
         method: 'POST',
         body: formData
       })
