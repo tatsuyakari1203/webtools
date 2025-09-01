@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-const { GoogleGenAI } = require('@google/genai')
+import { GoogleGenAI } from '@google/genai'
 
 export async function POST(request: NextRequest) {
+  const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY
+
+  if (!GOOGLE_API_KEY) {
+    return NextResponse.json(
+      { success: false, error: 'GOOGLE_API_KEY is not configured' },
+      { status: 500 }
+    )
+  }
+
+  const ai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
+
   try {
     const formData = await request.formData()
     const images = formData.getAll('images') as File[]
@@ -16,11 +27,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    // Initialize Gemini AI
-    const genAI = new GoogleGenAI({
-      apiKey: process.env.GOOGLE_API_KEY
-    })
 
     // Convert images to base64
     const imageContents = []
@@ -60,7 +66,7 @@ export async function POST(request: NextRequest) {
     ]
 
     // Generate composed image with Gemini
-    const response = await genAI.models.generateContent({
+    const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image-preview',
       contents: content
     })
@@ -71,8 +77,12 @@ export async function POST(request: NextRequest) {
       throw new Error('No image generated')
     }
 
-    const parts = candidates[0].content.parts
+    const parts = candidates[0].content?.parts
     let imageData = null
+
+    if (!parts) {
+      throw new Error('No content parts found in response')
+    }
 
     for (const part of parts) {
       if (part.inlineData) {

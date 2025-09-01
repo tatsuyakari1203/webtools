@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider'
 import { Loader2, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { addToGlobalHistory } from '../utils/globalHistory'
 
 interface GenerateTabProps {
   loading: boolean
@@ -56,7 +57,16 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
       const data = await response.json()
       
       if (data.success && data.image_data) {
-        setGeneratedImage(`data:image/png;base64,${data.image_data}`)
+        const imageUrl = `data:image/png;base64,${data.image_data}`
+        setGeneratedImage(imageUrl)
+        
+        // Add to global history
+        addToGlobalHistory({
+          image: imageUrl,
+          prompt: prompt.trim(),
+          type: 'generate'
+        })
+        
         toast.success('Image generated successfully!')
       } else {
         throw new Error(data.error || 'Failed to generate image')

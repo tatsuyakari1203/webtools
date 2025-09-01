@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-const { GoogleGenAI } = require('@google/genai')
-
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY
-
-if (!GOOGLE_API_KEY) {
-  throw new Error('GOOGLE_API_KEY is required')
-}
-
-const ai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
+import { GoogleGenAI } from '@google/genai'
 
 export async function POST(request: NextRequest) {
+  const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY
+
+  if (!GOOGLE_API_KEY) {
+    return NextResponse.json(
+      { success: false, error: 'GOOGLE_API_KEY is not configured' },
+      { status: 500 }
+    )
+  }
+
+  const ai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
   try {
     const body = await request.json()
     const { prompt, width = 1024, height = 1024, style = 'photorealistic', quality = 'ultra' } = body
@@ -58,8 +60,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const parts = candidates[0].content.parts
+    const parts = candidates[0].content?.parts
     let imageData = null
+
+    if (!parts) {
+      return NextResponse.json(
+        { success: false, error: 'No content parts found in response' },
+        { status: 500 }
+      )
+    }
 
     for (const part of parts) {
       if (part.inlineData) {

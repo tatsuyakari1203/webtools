@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Download, Image as ImageIcon, Loader2, Maximize2, Eye, Wand2, Undo, Redo, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Lightbox } from './Lightbox'
+import { addToGlobalHistory } from '../utils/globalHistory'
 
 interface ResultDisplayProps {
   image: string | null
@@ -34,10 +35,13 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   const [imageHistory, setImageHistory] = useState<ImageHistoryItem[]>([])
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1)
 
-  // Load history from localStorage on mount
+  // Load refine history from localStorage on mount (session-specific)
   useEffect(() => {
-    const savedHistory = localStorage.getItem('nano-banana-history')
-    const savedIndex = localStorage.getItem('nano-banana-history-index')
+    const sessionId = sessionStorage.getItem('nano-banana-session-id') || Date.now().toString()
+    sessionStorage.setItem('nano-banana-session-id', sessionId)
+    
+    const savedHistory = localStorage.getItem(`nano-banana-refine-history-${sessionId}`)
+    const savedIndex = localStorage.getItem(`nano-banana-refine-history-index-${sessionId}`)
     if (savedHistory) {
       try {
         const history = JSON.parse(savedHistory)
@@ -46,16 +50,17 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
           setCurrentHistoryIndex(parseInt(savedIndex))
         }
       } catch (error) {
-        console.error('Error loading history from localStorage:', error)
+        console.error('Error loading refine history from localStorage:', error)
       }
     }
   }, [])
 
-  // Save history to localStorage whenever it changes
+  // Save refine history to localStorage whenever it changes (session-specific)
   useEffect(() => {
-    if (imageHistory.length > 0) {
-      localStorage.setItem('nano-banana-history', JSON.stringify(imageHistory))
-      localStorage.setItem('nano-banana-history-index', currentHistoryIndex.toString())
+    const sessionId = sessionStorage.getItem('nano-banana-session-id')
+    if (imageHistory.length > 0 && sessionId) {
+      localStorage.setItem(`nano-banana-refine-history-${sessionId}`, JSON.stringify(imageHistory))
+      localStorage.setItem(`nano-banana-refine-history-index-${sessionId}`, currentHistoryIndex.toString())
     }
   }, [imageHistory, currentHistoryIndex])
   const handleDownload = async () => {
@@ -109,8 +114,23 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
     })
     
     // Update current index to point to the new item
-    setCurrentHistoryIndex(prev => prev + 1)
+    setCurrentHistoryIndex(currentHistoryIndex + 1)
   }, [currentHistoryIndex])
+
+  // Add current image to history when it changes (for first time generation)
+  useEffect(() => {
+    if (image && imageHistory.length === 0) {
+      // This is the first image, add it to history
+      addToHistory(image, 'Initial generation')
+    } else if (image && imageHistory.length > 0 && currentHistoryIndex >= 0) {
+      // Check if current image is different from the one in history
+      const currentHistoryImage = imageHistory[currentHistoryIndex]?.image
+      if (currentHistoryImage !== image) {
+        // Image changed externally (e.g., from other tabs), add to history
+        addToHistory(image, 'Generated image')
+      }
+    }
+  }, [image, imageHistory.length, currentHistoryIndex, addToHistory])
 
   // Handle refine functionality
   const handleRefine = async () => {
@@ -140,13 +160,21 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
       if (data.success && data.image_data) {
          const newImageUrl = `data:image/png;base64,${data.image_data}`
          
-         // Add current image to history if it's not already there
+         // Add current image to refine history if it's not already there
          if (image && (imageHistory.length === 0 || imageHistory[currentHistoryIndex]?.image !== image)) {
            addToHistory(image, 'Previous version')
          }
          
          setGeneratedImage(newImageUrl)
          addToHistory(newImageUrl, refinePrompt)
+         
+         // Add refined image to global history
+         addToGlobalHistory({
+           image: newImageUrl,
+           prompt: refinePrompt.trim(),
+           type: 'refine'
+         })
+         
          setRefinePrompt('')
          // Keep refine input open for continuous editing
          toast.success('Image refined successfully!')
@@ -307,20 +335,77 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                      {imageHistory.length > 0 && (
                        <div className="space-y-2">
                          <h5 className="text-xs font-medium text-muted-foreground">Refine History ({imageHistory.length} versions)</h5>
-                         <div className="max-h-32 overflow-y-auto space-y-1">
+                         <div className="max-h-48 overflow-y-auto space-y-2">
                            {imageHistory.map((item, index) => (
                              <div 
                                key={index}
-                               className={`text-xs p-2 rounded border ${
+                               className={`flex gap-3 p-2 rounded border ${
                                  index === currentHistoryIndex 
                                    ? 'bg-primary/10 border-primary/20' 
                                    : 'bg-background border-border'
                                }`}
                              >
-                               <div className="font-medium">Version {index + 1}</div>
-                               <div className="text-muted-foreground truncate">{item.prompt}</div>
-                               <div className="text-muted-foreground">
-                                 {new Date(item.timestamp).toLocaleTimeString()}
+                               {/* Thumbnail */}
+                               <div className="flex-shrink-0">
+                                 <img
+                                   src={item.image}
+                                   alt={`Version ${index + 1}`}
+                                   className="w-12 h-12 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+                                   onClick={() => {
+                                     setCurrentHistoryIndex(index)
+                                     setGeneratedImage(item.image)
+                                     toast.success(`Switched to version ${index + 1}`)
+                                   }}
+                                 />
+                               </div>
+                               
+                               {/* Content */}
+                               <div className="flex-1 min-w-0">
+                                 <div className="flex items-center justify-between">
+                                   <div className="font-medium text-xs">Version {index + 1}</div>
+                                   <Button
+                                     variant="ghost"
+                                     size="sm"
+                                     className="h-6 w-6 p-0"
+                                     onClick={async () => {
+                                       try {
+                                         let blob: Blob
+                                         
+                                         if (item.image.startsWith('blob:')) {
+                                           const response = await fetch(item.image)
+                                           blob = await response.blob()
+                                         } else if (item.image.startsWith('data:image')) {
+                                           const response = await fetch(item.image)
+                                           blob = await response.blob()
+                                         } else {
+                                           toast.error('Invalid image format')
+                                           return
+                                         }
+                                         
+                                         const url = URL.createObjectURL(blob)
+                                         const link = document.createElement('a')
+                                         link.href = url
+                                         link.download = `nano-banana-v${index + 1}-${Date.now()}.png`
+                                         document.body.appendChild(link)
+                                         link.click()
+                                         document.body.removeChild(link)
+                                         URL.revokeObjectURL(url)
+                                         
+                                         toast.success(`Version ${index + 1} downloaded!`)
+                                       } catch (error) {
+                                         console.error('Error downloading image:', error)
+                                         toast.error('Failed to download image')
+                                       }
+                                     }}
+                                     title={`Download version ${index + 1}`}
+                                   >
+                                     <Download className="h-3 w-3" />
+                                   </Button>
+                                 </div>
+                                 <div className="text-muted-foreground text-xs truncate">{item.prompt}</div>
+                                 <div className="text-muted-foreground text-xs">
+                                   {new Date(item.timestamp).toLocaleTimeString()}
+                                 </div>
                                </div>
                              </div>
                            ))}

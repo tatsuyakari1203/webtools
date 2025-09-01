@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Edit } from 'lucide-react'
 import { toast } from 'sonner'
 import { ImageInput } from './ImageInput'
+import { addToGlobalHistory } from '../utils/globalHistory'
 
 interface EditTabProps {
   loading: boolean
@@ -61,6 +62,14 @@ export const EditTab: React.FC<EditTabProps> = ({
       const imageUrl = `data:image/png;base64,${result.image_data}`
       
       setGeneratedImage(imageUrl)
+      
+      // Add to global history
+      addToGlobalHistory({
+        image: imageUrl,
+        prompt: editInstruction.trim(),
+        type: 'edit'
+      })
+      
       toast.success('Image edited successfully!')
     } catch (error) {
       console.error('Error editing image:', error)
