@@ -169,9 +169,7 @@ async def generate_image(request: TextToImageRequest):
                 import json
                 
                 # Send initial status
-                yield f"data: {json.dumps({'status': 'starting', 'message': 'Initializing image generation...'})}
-
-"
+                yield f"data: {json.dumps({'status': 'starting', 'message': 'Initializing image generation...'})}\n\n"
                 
                 try:
                     # Generate image using Gemini service
@@ -191,9 +189,7 @@ async def generate_image(request: TextToImageRequest):
                             'image_data': result["image_data"],
                             'message': result["message"]
                         }
-                        yield f"data: {json.dumps(response_data)}
-
-"
+                        yield f"data: {json.dumps(response_data)}\n\n"
                     else:
                         # Send error response
                         response_data = {
@@ -202,9 +198,7 @@ async def generate_image(request: TextToImageRequest):
                             'error': result["error"],
                             'message': result["message"]
                         }
-                        yield f"data: {json.dumps(response_data)}
-
-"
+                        yield f"data: {json.dumps(response_data)}\n\n"
                         
                 except Exception as e:
                     # Send error response
@@ -214,14 +208,10 @@ async def generate_image(request: TextToImageRequest):
                         'error': str(e),
                         'message': 'Image generation failed'
                     }
-                    yield f"data: {json.dumps(response_data)}
-
-"
+                    yield f"data: {json.dumps(response_data)}\n\n"
                 
                 # Send end signal
-                yield "data: [DONE]
-
-"
+                yield "data: [DONE]\n\n"
             
             return StreamingResponse(
                 generate_stream(),
