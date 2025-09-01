@@ -9,8 +9,8 @@ services:
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - NEXT_TELEMETRY_DISABLED=1
-      - BACKEND_URL=http://172.17.0.1:7777
-      - NEXT_PUBLIC_BACKEND_URL=http://172.17.0.1:7777
+      - BACKEND_URL=http://localhost:7777
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:7777
       - PORT=5005
     network_mode: "host"
     healthcheck:
