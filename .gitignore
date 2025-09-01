@@ -48,6 +48,9 @@ app.log
 dive.deb
 dive_0.13.1_linux_amd64.deb
 
+# backend logs
+backend/logs/*.log
+
 # Python virtual environment
 backend/venv/
 venv/
@@ -71,4 +74,5 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+backend/logs/nanobanana.log
 backend/logs/nanobanana.log
