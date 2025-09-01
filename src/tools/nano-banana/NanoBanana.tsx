@@ -125,8 +125,7 @@ const NanoBanana: React.FC = () => {
         quality: 'ultra'
       }
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7777'
-      const response = await fetch(`${backendUrl}/api/generate`, {
+      const response = await fetch('/api/nano-banana/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -166,8 +165,7 @@ const NanoBanana: React.FC = () => {
       formData.append('style', editStyle)
       formData.append('quality', 'ultra')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7777'
-      const response = await fetch(`${backendUrl}/api/edit`, {
+      const response = await fetch('/api/nano-banana/edit', {
         method: 'POST',
         body: formData
       })
@@ -214,8 +212,7 @@ const NanoBanana: React.FC = () => {
       formData.append('style', composeStyle)
       formData.append('quality', 'ultra')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
-      const response = await fetch(`${backendUrl}/api/compose`, {
+      const response = await fetch('/api/nano-banana/compose', {
         method: 'POST',
         body: formData
       })
@@ -438,8 +435,7 @@ const NanoBanana: React.FC = () => {
       formData.append('style', styleTransferStyle)
       formData.append('quality', 'ultra')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
-      const response = await fetch(`${backendUrl}/api/style-transfer`, {
+      const response = await fetch('/api/nano-banana/style-transfer', {
         method: 'POST',
         body: formData
       })
@@ -481,7 +477,7 @@ const NanoBanana: React.FC = () => {
         quality: 'ultra'
       }
 
-      const apiResponse = await fetch('http://localhost:8000/api/conversation', {
+      const apiResponse = await fetch('/api/nano-banana/conversation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

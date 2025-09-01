@@ -8,9 +8,12 @@ services:
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - NEXT_TELEMETRY_DISABLED=1
-      - NEXT_PUBLIC_BACKEND_URL=http://localhost:7777
+      - BACKEND_URL=http://host.docker.internal:7777
+      - NEXT_PUBLIC_BACKEND_URL=http://host.docker.internal:7777
     networks:
       - webtools-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
       interval: 30s
