@@ -225,9 +225,22 @@ class GeminiImageService:
         if any(keyword in prompt.lower() for keyword in text_keywords):
             enhanced_prompt += " IMPORTANT: Render all text clearly and legibly with proper spelling, sharp edges, and high contrast. Text should be perfectly readable and well-formed with correct typography."
         
-        # Add style information
+        # Add style information with detailed descriptions
         if style:
-            enhanced_prompt += f" Style: {style}."
+            if style.lower() == "anime":
+                enhanced_prompt += " Style: Japanese anime/manga art style with large expressive eyes, vibrant colors, clean line art, cel-shaded appearance, and characteristic anime facial features and proportions."
+            elif style.lower() == "photorealistic":
+                enhanced_prompt += " Style: photorealistic, lifelike, natural lighting, realistic textures and materials."
+            elif style.lower() == "artistic":
+                enhanced_prompt += " Style: artistic, painterly, creative interpretation with artistic flair."
+            elif style.lower() == "abstract":
+                enhanced_prompt += " Style: abstract art with non-representational forms, bold colors, and creative composition."
+            elif style.lower() == "modern":
+                enhanced_prompt += " Style: modern contemporary art with clean lines, minimalist approach, and current design trends."
+            elif style.lower() == "classical":
+                enhanced_prompt += " Style: classical art with traditional techniques, refined composition, and timeless aesthetic."
+            else:
+                enhanced_prompt += f" Style: {style}."
         
         # Add quality and dimension hints
         if quality == "high":
@@ -260,9 +273,22 @@ class GeminiImageService:
         if any(keyword in edit_instruction.lower() or (prompt and keyword in prompt.lower()) for keyword in text_keywords):
             enhanced_prompt += " IMPORTANT: When editing or adding text, ensure all text is clearly readable, properly spelled, and has sharp, well-defined edges with high contrast."
         
-        # Add style information
+        # Add style information with detailed descriptions
         if style:
-            enhanced_prompt += f" Apply {style} style."
+            if style.lower() == "anime":
+                enhanced_prompt += " Apply Japanese anime/manga art style with large expressive eyes, vibrant colors, clean line art, cel-shaded appearance, and characteristic anime facial features and proportions."
+            elif style.lower() == "photorealistic":
+                enhanced_prompt += " Apply photorealistic style with lifelike appearance, natural lighting, and realistic textures."
+            elif style.lower() == "artistic":
+                enhanced_prompt += " Apply artistic style with painterly effects and creative interpretation."
+            elif style.lower() == "abstract":
+                enhanced_prompt += " Apply abstract art style with non-representational forms and bold colors."
+            elif style.lower() == "modern":
+                enhanced_prompt += " Apply modern contemporary style with clean lines and minimalist approach."
+            elif style.lower() == "classical":
+                enhanced_prompt += " Apply classical art style with traditional techniques and refined composition."
+            else:
+                enhanced_prompt += f" Apply {style} style."
         
         # Add quality hints
         if quality == "high":
@@ -437,20 +463,31 @@ class GeminiImageService:
         intensity: float,
         quality: str = "standard"
     ) -> str:
-        """Enhance prompt for style transfer"""
-        enhanced = f"Transform the provided photograph using the artistic style from the second image. {prompt}. "
+        """Enhance prompt for style transfer with detailed style guidance"""
+        # Check if the prompt or style image suggests anime style
+        anime_keywords = ['anime', 'manga', 'japanese animation', 'cel-shaded', 'cartoon']
+        is_anime_style = any(keyword in prompt.lower() for keyword in anime_keywords)
+        
+        if is_anime_style:
+            enhanced = f"Transform the ENTIRE content image into Japanese anime/manga art style using the style reference. {prompt}. "
+            enhanced += "Apply anime characteristics to ALL elements: convert the entire scene including background, foreground, objects, and characters into anime style with large expressive eyes, vibrant colors, clean line art, cel-shaded appearance, smooth gradients, and characteristic anime facial features and proportions. "
+        else:
+            enhanced = f"Transform the ENTIRE content image using the artistic style from the style reference image. {prompt}. "
         
         if intensity < 0.3:
-            enhanced += "Apply the style subtly, preserving most of the original content details. "
+            enhanced += "Apply the style subtly, preserving most of the original content details and composition. "
         elif intensity > 0.7:
-            enhanced += "Apply the style strongly, dramatically transforming the image while preserving the basic composition. "
+            enhanced += "Apply the style strongly, dramatically transforming the image with bold artistic interpretation while preserving the basic subject and composition. "
         else:
             enhanced += "Apply the style moderately, balancing artistic transformation with content preservation. "
         
         if quality == "high":
-            enhanced += "Generate in high resolution with exceptional artistic detail. "
+            enhanced += "Generate in high resolution with exceptional artistic detail and clarity. "
         
-        enhanced += "Preserve the original composition of buildings and objects, but render all elements with the artistic style and color palette from the style reference image."
+        if is_anime_style:
+            enhanced += "Ensure the ENTIRE result has the distinctive anime/manga aesthetic with smooth shading, vibrant colors, and clean line work typical of Japanese animation. Transform every pixel, including background elements, lighting, shadows, and all objects into anime style."
+        else:
+            enhanced += "Preserve the original composition and subject matter, but render ALL elements including background, foreground, objects, lighting, and shadows with the artistic style, color palette, and visual characteristics from the style reference image."
         
         return enhanced
     

@@ -10,8 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Download, Upload, Wand2, Combine, Palette, Image as ImageIcon, X, Trash2 } from 'lucide-react'
+import { Loader2, Download, Upload, Wand2, Combine, Palette, Image as ImageIcon, X, Trash2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
 interface GenerateRequest {
   prompt: string
@@ -35,6 +36,25 @@ interface ComposeRequest {
   quality?: string
 }
 
+interface StyleTransferRequest {
+  content_image: File
+  style_image: File
+  intensity?: number
+  style?: string
+  quality?: string
+}
+
+interface ConversationRequest {
+  image: File
+  conversation_history: Array<{
+    instruction: string
+    result_image?: string
+  }>
+  new_instruction: string
+  style?: string
+  quality?: string
+}
+
 interface ApiResponse {
   success: boolean
   image_data?: string
@@ -50,7 +70,7 @@ const NanoBanana: React.FC = () => {
   // Generate tab states
   const [generatePrompt, setGeneratePrompt] = useState('')
   const [generateStyle, setGenerateStyle] = useState('photorealistic')
-  const [generateQuality, setGenerateQuality] = useState('high')
+
   const [imageSize, setImageSize] = useState([1024])
   
   // Edit tab states
@@ -59,15 +79,32 @@ const NanoBanana: React.FC = () => {
   const [editPrompt, setEditPrompt] = useState('')
   const [editInstruction, setEditInstruction] = useState('')
   const [editStyle, setEditStyle] = useState('photorealistic')
-  const [editQuality, setEditQuality] = useState('high')
+
   
   // Compose tab states
   const [composeImages, setComposeImages] = useState<File[]>([])
   const [composeImagePreviews, setComposeImagePreviews] = useState<string[]>([])
   const [composePrompt, setComposePrompt] = useState('')
-  const [composeType, setComposeType] = useState('combine')
+  const [composeType, setComposeType] = useState('collage')
   const [composeStyle, setComposeStyle] = useState('photorealistic')
-  const [composeQuality, setComposeQuality] = useState('high')
+
+  
+  // Style Transfer tab states
+  const [styleContentImage, setStyleContentImage] = useState<File | null>(null)
+  const [styleContentPreview, setStyleContentPreview] = useState<string | null>(null)
+  const [styleStyleImage, setStyleStyleImage] = useState<File | null>(null)
+  const [styleStylePreview, setStyleStylePreview] = useState<string | null>(null)
+  const [styleIntensity, setStyleIntensity] = useState([0.7])
+  const [styleTransferStyle, setStyleTransferStyle] = useState('artistic')
+
+  
+  // Conversation states
+  const [conversationHistory, setConversationHistory] = useState<Array<{
+    instruction: string
+    result_image: string
+  }>>([])
+  const [refineInstruction, setRefineInstruction] = useState('')
+  const [showRefineDialog, setShowRefineDialog] = useState(false)
   
   const editFileInputRef = useRef<HTMLInputElement>(null)
   const composeFileInputRef = useRef<HTMLInputElement>(null)
@@ -85,7 +122,7 @@ const NanoBanana: React.FC = () => {
         width: imageSize[0],
         height: imageSize[0],
         style: generateStyle,
-        quality: generateQuality
+        quality: 'ultra'
       }
 
       const response = await fetch('http://localhost:8000/api/generate', {
@@ -113,8 +150,8 @@ const NanoBanana: React.FC = () => {
   }
 
   const handleEdit = async () => {
-    if (!editImage || !editPrompt.trim() || !editInstruction.trim()) {
-      toast.error('Please upload image and enter complete information')
+    if (!editImage || !editInstruction.trim()) {
+      toast.error('Please upload image and enter edit instructions')
       return
     }
 
@@ -124,8 +161,9 @@ const NanoBanana: React.FC = () => {
       formData.append('image', editImage)
       formData.append('prompt', editPrompt)
       formData.append('edit_instruction', editInstruction)
+      
       formData.append('style', editStyle)
-      formData.append('quality', editQuality)
+      formData.append('quality', 'ultra')
 
       const response = await fetch('http://localhost:8000/api/edit', {
         method: 'POST',
@@ -170,8 +208,9 @@ const NanoBanana: React.FC = () => {
       })
       formData.append('prompt', composePrompt)
       formData.append('composition_type', composeType)
+      
       formData.append('style', composeStyle)
-      formData.append('quality', composeQuality)
+      formData.append('quality', 'ultra')
 
       const response = await fetch('http://localhost:8000/api/compose', {
         method: 'POST',
@@ -324,6 +363,152 @@ const NanoBanana: React.FC = () => {
     toast.success('Đã xóa toàn bộ ảnh')
   }
 
+  // Style Transfer handlers
+  const handleStyleContentFileChange = async (file: File) => {
+    try {
+      toast.loading('Processing content image...', { id: 'compress-content' })
+      const processedFile = file.size > 2 * 1024 * 1024 ? await compressImage(file) : file
+      
+      setStyleContentImage(processedFile)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setStyleContentPreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(processedFile)
+      
+      toast.success('Content image processed successfully!', { id: 'compress-content' })
+    } catch (error) {
+      toast.error('Failed to process content image', { id: 'compress-content' })
+    }
+  }
+
+  const handleStyleStyleFileChange = async (file: File) => {
+    try {
+      toast.loading('Processing style image...', { id: 'compress-style' })
+      const processedFile = file.size > 2 * 1024 * 1024 ? await compressImage(file) : file
+      
+      setStyleStyleImage(processedFile)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setStyleStylePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(processedFile)
+      
+      toast.success('Style image processed successfully!', { id: 'compress-style' })
+    } catch (error) {
+      toast.error('Failed to process style image', { id: 'compress-style' })
+    }
+  }
+
+  const removeStyleContentImage = () => {
+    setStyleContentImage(null)
+    setStyleContentPreview(null)
+  }
+
+  const removeStyleStyleImage = () => {
+    setStyleStyleImage(null)
+    setStyleStylePreview(null)
+  }
+
+  const handleStyleTransfer = async () => {
+    if (!styleContentImage || !styleStyleImage) {
+      toast.error('Please upload both content and style images')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const formData = new FormData()
+      formData.append('content_image', styleContentImage)
+      formData.append('style_image', styleStyleImage)
+      // Create a more detailed prompt based on selected style
+      let stylePrompt = 'Transfer the style from the style image to the content image'
+      if (styleTransferStyle === 'anime') {
+         stylePrompt = 'Transform the ENTIRE content image into Japanese anime/manga art style using the style reference image. Convert the complete scene including background, foreground, objects, and characters into anime style with large expressive eyes, vibrant colors, clean line art, cel-shaded appearance, and characteristic anime facial features and proportions.'
+       } else if (styleTransferStyle === 'photorealistic') {
+         stylePrompt = 'Transform the ENTIRE content image to photorealistic style using the style reference image. Apply natural lighting and realistic textures to all elements including background and foreground.'
+       } else if (styleTransferStyle === 'artistic') {
+         stylePrompt = 'Transform the ENTIRE content image with artistic painterly style using the style reference image. Apply creative interpretation and artistic flair to all elements including background, objects, and lighting.'
+       }
+      formData.append('prompt', stylePrompt)
+      formData.append('intensity', styleIntensity[0].toString())
+      formData.append('style', styleTransferStyle)
+      formData.append('quality', 'ultra')
+
+      const response = await fetch('http://localhost:8000/api/style-transfer', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result: ApiResponse = await response.json()
+      
+      if (result.success && result.image_data) {
+        setGeneratedImage(`data:image/png;base64,${result.image_data}`)
+        toast.success('Style transfer completed successfully!')
+      } else {
+        toast.error(result.error || 'Style transfer failed')
+      }
+    } catch (error) {
+      console.error('Style transfer error:', error)
+      toast.error('Error occurred while transferring style')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle conversation refinement
+  const handleRefineImage = async () => {
+    if (!generatedImage || !refineInstruction.trim()) {
+      toast.error('Please provide a refinement instruction')
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Convert base64 image to blob
+      const response = await fetch(generatedImage)
+      const blob = await response.blob()
+      const file = new File([blob], 'current-image.png', { type: 'image/png' })
+
+      const formData = new FormData()
+      formData.append('image', file)
+      formData.append('conversation_history', JSON.stringify(conversationHistory))
+      formData.append('new_instruction', refineInstruction)
+      formData.append('style', editStyle)
+      formData.append('quality', 'ultra')
+
+      const apiResponse = await fetch('http://localhost:8000/api/conversation', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result: ApiResponse = await apiResponse.json()
+      
+      if (result.success && result.image_data) {
+        // Add to conversation history
+        setConversationHistory(prev => [
+          ...prev,
+          {
+            instruction: refineInstruction,
+            result_image: generatedImage
+          }
+        ])
+        
+        setGeneratedImage(`data:image/png;base64,${result.image_data}`)
+        setRefineInstruction('')
+        setShowRefineDialog(false)
+        toast.success('Image refined successfully!')
+      } else {
+        toast.error(result.error || 'Refinement failed')
+      }
+    } catch (error) {
+      console.error('Refinement error:', error)
+      toast.error('Error occurred while refining image')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="text-center mb-8">
@@ -342,7 +527,7 @@ const NanoBanana: React.FC = () => {
         {/* Controls Panel */}
         <div className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="generate" className="flex items-center gap-2">
                 <Wand2 className="w-4 h-4" />
                 Generate
@@ -354,6 +539,10 @@ const NanoBanana: React.FC = () => {
               <TabsTrigger value="compose" className="flex items-center gap-2">
                 <Combine className="w-4 h-4" />
                 Compose
+              </TabsTrigger>
+              <TabsTrigger value="style-transfer" className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                Style
               </TabsTrigger>
             </TabsList>
 
@@ -381,36 +570,20 @@ const NanoBanana: React.FC = () => {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="generate-style">Style</Label>
-                      <Select value={generateStyle} onValueChange={setGenerateStyle}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="photorealistic">Photorealistic</SelectItem>
-                          <SelectItem value="cartoon">Cartoon</SelectItem>
-                          <SelectItem value="anime">Anime</SelectItem>
-                          <SelectItem value="artistic">Artistic</SelectItem>
-                          <SelectItem value="abstract">Abstract</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="generate-quality">Quality</Label>
-                      <Select value={generateQuality} onValueChange={setGenerateQuality}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="ultra">Ultra</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div>
+                    <Label htmlFor="generate-style">Style</Label>
+                    <Select value={generateStyle} onValueChange={setGenerateStyle}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="photorealistic">Photorealistic</SelectItem>
+                        <SelectItem value="cartoon">Cartoon</SelectItem>
+                        <SelectItem value="anime">Anime</SelectItem>
+                        <SelectItem value="artistic">Artistic</SelectItem>
+                        <SelectItem value="abstract">Abstract</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   
                   <div>
@@ -504,10 +677,10 @@ const NanoBanana: React.FC = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="edit-prompt">Current image description</Label>
+                    <Label htmlFor="edit-prompt">Current image description <span className="text-sm text-muted-foreground">(optional)</span></Label>
                     <Textarea
                       id="edit-prompt"
-                      placeholder="Example: A landscape photo of mountains"
+                      placeholder="Example: A landscape photo of mountains (helps AI understand the image better)"
                       value={editPrompt}
                       onChange={(e) => setEditPrompt(e.target.value)}
                       rows={2}
@@ -525,41 +698,25 @@ const NanoBanana: React.FC = () => {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="edit-style">Style</Label>
-                      <Select value={editStyle} onValueChange={setEditStyle}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="photorealistic">Photorealistic</SelectItem>
-                          <SelectItem value="cartoon">Cartoon</SelectItem>
-                          <SelectItem value="anime">Anime</SelectItem>
-                          <SelectItem value="artistic">Artistic</SelectItem>
-                          <SelectItem value="vibrant">Vibrant</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="edit-quality">Quality</Label>
-                      <Select value={editQuality} onValueChange={setEditQuality}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="ultra">Ultra</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div>
+                    <Label htmlFor="edit-style">Style</Label>
+                    <Select value={editStyle} onValueChange={setEditStyle}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="photorealistic">Photorealistic</SelectItem>
+                        <SelectItem value="cartoon">Cartoon</SelectItem>
+                        <SelectItem value="anime">Anime</SelectItem>
+                        <SelectItem value="artistic">Artistic</SelectItem>
+                        <SelectItem value="vibrant">Vibrant</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   
                   <Button 
                     onClick={handleEdit} 
-                    disabled={loading || !editImage || !editPrompt.trim() || !editInstruction.trim()}
+                    disabled={loading || !editImage || !editInstruction.trim()}
                     className="w-full"
                   >
                     {loading ? (
@@ -671,7 +828,7 @@ const NanoBanana: React.FC = () => {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="compose-type">Composition type</Label>
                       <Select value={composeType} onValueChange={setComposeType}>
@@ -700,20 +857,6 @@ const NanoBanana: React.FC = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    
-                    <div>
-                      <Label htmlFor="compose-quality">Quality</Label>
-                      <Select value={composeQuality} onValueChange={setComposeQuality}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="ultra">Ultra</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
                   
                   <Button 
@@ -730,6 +873,160 @@ const NanoBanana: React.FC = () => {
                       <>
                         <Combine className="w-4 h-4 mr-2" />
                         Compose Images
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Style Transfer Tab */}
+            <TabsContent value="style-transfer" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="w-5 h-5" />
+                    Style Transfer
+                  </CardTitle>
+                  <CardDescription>
+                    Transfer the style from one image to another
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Content Image */}
+                    <div>
+                      <Label>Content Image</Label>
+                      <DropZone
+                        onFilesChange={(files) => files[0] && handleStyleContentFileChange(files[0])}
+                        accept="image/*"
+                        multiple={false}
+                        className="mt-2"
+                      >
+                        {styleContentPreview ? (
+                          <div className="relative">
+                            <div className="relative w-full h-48 overflow-hidden rounded-lg">
+                              <img
+                                src={styleContentPreview}
+                                alt="Content Preview"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={removeStyleContentImage}
+                              className="absolute top-2 right-2"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                            <p className="text-sm text-muted-foreground mt-2 text-center">
+                              {styleContentImage?.name}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                             <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                             <p className="text-sm text-muted-foreground">
+                               Content image
+                             </p>
+                             <p className="text-xs text-muted-foreground mt-1">
+                               The image to apply style to
+                             </p>
+                           </div>
+                        )}
+                      </DropZone>
+                    </div>
+
+                    {/* Style Image */}
+                    <div>
+                      <Label>Style Image</Label>
+                      <DropZone
+                        onFilesChange={(files) => files[0] && handleStyleStyleFileChange(files[0])}
+                        accept="image/*"
+                        multiple={false}
+                        className="mt-2"
+                      >
+                        {styleStylePreview ? (
+                          <div className="relative">
+                            <div className="relative w-full h-48 overflow-hidden rounded-lg">
+                              <img
+                                src={styleStylePreview}
+                                alt="Style Preview"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={removeStyleStyleImage}
+                              className="absolute top-2 right-2"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                            <p className="text-sm text-muted-foreground mt-2 text-center">
+                              {styleStyleImage?.name}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                             <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                             <p className="text-sm text-muted-foreground">
+                               Style image
+                             </p>
+                             <p className="text-xs text-muted-foreground mt-1">
+                               The style to transfer
+                             </p>
+                           </div>
+                        )}
+                      </DropZone>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label>Style Intensity: {(styleIntensity[0] * 100).toFixed(0)}%</Label>
+                    <Slider
+                      value={styleIntensity}
+                      onValueChange={setStyleIntensity}
+                      max={1}
+                      min={0.1}
+                      step={0.1}
+                      className="mt-2"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="style-transfer-style">Style</Label>
+                    <Select value={styleTransferStyle} onValueChange={setStyleTransferStyle}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="artistic">Artistic</SelectItem>
+                        <SelectItem value="photorealistic">Photorealistic</SelectItem>
+                        <SelectItem value="abstract">Abstract</SelectItem>
+                        <SelectItem value="modern">Modern</SelectItem>
+                        <SelectItem value="classical">Classical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <Button 
+                    onClick={handleStyleTransfer} 
+                    disabled={loading || !styleContentImage || !styleStyleImage}
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Transferring Style...
+                      </>
+                    ) : (
+                      <>
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Transfer Style
                       </>
                     )}
                   </Button>
@@ -761,10 +1058,74 @@ const NanoBanana: React.FC = () => {
                       className="w-full h-auto rounded-lg border shadow-lg"
                     />
                   </div>
-                  <Button onClick={handleDownload} className="w-full">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
+                  
+                  {/* Conversation History */}
+                  {conversationHistory.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Refinement History</Label>
+                      <div className="max-h-32 overflow-y-auto space-y-1">
+                        {conversationHistory.map((item, index) => (
+                          <div key={index} className="text-xs p-2 bg-muted rounded text-muted-foreground">
+                            {index + 1}. {item.instruction}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button onClick={handleDownload} variant="outline">
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                    
+                    <Dialog open={showRefineDialog} onOpenChange={setShowRefineDialog}>
+                      <DialogTrigger asChild>
+                        <Button variant="default">
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Refine
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Refine Image</DialogTitle>
+                          <DialogDescription>
+                            Provide instructions to refine the current image
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="refine-instruction">Refinement Instruction</Label>
+                            <Textarea
+                              id="refine-instruction"
+                              placeholder="e.g., Make the colors more vibrant, add more details to the background..."
+                              value={refineInstruction}
+                              onChange={(e) => setRefineInstruction(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setShowRefineDialog(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={handleRefineImage} disabled={loading || !refineInstruction.trim()}>
+                            {loading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Refining...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Refine Image
+                              </>
+                            )}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-64 text-muted-foreground border-2 border-dashed rounded-lg">

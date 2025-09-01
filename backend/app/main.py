@@ -200,7 +200,7 @@ async def generate_image(request: TextToImageRequest):
 @app.post("/api/edit", response_model=ImageResponse)
 async def edit_image(
     image: UploadFile = File(...),
-    prompt: str = Form(...),
+    prompt: Optional[str] = Form(None),
     edit_instruction: str = Form(...),
     style: Optional[str] = Form(None),
     quality: Optional[str] = Form("standard")
@@ -226,7 +226,8 @@ async def edit_image(
                 f"Edit instruction too long. Maximum length is {max_prompt_length} characters"
             )
         
-        logger.info(f"Image edit request: {prompt[:50]}... - {edit_instruction[:50]}...")
+        prompt_display = prompt[:50] if prompt else "No description"
+        logger.info(f"Image edit request: {prompt_display}... - {edit_instruction[:50]}...")
         
         # Read and process uploaded image
         try:
@@ -245,7 +246,7 @@ async def edit_image(
         # Edit image using Gemini service
         result = await gemini_service.edit_image(
             image=pil_image,
-            prompt=prompt,
+            prompt=prompt or "",
             edit_instruction=edit_instruction,
             style=style,
             quality=quality
