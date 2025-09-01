@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Wand2, Edit, Combine, Palette, History } from 'lucide-react'
+import { Wand2, Edit, Combine, Palette, History, BookOpen } from 'lucide-react'
 import { GenerateTab } from './components/GenerateTab'
 import { EditTab } from './components/EditTab'
 import { ComposeTab } from './components/ComposeTab'
 import { StyleTransferTab } from './components/StyleTransferTab'
 import { HistoryTab } from './components/HistoryTab'
+import PromptGuideTab from './components/PromptGuideTab'
 import { ResultDisplay } from './components/ResultDisplay'
 
 const NanoBanana: React.FC = () => {
@@ -32,7 +33,7 @@ const NanoBanana: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Left Panel - Controls */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="generate" className="flex items-center gap-1">
               <Wand2 className="h-4 w-4" />
               Generate
@@ -48,6 +49,10 @@ const NanoBanana: React.FC = () => {
             <TabsTrigger value="style" className="flex items-center gap-1">
               <Palette className="h-4 w-4" />
               Style
+            </TabsTrigger>
+            <TabsTrigger value="guide" className="flex items-center gap-1">
+              <BookOpen className="h-4 w-4" />
+              Guide
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-1">
               <History className="h-4 w-4" />
@@ -85,6 +90,10 @@ const NanoBanana: React.FC = () => {
               setLoading={setLoading}
               setGeneratedImage={setGeneratedImage}
             />
+          </TabsContent>
+
+          <TabsContent value="guide">
+            <PromptGuideTab />
           </TabsContent>
 
           <TabsContent value="history">
