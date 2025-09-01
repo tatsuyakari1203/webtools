@@ -2,12 +2,11 @@
 
 import React, { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Wand2, Edit, Combine, Palette, MessageSquare } from 'lucide-react'
+import { Wand2, Edit, Combine, Palette } from 'lucide-react'
 import { GenerateTab } from './components/GenerateTab'
 import { EditTab } from './components/EditTab'
 import { ComposeTab } from './components/ComposeTab'
 import { StyleTransferTab } from './components/StyleTransferTab'
-import { ConversationTab } from './components/ConversationTab'
 import { ResultDisplay } from './components/ResultDisplay'
 
 const NanoBanana: React.FC = () => {
@@ -32,7 +31,7 @@ const NanoBanana: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Left Panel - Controls */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="generate" className="flex items-center gap-1">
               <Wand2 className="h-4 w-4" />
               Generate
@@ -48,10 +47,6 @@ const NanoBanana: React.FC = () => {
             <TabsTrigger value="style" className="flex items-center gap-1">
               <Palette className="h-4 w-4" />
               Style
-            </TabsTrigger>
-            <TabsTrigger value="conversation" className="flex items-center gap-1">
-              <MessageSquare className="h-4 w-4" />
-              Refine
             </TabsTrigger>
           </TabsList>
 
@@ -86,21 +81,14 @@ const NanoBanana: React.FC = () => {
               setGeneratedImage={setGeneratedImage}
             />
           </TabsContent>
-
-          <TabsContent value="conversation">
-            <ConversationTab 
-              loading={loading}
-              setLoading={setLoading}
-              setGeneratedImage={setGeneratedImage}
-              currentImage={generatedImage}
-            />
-          </TabsContent>
         </Tabs>
 
         {/* Right Panel - Result */}
         <ResultDisplay 
           image={generatedImage}
           loading={loading}
+          setGeneratedImage={setGeneratedImage}
+          setLoading={setLoading}
         />
       </div>
     </div>
