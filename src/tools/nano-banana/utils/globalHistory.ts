@@ -57,17 +57,26 @@ export const addToGlobalHistory = (item: Omit<HistoryItem, 'id' | 'timestamp'>) 
           console.warn(`Reduced history limit to ${maxItems} items due to storage constraints`)
         }
       } catch (storageError) {
-        // If storage fails, try with fewer items
-        maxItems = Math.floor(maxItems * 0.7)
-        if (maxItems < 5) {
-          // If we can't even store 5 items, clear the history and try with just the new item
-          try {
-            localStorage.removeItem(GLOBAL_HISTORY_KEY)
-            localStorage.setItem(GLOBAL_HISTORY_KEY, JSON.stringify([newItem]))
-            success = true
-            console.warn('Cleared history due to storage constraints, keeping only the latest item')
-          } catch (finalError) {
-            console.error('Failed to store even a single item:', finalError)
+        if (storageError instanceof DOMException && storageError.name === 'QuotaExceededError') {
+          console.warn('localStorage quota exceeded, reducing history size')
+          // If storage fails due to quota, try with fewer items
+          maxItems = Math.floor(maxItems * 0.7)
+          if (maxItems < 5) {
+            // If we can't even store 5 items, clear the history and try with just the new item
+            try {
+              localStorage.removeItem(GLOBAL_HISTORY_KEY)
+              localStorage.setItem(GLOBAL_HISTORY_KEY, JSON.stringify([newItem]))
+              success = true
+              console.warn('Cleared history due to storage quota exceeded, keeping only the latest item')
+            } catch (finalError) {
+              console.error('Failed to store even a single item:', finalError)
+              return null
+            }
+          }
+        } else {
+          console.error('Storage error:', storageError)
+          maxItems = Math.floor(maxItems * 0.7)
+          if (maxItems < 5) {
             return null
           }
         }
@@ -178,5 +187,45 @@ export const cleanupOldHistory = (maxItems: number = 25) => {
   } catch (error) {
     console.error('Error cleaning up history:', error)
     return { cleaned: false, removedCount: 0 }
+  }
+}
+
+// Emergency cleanup function for when storage quota is exceeded
+export const emergencyStorageCleanup = () => {
+  try {
+    console.warn('Performing emergency storage cleanup for nano-banana')
+    
+    // Clear all nano-banana related localStorage items
+    const keys = Object.keys(localStorage)
+    const nanoBananaKeys = keys.filter(key => key.startsWith('nano-banana-'))
+    
+    nanoBananaKeys.forEach(key => {
+      try {
+        localStorage.removeItem(key)
+      } catch (e) {
+        console.error(`Error removing localStorage item ${key}:`, e)
+      }
+    })
+    
+    // Clear sessionStorage items as well
+    try {
+      const sessionKeys = Object.keys(sessionStorage)
+      const nanoBananaSessionKeys = sessionKeys.filter(key => key.startsWith('nano-banana-'))
+      nanoBananaSessionKeys.forEach(key => {
+        try {
+          sessionStorage.removeItem(key)
+        } catch (e) {
+          console.error(`Error removing sessionStorage item ${key}:`, e)
+        }
+      })
+    } catch (e) {
+      console.error('Error accessing sessionStorage:', e)
+    }
+    
+    console.log('Emergency cleanup completed')
+    return true
+  } catch (error) {
+    console.error('Error during emergency cleanup:', error)
+    return false
   }
 }

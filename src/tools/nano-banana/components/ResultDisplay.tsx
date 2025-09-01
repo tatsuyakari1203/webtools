@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Download, Image as ImageIcon, Loader2, Maximize2, Eye, Wand2, Undo, Redo, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Lightbox } from './Lightbox'
-import { addToGlobalHistory } from '../utils/globalHistory'
+import { addToGlobalHistory, emergencyStorageCleanup } from '../utils/globalHistory'
 
 interface ResultDisplayProps {
   image: string | null
@@ -38,7 +38,15 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   // Load refine history from localStorage on mount (session-specific)
   useEffect(() => {
     const sessionId = sessionStorage.getItem('nano-banana-session-id') || Date.now().toString()
-    sessionStorage.setItem('nano-banana-session-id', sessionId)
+    try {
+      sessionStorage.setItem('nano-banana-session-id', sessionId)
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.warn('sessionStorage quota exceeded, unable to set session ID')
+      } else {
+        console.error('Error setting session ID:', error)
+      }
+    }
     
     const savedHistory = localStorage.getItem(`nano-banana-refine-history-${sessionId}`)
     const savedIndex = localStorage.getItem(`nano-banana-refine-history-index-${sessionId}`)
@@ -59,8 +67,32 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   useEffect(() => {
     const sessionId = sessionStorage.getItem('nano-banana-session-id')
     if (imageHistory.length > 0 && sessionId) {
-      localStorage.setItem(`nano-banana-refine-history-${sessionId}`, JSON.stringify(imageHistory))
-      localStorage.setItem(`nano-banana-refine-history-index-${sessionId}`, currentHistoryIndex.toString())
+      try {
+        localStorage.setItem(`nano-banana-refine-history-${sessionId}`, JSON.stringify(imageHistory))
+        localStorage.setItem(`nano-banana-refine-history-index-${sessionId}`, currentHistoryIndex.toString())
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+           console.warn('localStorage quota exceeded, performing emergency cleanup')
+           // Perform emergency cleanup
+           const cleanupSuccess = emergencyStorageCleanup()
+           
+           if (cleanupSuccess) {
+             // Try to save again after cleanup
+             try {
+               localStorage.setItem(`nano-banana-refine-history-${sessionId}`, JSON.stringify(imageHistory))
+               localStorage.setItem(`nano-banana-refine-history-index-${sessionId}`, currentHistoryIndex.toString())
+               toast.success('Storage cleaned up successfully. History saved.')
+             } catch (retryError) {
+               console.error('Failed to save refine history even after emergency cleanup:', retryError)
+               toast.error('Storage quota exceeded. History could not be saved.')
+             }
+           } else {
+             toast.error('Storage quota exceeded and cleanup failed. History may not be saved.')
+           }
+        } else {
+          console.error('Error saving refine history to localStorage:', error)
+        }
+      }
     }
   }, [imageHistory, currentHistoryIndex])
   const handleDownload = async () => {
