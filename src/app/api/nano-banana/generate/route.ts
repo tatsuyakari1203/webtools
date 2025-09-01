@@ -18,11 +18,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(errorData, { status: response.status });
     }
     
-    // Stream the response back to the client
-    return new NextResponse(response.body, {
+    // Parse JSON response and return it
+    const data = await response.json();
+    return NextResponse.json(data, {
       status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
   } catch (error) {

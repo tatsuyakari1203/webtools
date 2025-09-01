@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
 import os
@@ -57,15 +56,8 @@ app.add_exception_handler(GeminiServiceError, gemini_service_exception_handler)
 app.add_exception_handler(ImageProcessingError, image_processing_exception_handler)
 app.add_exception_handler(ValidationError, validation_exception_handler)
 
-# CORS configuration
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS removed - backend only accessible internally from Next.js server
+# No need for CORS since backend is not exposed to browsers directly
 
 # Request/Response models
 class TextToImageRequest(BaseModel):
@@ -74,6 +66,7 @@ class TextToImageRequest(BaseModel):
     height: Optional[int] = 1024
     style: Optional[str] = None
     quality: Optional[str] = "standard"
+    stream: Optional[bool] = False
 
 class ImageEditRequest(BaseModel):
     prompt: str
@@ -150,7 +143,7 @@ async def root():
     }
 
 # Text-to-Image endpoint
-@app.post("/api/generate", response_model=ImageResponse)
+@app.post("/api/generate")
 async def generate_image(request: TextToImageRequest):
     """Generate image from text prompt"""
     try:
@@ -167,9 +160,80 @@ async def generate_image(request: TextToImageRequest):
                 f"Prompt too long. Maximum length is {max_prompt_length} characters"
             )
         
-        logger.info(f"Text-to-image request: {request.prompt[:100]}...")
+        logger.info(f"Text-to-image request: {request.prompt[:100]}... (streaming: {request.stream})")
         
-        # Generate image using Gemini service
+        # Check if streaming is requested
+        if request.stream:
+            # Return streaming response
+            async def generate_stream():
+                import json
+                
+                # Send initial status
+                yield f"data: {json.dumps({'status': 'starting', 'message': 'Initializing image generation...'})}
+
+"
+                
+                try:
+                    # Generate image using Gemini service
+                    result = await gemini_service.generate_image_from_text(
+                        prompt=request.prompt,
+                        width=request.width,
+                        height=request.height,
+                        style=request.style,
+                        quality=request.quality
+                    )
+                    
+                    if result["success"]:
+                        # Send success response with image data
+                        response_data = {
+                            'status': 'completed',
+                            'success': True,
+                            'image_data': result["image_data"],
+                            'message': result["message"]
+                        }
+                        yield f"data: {json.dumps(response_data)}
+
+"
+                    else:
+                        # Send error response
+                        response_data = {
+                            'status': 'error',
+                            'success': False,
+                            'error': result["error"],
+                            'message': result["message"]
+                        }
+                        yield f"data: {json.dumps(response_data)}
+
+"
+                        
+                except Exception as e:
+                    # Send error response
+                    response_data = {
+                        'status': 'error',
+                        'success': False,
+                        'error': str(e),
+                        'message': 'Image generation failed'
+                    }
+                    yield f"data: {json.dumps(response_data)}
+
+"
+                
+                # Send end signal
+                yield "data: [DONE]
+
+"
+            
+            return StreamingResponse(
+                generate_stream(),
+                media_type="text/event-stream",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive",
+                    "X-Accel-Buffering": "no"
+                }
+            )
+        
+        # Non-streaming response (original behavior)
         result = await gemini_service.generate_image_from_text(
             prompt=request.prompt,
             width=request.width,
