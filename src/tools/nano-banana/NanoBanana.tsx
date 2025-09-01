@@ -125,7 +125,7 @@ const NanoBanana: React.FC = () => {
         quality: 'ultra'
       }
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7777'
       const response = await fetch(`${backendUrl}/api/generate`, {
         method: 'POST',
         headers: {
@@ -166,7 +166,7 @@ const NanoBanana: React.FC = () => {
       formData.append('style', editStyle)
       formData.append('quality', 'ultra')
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7777'
       const response = await fetch(`${backendUrl}/api/edit`, {
         method: 'POST',
         body: formData

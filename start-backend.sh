@@ -39,8 +39,8 @@ if [ -f "requirements.txt" ]; then
 fi
 
 # Khởi chạy server
-echo "🌟 Khởi chạy backend server trên http://0.0.0.0:8000"
+echo "🌟 Khởi chạy backend server trên http://0.0.0.0:7777"
 echo "📝 Logs sẽ hiển thị bên dưới. Nhấn Ctrl+C để dừng server."
 echo "" 
 
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+python -m uvicorn app.main:app --host 0.0.0.0 --port 7777 --reload

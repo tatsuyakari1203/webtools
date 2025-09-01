@@ -22,7 +22,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Set build-time environment variables
-ARG NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+ARG NEXT_PUBLIC_BACKEND_URL=http://localhost:7777
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 
 # Build the application with turbopack for faster builds

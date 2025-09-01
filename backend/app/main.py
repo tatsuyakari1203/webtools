@@ -526,7 +526,7 @@ if __name__ == "__main__":
     import uvicorn
     
     host = os.getenv("BACKEND_HOST", "0.0.0.0")
-    port = int(os.getenv("BACKEND_PORT", 8000))
+    port = int(os.getenv("BACKEND_PORT", 7777))
     debug = os.getenv("DEBUG", "True").lower() == "true"
     
     uvicorn.run(
