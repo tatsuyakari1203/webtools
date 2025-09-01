@@ -496,7 +496,6 @@ const NanoBanana: React.FC = () => {
         
         setGeneratedImage(`data:image/png;base64,${result.image_data}`)
         setRefineInstruction('')
-        setShowRefineDialog(false)
         toast.success('Image refined successfully!')
       } else {
         toast.error(result.error || 'Refinement failed')
@@ -511,17 +510,7 @@ const NanoBanana: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-          🍌 Nano Banana
-        </h1>
-        <p className="text-lg text-muted-foreground mb-2">
-          AI Image Generation & Editing Tool
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Create, edit and compose images with AI
-        </p>
-      </div>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Controls Panel */}
@@ -1073,43 +1062,55 @@ const NanoBanana: React.FC = () => {
                     </div>
                   )}
                   
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button onClick={handleDownload} variant="outline">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button onClick={handleDownload} variant="outline">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                      
+                      <Button 
+                        variant="default" 
+                        onClick={() => setShowRefineDialog(!showRefineDialog)}
+                      >
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Refine
+                      </Button>
+                    </div>
                     
-                    <Dialog open={showRefineDialog} onOpenChange={setShowRefineDialog}>
-                      <DialogTrigger asChild>
-                        <Button variant="default">
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                          Refine
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Refine Image</DialogTitle>
-                          <DialogDescription>
-                            Provide instructions to refine the current image
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="refine-instruction">Refinement Instruction</Label>
-                            <Textarea
-                              id="refine-instruction"
-                              placeholder="e.g., Make the colors more vibrant, add more details to the background..."
-                              value={refineInstruction}
-                              onChange={(e) => setRefineInstruction(e.target.value)}
-                              className="mt-1"
-                            />
-                          </div>
+                    {/* Inline Refine Input */}
+                    {showRefineDialog && (
+                      <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+                        <div>
+                          <Label htmlFor="refine-instruction" className="text-sm font-medium">
+                            Refinement Instruction
+                          </Label>
+                          <Textarea
+                            id="refine-instruction"
+                            placeholder="e.g., Make the colors more vibrant, add more details to the background..."
+                            value={refineInstruction}
+                            onChange={(e) => setRefineInstruction(e.target.value)}
+                            className="mt-1"
+                            rows={3}
+                          />
                         </div>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setShowRefineDialog(false)}>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setShowRefineDialog(false)
+                              setRefineInstruction('')
+                            }}
+                          >
                             Cancel
                           </Button>
-                          <Button onClick={handleRefineImage} disabled={loading || !refineInstruction.trim()}>
+                          <Button 
+                            size="sm"
+                            onClick={handleRefineImage} 
+                            disabled={loading || !refineInstruction.trim()}
+                            className="flex-1"
+                          >
                             {loading ? (
                               <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -1122,9 +1123,9 @@ const NanoBanana: React.FC = () => {
                               </>
                             )}
                           </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
