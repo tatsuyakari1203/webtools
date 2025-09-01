@@ -3,19 +3,18 @@ services:
     image: tatsuyakari/webtools:latest
     container_name: webtools-frontend-app
     restart: unless-stopped
-    ports:
-      - "5005:3000"
+    # ports không cần thiết khi sử dụng network_mode: host
+    # ports:
+    #   - "5005:3000"
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - NEXT_TELEMETRY_DISABLED=1
-      - BACKEND_URL=http://host.docker.internal:7777
-      - NEXT_PUBLIC_BACKEND_URL=http://host.docker.internal:7777
-    networks:
-      - webtools-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - BACKEND_URL=http://172.17.0.1:7777
+      - NEXT_PUBLIC_BACKEND_URL=http://172.17.0.1:7777
+      - PORT=5005
+    network_mode: "host"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5005"]
       interval: 30s
       timeout: 10s
       retries: 3
