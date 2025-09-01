@@ -49,24 +49,21 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
       }
 
-      // Handle JSON response with base64 image data
-      const result = await response.json()
+      const data = await response.json()
       
-      if (!result.success) {
-        throw new Error(result.error || 'Generation failed')
+      if (data.success && data.image_data) {
+        setGeneratedImage(`data:image/png;base64,${data.image_data}`)
+        toast.success('Image generated successfully!')
+      } else {
+        throw new Error(data.error || 'Failed to generate image')
       }
-      
-      // Convert base64 to blob URL
-      const imageUrl = `data:image/png;base64,${result.image_data}`
-      
-      setGeneratedImage(imageUrl)
-      toast.success('Image generated successfully!')
     } catch (error) {
       console.error('Error generating image:', error)
-      toast.error('Unable to connect to server')
+      toast.error(error instanceof Error ? error.message : 'Unable to connect to server')
     } finally {
       setLoading(false)
     }

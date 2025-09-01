@@ -1,31 +1,98 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7777'
+const { GoogleGenAI } = require('@google/genai')
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
-    
-    const response = await fetch(`${BACKEND_URL}/api/style-transfer`, {
-      method: 'POST',
-      body: formData
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from backend' }));
-      return NextResponse.json(errorData, { status: response.status });
+    const contentImage = formData.get('content_image') as File
+    const styleImage = formData.get('style_image') as File
+    const prompt = formData.get('prompt') as string
+    const intensity = formData.get('intensity') as string || '0.5'
+    const quality = formData.get('quality') as string || 'ultra'
+
+    if (!contentImage || !styleImage || !prompt) {
+      return NextResponse.json(
+        { success: false, error: 'Content image, style image, and prompt are required' },
+        { status: 400 }
+      )
     }
-    
-    // Stream the response back to the client
-    return new NextResponse(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
-    });
+
+    // Initialize Gemini AI
+    const genAI = new GoogleGenAI({
+      apiKey: process.env.GOOGLE_API_KEY
+    })
+
+    // Convert images to base64
+    const contentBuffer = await contentImage.arrayBuffer()
+    const styleBuffer = await styleImage.arrayBuffer()
+    const contentBase64 = Buffer.from(contentBuffer).toString('base64')
+    const styleBase64 = Buffer.from(styleBuffer).toString('base64')
+
+    // Create enhanced prompt for style transfer
+    const intensityValue = parseFloat(intensity)
+    let intensityDescription = ''
+    if (intensityValue <= 0.3) {
+      intensityDescription = 'Apply the style subtly, maintaining most of the original content characteristics.'
+    } else if (intensityValue <= 0.7) {
+      intensityDescription = 'Apply the style moderately, balancing original content with style elements.'
+    } else {
+      intensityDescription = 'Apply the style strongly, emphasizing the style characteristics while preserving content structure.'
+    }
+
+    const enhancedPrompt = `Transfer the artistic style from the second image to the first image. ${intensityDescription} ${prompt}. Quality: ${quality}. Maintain the composition and main elements of the content image while adopting the visual style, color palette, and artistic techniques from the style reference.`
+
+    // Prepare the content for Gemini
+    const content = [
+      { text: enhancedPrompt },
+      {
+        inlineData: {
+          mimeType: contentImage.type,
+          data: contentBase64
+        }
+      },
+      {
+        inlineData: {
+          mimeType: styleImage.type,
+          data: styleBase64
+        }
+      }
+    ]
+
+    // Generate style-transferred image with Gemini
+    const response = await genAI.models.generateContent({
+      model: 'gemini-2.5-flash-image-preview',
+      contents: content
+    })
+
+    // Extract image data from response
+    const candidates = response.candidates
+    if (!candidates || candidates.length === 0) {
+      throw new Error('No image generated')
+    }
+
+    const parts = candidates[0].content.parts
+    let imageData = null
+
+    for (const part of parts) {
+      if (part.inlineData) {
+        imageData = part.inlineData.data
+        break
+      }
+    }
+
+    if (!imageData) {
+      throw new Error('No image data found in response')
+    }
+
+    return NextResponse.json({
+      success: true,
+      image_data: imageData
+    })
 
   } catch (error) {
-    console.error('Proxy error:', error)
+    console.error('Error in style transfer:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to connect to backend' },
+      { success: false, error: 'Failed to transfer style' },
       { status: 500 }
     )
   }

@@ -9,8 +9,6 @@ services:
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - NEXT_TELEMETRY_DISABLED=1
-      - BACKEND_URL=http://localhost:7777
-      - NEXT_PUBLIC_BACKEND_URL=http://localhost:7777
       - PORT=5005
     network_mode: "host"
     healthcheck:
@@ -22,7 +20,7 @@ services:
     # depends_on:
       # - webtools-backend
 
-  # webtools-backend service removed - using local Python server instead
+  # Backend functionality now handled by Next.js API routes
 
 networks:
   webtools-network:

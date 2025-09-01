@@ -1,1 +1,0 @@
-# NanoBanana Backend Application Package
