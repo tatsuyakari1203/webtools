@@ -9,11 +9,19 @@ export async function POST(request: NextRequest) {
     const response = await fetch(`${BACKEND_URL}/api/edit`, {
       method: 'POST',
       body: formData
-    })
-
-    const data = await response.json()
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from backend' }));
+      return NextResponse.json(errorData, { status: response.status });
+    }
     
-    return NextResponse.json(data, { status: response.status })
+    // Stream the response back to the client
+    return new NextResponse(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
+
   } catch (error) {
     console.error('Proxy error:', error)
     return NextResponse.json(

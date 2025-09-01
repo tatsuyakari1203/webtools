@@ -12,11 +12,19 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body)
-    })
-
-    const data = await response.json()
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from backend' }));
+      return NextResponse.json(errorData, { status: response.status });
+    }
     
-    return NextResponse.json(data, { status: response.status })
+    // Stream the response back to the client
+    return new NextResponse(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
+
   } catch (error) {
     console.error('Proxy error:', error)
     return NextResponse.json(
