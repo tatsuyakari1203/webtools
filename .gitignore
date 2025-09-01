@@ -71,3 +71,4 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+backend/logs/nanobanana.log
