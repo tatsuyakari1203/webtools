@@ -8,8 +8,7 @@ services:
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - NEXT_TELEMETRY_DISABLED=1
-      - BACKEND_URL=http://webtools-backend:8000
-      - NEXT_PUBLIC_BACKEND_URL=http://webtools-backend:8000
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
     networks:
       - webtools-network
     healthcheck:
@@ -18,30 +17,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    depends_on:
-      - webtools-backend
+    # depends_on:
+      # - webtools-backend
 
-  webtools-backend:
-    image: tatsuyakari/webtools-backend:latest
-    container_name: webtools-backend-app
-    restart: unless-stopped
-    ports:
-      - "8000:8000"
-    environment:
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - BACKEND_HOST=0.0.0.0
-      - BACKEND_PORT=8000
-      - DEBUG=False
-      - LOG_LEVEL=INFO
-      - ALLOWED_ORIGINS=http://localhost:5005,http://localhost:3000
-    networks:
-      - webtools-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+  # webtools-backend service removed - using local Python server instead
 
 networks:
   webtools-network:

@@ -438,7 +438,8 @@ const NanoBanana: React.FC = () => {
       formData.append('style', styleTransferStyle)
       formData.append('quality', 'ultra')
 
-      const response = await fetch('http://localhost:8000/api/style-transfer', {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+      const response = await fetch(`${backendUrl}/api/style-transfer`, {
         method: 'POST',
         body: formData
       })
