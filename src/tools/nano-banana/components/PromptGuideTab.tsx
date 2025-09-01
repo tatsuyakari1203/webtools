@@ -2,12 +2,11 @@
 
 import React, { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ChevronDown, ChevronRight, BookOpen, Lightbulb, Camera, Palette, Edit, Layers, Globe } from 'lucide-react'
+import { ChevronDown, ChevronRight, BookOpen, Lightbulb, Camera, Palette, Edit, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface PromptExample {
@@ -247,7 +246,7 @@ const PromptGuideTab: React.FC = () => {
 
   const currentContent = content[language]
 
-  const renderSection = (sectionKey: string, section: any) => {
+  const renderSection = (sectionKey: string, section: { icon: React.ComponentType<{ className?: string }>; title: string; description?: string; tips?: string[]; examples?: PromptExample[] }) => {
     const IconComponent = section.icon
     const isOpen = openSections[sectionKey]
 
