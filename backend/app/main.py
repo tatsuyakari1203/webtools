@@ -25,7 +25,8 @@ from .middleware import (
 )
 
 # Load environment variables
-load_dotenv()
+# Load .env from root directory
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.env'))
 
 # Configure logging
 logger.add(
@@ -524,8 +525,8 @@ async def conversation_edit(
 if __name__ == "__main__":
     import uvicorn
     
-    host = os.getenv("HOST", "0.0.0.0")
-    port = int(os.getenv("PORT", 8000))
+    host = os.getenv("BACKEND_HOST", "0.0.0.0")
+    port = int(os.getenv("BACKEND_PORT", 8000))
     debug = os.getenv("DEBUG", "True").lower() == "true"
     
     uvicorn.run(

@@ -27,18 +27,13 @@ API AskGemini đã được cấu hình với các biện pháp bảo mật đ�
 
 ### Cập nhật Allowed Origins
 
-Trong file `/src/middleware.ts`, cập nhật mảng `ALLOWED_ORIGINS`:
+Các domain được phép truy cập API hiện được quản lý thông qua biến môi trường trong file `.env`:
 
-```typescript
-const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'https://localhost:3000',
-  'http://127.0.0.1:3000',
-  'https://127.0.0.1:3000',
-  // Thêm domain production của bạn
-  'https://yourdomain.com',
-  'https://www.yourdomain.com'
-];
+```env
+# CORS Configuration
+CORS_ALLOWED_ORIGINS=http://localhost:3000,https://localhost:3000,http://127.0.0.1:3000,https://127.0.0.1:3000,https://yourdomain.com,https://www.yourdomain.com
+CORS_WILDCARD_DOMAINS=yourdomain.com
+CORS_PROTECTED_ROUTES=/api/askgemini,/api/ocr/process
 ```
 
 ### Environment Variables
@@ -49,6 +44,11 @@ NODE_ENV=development  # hoặc production
 
 # Google API Key (bắt buộc)
 GOOGLE_API_KEY=your_google_api_key_here
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS=http://localhost:3000,https://localhost:3000,http://127.0.0.1:3000,https://127.0.0.1:3000
+CORS_WILDCARD_DOMAINS=yourdomain.com
+CORS_PROTECTED_ROUTES=/api/askgemini,/api/ocr/process
 ```
 
 ## Các tình huống được xử lý
@@ -179,7 +179,7 @@ curl -X OPTIONS http://localhost:3000/api/askgemini \
 ### Common Issues
 
 1. **CORS Error trong Browser**:
-   - Kiểm tra domain có trong `ALLOWED_ORIGINS`
+   - Kiểm tra domain có trong biến môi trường `CORS_ALLOWED_ORIGINS`
    - Đảm bảo protocol (http/https) khớp
 
 2. **403 Forbidden**:
@@ -188,7 +188,7 @@ curl -X OPTIONS http://localhost:3000/api/askgemini \
 
 3. **Development Issues**:
    - Đặt `NODE_ENV=development`
-   - Thêm localhost vào `ALLOWED_ORIGINS`
+   - Thêm localhost vào biến môi trường `CORS_ALLOWED_ORIGINS`
 
 ### Debug Commands
 
@@ -207,7 +207,9 @@ curl -X POST http://localhost:3000/api/askgemini \
 
 ## Cập nhật và Maintenance
 
-- Review `ALLOWED_ORIGINS` khi thêm domain mới
+- Review biến môi trường `CORS_ALLOWED_ORIGINS` khi thêm domain mới
 - Update security headers theo best practices mới
 - Monitor và analyze security logs định kỳ
 - Test security configuration sau mỗi deployment
+- Cập nhật `CORS_WILDCARD_DOMAINS` cho subdomain access
+- Thêm API routes mới vào `CORS_PROTECTED_ROUTES` khi cần

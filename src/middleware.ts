@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Danh sách các domain được phép truy cập API
-const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'https://localhost:3000',
-  'http://127.0.0.1:3000',
-  'https://127.0.0.1:3000',
-  // Thêm domain production của bạn ở đây
-  'https://tatsuyakari.com',
-  'https://www.tatsuyakari.com'
-];
+// Danh sách các domain được phép truy cập API (từ biến môi trường)
+const ALLOWED_ORIGINS = process.env.CORS_ALLOWED_ORIGINS 
+  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : [
+      'http://localhost:3000',
+      'https://localhost:3000',
+      'http://127.0.0.1:3000',
+      'https://127.0.0.1:3000'
+    ];
 
-// Wildcard domains
-const ALLOWED_WILDCARD_DOMAINS = [
-  'tatsuyakari.com'
-];
+// Wildcard domains (từ biến môi trường)
+const ALLOWED_WILDCARD_DOMAINS = process.env.CORS_WILDCARD_DOMAINS
+  ? process.env.CORS_WILDCARD_DOMAINS.split(',').map(domain => domain.trim())
+  : [];
 
 // Hàm kiểm tra origin có được phép hay không
 function isOriginAllowed(origin: string): boolean {
@@ -41,11 +40,13 @@ function isOriginAllowed(origin: string): boolean {
   return false;
 }
 
-// Các API routes cần bảo vệ
-const PROTECTED_API_ROUTES = [
-  '/api/askgemini',
-  '/api/ocr/process'
-];
+// Các API routes cần bảo vệ (từ biến môi trường)
+const PROTECTED_API_ROUTES = process.env.CORS_PROTECTED_ROUTES
+  ? process.env.CORS_PROTECTED_ROUTES.split(',').map(route => route.trim())
+  : [
+      '/api/askgemini',
+      '/api/ocr/process'
+    ];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
