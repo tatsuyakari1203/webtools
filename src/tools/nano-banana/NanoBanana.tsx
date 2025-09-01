@@ -465,21 +465,24 @@ const NanoBanana: React.FC = () => {
 
     setLoading(true)
     try {
-      // Convert base64 image to blob
-      const response = await fetch(generatedImage)
-      const blob = await response.blob()
-      const file = new File([blob], 'current-image.png', { type: 'image/png' })
+      // Extract base64 data from data URL
+      const base64Data = generatedImage.split(',')[1]
 
-      const formData = new FormData()
-      formData.append('image', file)
-      formData.append('conversation_history', JSON.stringify(conversationHistory))
-      formData.append('new_instruction', refineInstruction)
-      formData.append('style', editStyle)
-      formData.append('quality', 'ultra')
+      const requestData = {
+        prompt: generatePrompt || 'Image refinement',
+        conversation_id: `conv_${Date.now()}`,
+        previous_image_data: base64Data,
+        edit_instruction: refineInstruction,
+        style: editStyle,
+        quality: 'ultra'
+      }
 
       const apiResponse = await fetch('http://localhost:8000/api/conversation', {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
       })
 
       const result: ApiResponse = await apiResponse.json()
