@@ -13,7 +13,6 @@ interface ResultDisplayProps {
   image: string | null
   loading: boolean
   setGeneratedImage: (image: string | null) => void
-  setLoading: (loading: boolean) => void
 }
 
 interface ImageHistoryItem {
@@ -25,8 +24,7 @@ interface ImageHistoryItem {
 export const ResultDisplay: React.FC<ResultDisplayProps> = ({ 
   image, 
   loading, 
-  setGeneratedImage, 
-  setLoading 
+  setGeneratedImage
 }) => {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [showRefineInput, setShowRefineInput] = useState(false)

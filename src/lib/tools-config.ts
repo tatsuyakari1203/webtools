@@ -55,6 +55,15 @@ export const TOOLS_REGISTRY: ToolConfig[] = [
     category: 'productivity',
     path: '/tools/pomodoro',
     component: lazy(() => import('@/tools/pomodoro'))
+  },
+  {
+    id: 'token-generator',
+    name: 'Token Generator',
+    description: 'Tạo chuỗi ngẫu nhiên với các ký tự bạn muốn, chữ hoa, chữ thường, số và/hoặc ký hiệu',
+    icon: 'Key',
+    category: 'utilities',
+    path: '/tools/token-generator',
+    component: lazy(() => import('@/tools/token-generator'))
   }
 ];
 

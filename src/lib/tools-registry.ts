@@ -1,4 +1,4 @@
-import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode, Timer, Banana, Crop, Globe } from "lucide-react"
+import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode, Timer, Banana, Crop, Globe, Key } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -109,6 +109,15 @@ export const toolsRegistry: Tool[] = [
     category: "Network",
     icon: Globe,
     path: "/tools/what-is-my-ip",
+    featured: false,
+  },
+  {
+    id: "token-generator",
+    name: "Token Generator",
+    description: "Generate random string with the chars you want, uppercase or lowercase letters, numbers and/or symbols",
+    category: "Utilities",
+    icon: Key,
+    path: "/tools/token-generator",
     featured: false,
   },
 ]

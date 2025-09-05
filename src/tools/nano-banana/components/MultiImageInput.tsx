@@ -3,7 +3,7 @@
 import React, { useRef, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Upload, X, Image as ImageIcon, Plus } from 'lucide-react'
+import { X, Image as ImageIcon, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface MultiImageInputProps {

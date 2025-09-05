@@ -108,7 +108,6 @@ const NanoBanana: React.FC = () => {
           image={generatedImage}
           loading={loading}
           setGeneratedImage={setGeneratedImage}
-          setLoading={setLoading}
         />
       </div>
     </div>

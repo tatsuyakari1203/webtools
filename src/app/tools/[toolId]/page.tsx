@@ -11,6 +11,7 @@ import PomodoroTimer from "@/tools/pomodoro/PomodoroTimer"
 import NanoBanana from "@/tools/nano-banana/NanoBanana"
 import SocialCrop from "@/tools/social-crop"
 import WhatIsMyIP from "@/tools/what-is-my-ip"
+import TokenGenerator from "@/tools/token-generator"
 import ComingSoonTool from "@/components/tools/ComingSoonTool"
 import { ToolStructuredData } from "@/components/StructuredData"
 import type { Metadata } from "next"
@@ -54,6 +55,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <SocialCrop />
       case "what-is-my-ip":
         return <WhatIsMyIP />
+      case "token-generator":
+        return <TokenGenerator />
       default:
         return <ComingSoonTool tool={tool} />
     }
