@@ -246,19 +246,61 @@ export default function SocialCrop() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Left Column - Upload and Controls */}
         <div className="xl:col-span-1 space-y-6">
-          {/* File Upload */}
-          <FileUpload 
-            onFileSelect={handleFileSelect}
-            disabled={isProcessing}
-          />
-          
-          {/* Aspect Ratio Selector */}
-          <AspectRatioSelector
-            value={aspectRatio}
-            onValueChange={handleAspectRatioChange}
-            disabled={isProcessing}
-          />
-          
+          {!selectedFile ? (
+            /* File Upload */
+            <FileUpload 
+              onFileSelect={handleFileSelect}
+              disabled={isProcessing}
+            />
+          ) : (
+            /* Crop Interface */
+            <>
+              {/* Image Crop Component - Moved to top for better UX */}
+              <div className="bg-card rounded-lg border p-4">
+                <h3 className="text-lg font-semibold mb-4">Crop Image</h3>
+                <ImageCrop
+                  src={imageUrl}
+                  onCropComplete={handleCropComplete}
+                  aspectRatio={getAspectRatio(aspectRatio)}
+                  circular={false}
+                />
+                <div className="mt-6">
+                  <button 
+                    onClick={() => handleCropComplete(imageUrl)}
+                    className="w-full h-12 text-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                    disabled={isProcessing}
+                  >
+                    Cắt Ảnh
+                  </button>
+                </div>
+              </div>
+              
+              {/* Aspect Ratio Selector */}
+              <AspectRatioSelector
+                value={aspectRatio}
+                onValueChange={handleAspectRatioChange}
+                disabled={isProcessing}
+              />
+              
+              {/* Upload New Image Button */}
+              <div className="bg-card rounded-lg border p-4">
+                <button 
+                  onClick={() => {
+                    setSelectedFile(null);
+                    setImageUrl('');
+                    setCroppedImages([]);
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Upload New Image
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+        
+        {/* Right Column - Download & Preview */}
+        <div className="xl:col-span-1 space-y-6">
           {/* Download Controls */}
           {canDownload && (
             <div className="bg-card rounded-lg border p-4">
@@ -281,22 +323,8 @@ export default function SocialCrop() {
               </div>
             </div>
           )}
-        
-        {/* Image Crop Component */}
-        {selectedFile && imageUrl && (
-          <div className="mt-6">
-            <ImageCrop
-              src={imageUrl}
-              onCropComplete={handleCropComplete}
-              aspectRatio={getAspectRatio(aspectRatio)}
-              circular={false}
-            />
-          </div>
-        )}
-        </div>
-        
-        {/* Right Column - Preview */}
-        <div className="xl:col-span-1">
+          
+          {/* Preview Section */}
           <div className="bg-card rounded-lg border p-4 min-h-[400px]">
             <h3 className="text-lg font-semibold mb-4">Preview</h3>
             {croppedImages.length > 0 ? (
