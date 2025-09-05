@@ -10,6 +10,7 @@ import Codebase2Json from "@/tools/codebase2json"
 import PomodoroTimer from "@/tools/pomodoro/PomodoroTimer"
 import NanoBanana from "@/tools/nano-banana/NanoBanana"
 import SocialCrop from "@/tools/social-crop"
+import WhatIsMyIP from "@/tools/what-is-my-ip"
 import ComingSoonTool from "@/components/tools/ComingSoonTool"
 import { ToolStructuredData } from "@/components/StructuredData"
 import type { Metadata } from "next"
@@ -51,6 +52,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <NanoBanana />
       case "social-crop":
         return <SocialCrop />
+      case "what-is-my-ip":
+        return <WhatIsMyIP />
       default:
         return <ComingSoonTool tool={tool} />
     }

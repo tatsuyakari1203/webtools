@@ -1,4 +1,4 @@
-import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode, Timer, Banana, Crop } from "lucide-react"
+import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode, Timer, Banana, Crop, Globe } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -100,6 +100,15 @@ export const toolsRegistry: Tool[] = [
     category: "Image",
     icon: Crop,
     path: "/tools/social-crop",
+    featured: false,
+  },
+  {
+    id: "what-is-my-ip",
+    name: "What is my IP?",
+    description: "Discover your public IP address and detailed location information",
+    category: "Network",
+    icon: Globe,
+    path: "/tools/what-is-my-ip",
     featured: false,
   },
 ]
