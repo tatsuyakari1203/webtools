@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useImperativeHandle, forwardRef } from 'react'
 import ReactCrop, {
   centerCrop,
   makeAspectCrop,
@@ -18,6 +18,10 @@ interface ImageCropProps {
   onCropComplete: (croppedImageUrl: string) => void
   aspectRatio?: number
   circular?: boolean
+}
+
+export interface ImageCropRef {
+  generateCrop: () => void
 }
 
 function centerAspectCrop(
@@ -40,7 +44,7 @@ function centerAspectCrop(
   )
 }
 
-export default function ImageCrop({ src, onCropComplete, aspectRatio, circular = false }: ImageCropProps) {
+const ImageCrop = forwardRef<ImageCropRef, ImageCropProps>(({ src, onCropComplete, aspectRatio, circular = false }, ref) => {
   const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
   const [scale, setScale] = useState(1)
@@ -50,9 +54,30 @@ export default function ImageCrop({ src, onCropComplete, aspectRatio, circular =
   const previewCanvasRef = useRef<HTMLCanvasElement>(null)
 
   function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+    const { width, height } = e.currentTarget
+    
     if (aspectRatio) {
-      const { width, height } = e.currentTarget
-      setCrop(centerAspectCrop(width, height, aspectRatio))
+      const newCrop = centerAspectCrop(width, height, aspectRatio)
+      setCrop(newCrop)
+      // Đảm bảo completedCrop được set ngay khi ảnh load
+      setCompletedCrop(convertToPixelCrop(newCrop, width, height))
+    } else {
+      // Đối với free form, tạo crop mặc định
+      const defaultCrop = centerCrop(
+        makeAspectCrop(
+          {
+            unit: '%',
+            width: 90,
+          },
+          1, // square aspect ratio as default
+          width,
+          height,
+        ),
+        width,
+        height,
+      )
+      setCrop(defaultCrop)
+      setCompletedCrop(convertToPixelCrop(defaultCrop, width, height))
     }
   }
   
@@ -60,10 +85,30 @@ export default function ImageCrop({ src, onCropComplete, aspectRatio, circular =
   React.useEffect(() => {
     if (aspectRatio && imgRef.current) {
       const { width, height } = imgRef.current
-      const newCrop = centerAspectCrop(width, height, aspectRatio)
-      setCrop(newCrop)
-      // Force update completed crop để đồng bộ
-      setCompletedCrop(convertToPixelCrop(newCrop, width, height))
+      
+      // Chỉ reset crop nếu chưa có crop hoặc aspect ratio khác hoàn toàn
+      if (!crop || crop.width === 0 || crop.height === 0) {
+        const newCrop = centerAspectCrop(width, height, aspectRatio)
+        setCrop(newCrop)
+        setCompletedCrop(convertToPixelCrop(newCrop, width, height))
+      } else {
+        // Giữ nguyên vị trí crop hiện tại, chỉ điều chỉnh kích thước theo aspect ratio mới
+        const currentCrop = crop
+        const newCrop = makeAspectCrop(
+          {
+            unit: '%',
+            x: currentCrop.x,
+            y: currentCrop.y,
+            width: currentCrop.width,
+            height: currentCrop.height,
+          },
+          aspectRatio,
+          width,
+          height
+        )
+        setCrop(newCrop)
+        setCompletedCrop(convertToPixelCrop(newCrop, width, height))
+      }
     }
   }, [aspectRatio])
 
@@ -99,21 +144,28 @@ export default function ImageCrop({ src, onCropComplete, aspectRatio, circular =
 
     ctx!.save()
 
-    ctx!.translate(-cropX, -cropY)
-    ctx!.translate(centerX, centerY)
-    ctx!.rotate((rotate * Math.PI) / 180)
-    ctx!.scale(scale * (flip.horizontal ? -1 : 1), scale * (flip.vertical ? -1 : 1))
-    ctx!.translate(-centerX, -centerY)
+    // Apply transformations if any
+    if (rotate !== 0 || scale !== 1 || flip.horizontal || flip.vertical) {
+      const centerX = (crop.width * scaleX) / 2
+      const centerY = (crop.height * scaleY) / 2
+      
+      ctx!.translate(centerX, centerY)
+      ctx!.rotate((rotate * Math.PI) / 180)
+      ctx!.scale(scale * (flip.horizontal ? -1 : 1), scale * (flip.vertical ? -1 : 1))
+      ctx!.translate(-centerX, -centerY)
+    }
+
+    // Draw only the cropped area
     ctx!.drawImage(
       image,
+      cropX,
+      cropY,
+      crop.width * scaleX,
+      crop.height * scaleY,
       0,
       0,
-      image.naturalWidth,
-      image.naturalHeight,
-      0,
-      0,
-      image.naturalWidth,
-      image.naturalHeight,
+      crop.width * scaleX,
+      crop.height * scaleY,
     )
 
     ctx!.restore()
@@ -126,6 +178,11 @@ export default function ImageCrop({ src, onCropComplete, aspectRatio, circular =
       }
     }, 'image/png')
   }, [completedCrop, scale, rotate, flip, onCropComplete])
+
+  // Expose generateCrop function to parent component
+  useImperativeHandle(ref, () => ({
+    generateCrop
+  }), [generateCrop])
 
   const handleRotateLeft = () => setRotate((prev) => prev - 90)
   const handleRotateRight = () => setRotate((prev) => prev + 90)
@@ -146,30 +203,27 @@ export default function ImageCrop({ src, onCropComplete, aspectRatio, circular =
           <div className="flex flex-wrap gap-2 justify-center">
             <Button variant="outline" size="sm" onClick={handleRotateLeft}>
               <RotateCcw className="h-4 w-4 mr-2" />
-              Xoay trái
+              Rotate Left
             </Button>
             <Button variant="outline" size="sm" onClick={handleRotateRight}>
               <RotateCw className="h-4 w-4 mr-2" />
-              Xoay phải
+              Rotate Right
             </Button>
             <Button variant="outline" size="sm" onClick={handleZoomIn}>
               <ZoomIn className="h-4 w-4 mr-2" />
-              Phóng to
+              Zoom In
             </Button>
             <Button variant="outline" size="sm" onClick={handleZoomOut}>
               <ZoomOut className="h-4 w-4 mr-2" />
-              Thu nhỏ
+              Zoom Out
             </Button>
             <Button variant="outline" size="sm" onClick={handleFlipHorizontal}>
               <FlipHorizontal className="h-4 w-4 mr-2" />
-              Lật ngang
+              Flip Horizontal
             </Button>
             <Button variant="outline" size="sm" onClick={handleReset}>
               <Reset className="h-4 w-4 mr-2" />
-              Đặt lại
-            </Button>
-            <Button onClick={generateCrop} className="bg-blue-600 hover:bg-blue-700">
-              Cắt ảnh
+              Reset
             </Button>
           </div>
 
@@ -208,4 +262,8 @@ export default function ImageCrop({ src, onCropComplete, aspectRatio, circular =
       </CardContent>
     </Card>
   )
-}
+})
+
+ImageCrop.displayName = 'ImageCrop'
+
+export default ImageCrop

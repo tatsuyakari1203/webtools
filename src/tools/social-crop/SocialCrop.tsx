@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { Upload, Download, Crop, RotateCw, Image as ImageIcon } from 'lucide-rea
 // Import our custom components
 import FileUpload from './components/FileUpload';
 import AspectRatioSelector from './components/AspectRatioSelector';
-import ImageCrop from './components/ImageCrop';
+import ImageCrop, { ImageCropRef } from './components/ImageCrop';
 import CropPreview from './components/CropPreview';
 
 // Import our custom hooks
@@ -26,6 +26,9 @@ export default function SocialCrop() {
   const [croppedImages, setCroppedImages] = useState<string[]>([]);
   const [downloadFormat, setDownloadFormat] = useState('jpeg');
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Refs
+  const imageCropRef = useRef<ImageCropRef>(null);
   
   // Custom hooks
   const { processImage } = useImageProcessor();
@@ -55,12 +58,12 @@ export default function SocialCrop() {
     }
   };
   
-  // Handle crop completion - implement thuật toán cắt ảnh theo code gốc
+  // Handle crop completion - sử dụng ảnh đã crop từ ImageCrop component
   const handleCropComplete = useCallback(async (croppedImageUrl: string) => {
     setIsProcessing(true);
     
     try {
-      // Tạo canvas từ cropped image URL
+      // Load ảnh đã crop sẵn từ ImageCrop component
       const img = new Image();
       img.crossOrigin = 'anonymous';
       
@@ -70,16 +73,47 @@ export default function SocialCrop() {
         img.src = croppedImageUrl;
       });
       
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0);
-      
       const images: string[] = [];
       
-      // Xử lý theo từng chế độ crop
-      if (aspectRatio === 'special2') {
+      // Đối với free form, chỉ cần trả về ảnh đã crop
+      if (aspectRatio === 'free') {
+        images.push(croppedImageUrl);
+        toast.success('Crop completed successfully');
+      }
+      // Đối với các chế độ khác, cần tạo canvas để chia ảnh
+      else {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0);
+        
+        // Đối với các chế độ crop thông thường (2, 3 ảnh), chỉ cần chia ảnh đã crop
+        if (aspectRatio === '2') {
+        // Chia ảnh thành 2 phần vuông
+        const squareSize = Math.min(canvas.width / 2, canvas.height);
+        for (let i = 0; i < 2; i++) {
+          const squareCanvas = document.createElement('canvas');
+          squareCanvas.width = squareSize;
+          squareCanvas.height = squareSize;
+          const squareCtx = squareCanvas.getContext('2d')!;
+          squareCtx.drawImage(canvas, i * squareSize, 0, squareSize, squareSize, 0, 0, squareSize, squareSize);
+          images.push(squareCanvas.toDataURL());
+        }
+        toast.success('Successfully created 2 square images');
+      } else if (aspectRatio === '3') {
+        // Chia ảnh thành 3 phần vuông
+        const squareSize = Math.min(canvas.width / 3, canvas.height);
+        for (let i = 0; i < 3; i++) {
+          const squareCanvas = document.createElement('canvas');
+          squareCanvas.width = squareSize;
+          squareCanvas.height = squareSize;
+          const squareCtx = squareCanvas.getContext('2d')!;
+          squareCtx.drawImage(canvas, i * squareSize, 0, squareSize, squareSize, 0, 0, squareSize, squareSize);
+          images.push(squareCanvas.toDataURL());
+        }
+        toast.success('Successfully created 3 square images');
+      } else if (aspectRatio === 'special2') {
         // Special2 (3 ảnh): 1 hình chữ nhật 2:1 phía trên và 2 hình vuông phía dưới
         const fullWidth = canvas.width;
         const rectHeight = fullWidth / 2; // Tỷ lệ 2:1
@@ -187,24 +221,7 @@ export default function SocialCrop() {
         });
         
         toast.success('Successfully created 5 images for special layout');
-      } else {
-        // Chế độ crop thông thường (2 hoặc 3 ảnh)
-        const ratio = parseInt(aspectRatio, 10);
-        const squareWidth = canvas.width / ratio;
-        
-        for (let i = 0; i < ratio; i++) {
-          const squareCanvas = document.createElement('canvas');
-          squareCanvas.width = squareWidth;
-          squareCanvas.height = squareWidth;
-          const squareCtx = squareCanvas.getContext('2d')!;
-          
-          const imageData = ctx.getImageData(i * squareWidth, 0, squareWidth, squareWidth);
-          squareCtx.putImageData(imageData, 0, 0);
-          
-          images.push(squareCanvas.toDataURL());
         }
-        
-        toast.success(`Successfully created ${ratio} square images`);
       }
       
       setCroppedImages(images);
@@ -293,6 +310,7 @@ export default function SocialCrop() {
                 </CardHeader>
                 <CardContent>
                   <ImageCrop
+                    ref={imageCropRef}
                     src={imageUrl}
                     onCropComplete={handleCropComplete}
                     aspectRatio={getAspectRatio(aspectRatio)}
@@ -300,7 +318,12 @@ export default function SocialCrop() {
                   />
                   <div className="mt-6">
                     <Button 
-                      onClick={() => handleCropComplete(imageUrl)}
+                      onClick={() => {
+                        // Trigger generateCrop from ImageCrop component
+                        if (imageCropRef.current) {
+                          imageCropRef.current.generateCrop();
+                        }
+                      }}
                       className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 backdrop-blur-sm"
                       disabled={isProcessing}
                     >
