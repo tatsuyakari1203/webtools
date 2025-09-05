@@ -3,7 +3,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { ASPECT_RATIOS, type AspectRatioOption } from '../lib/ImageCropper';
+import { ASPECT_RATIOS, type AspectRatioOption } from '../lib/aspectRatios';
 
 interface AspectRatioSelectorProps {
   value: string;

@@ -6,14 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Upload, Download, Crop, RotateCw, Image as ImageIcon } from 'lucide-react';
 
 // Import our custom components
 import FileUpload from './components/FileUpload';
 import AspectRatioSelector from './components/AspectRatioSelector';
 import ImageCrop, { ImageCropRef } from './components/ImageCrop';
-import CropPreview from './components/CropPreview';
 
 // Import our custom hooks
 import { useImageProcessor } from './hooks/useImageProcessor';
@@ -25,7 +23,7 @@ export default function SocialCrop() {
   const [aspectRatio, setAspectRatio] = useState('2');
   const [croppedImages, setCroppedImages] = useState<string[]>([]);
   const [downloadFormat, setDownloadFormat] = useState('jpeg');
-  const [isProcessing, setIsProcessing] = useState(false);
+
   
   // Refs
   const imageCropRef = useRef<ImageCropRef>(null);
@@ -210,7 +208,7 @@ export default function SocialCrop() {
             /* File Upload */
             <FileUpload 
               onFileSelect={handleFileSelect}
-              disabled={isProcessing}
+              disabled={workerProcessing}
             />
           ) : (
             /* Crop Interface */
@@ -238,9 +236,9 @@ export default function SocialCrop() {
                     <Button 
                       onClick={handleCropButtonClick}
                       className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 backdrop-blur-sm"
-                      disabled={isProcessing || workerProcessing}
+                      disabled={workerProcessing}
                     >
-                      {(isProcessing || workerProcessing) ? (
+                      {workerProcessing ? (
                         <>
                           <RotateCw className="mr-2 h-4 w-4 animate-spin" />
                           Processing...
@@ -268,7 +266,7 @@ export default function SocialCrop() {
                   <AspectRatioSelector
                     value={aspectRatio}
                     onValueChange={handleAspectRatioChange}
-                    disabled={isProcessing}
+                    disabled={workerProcessing}
                   />
                 </CardContent>
               </Card>

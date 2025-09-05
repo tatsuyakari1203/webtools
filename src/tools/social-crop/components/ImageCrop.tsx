@@ -110,7 +110,7 @@ const ImageCrop = forwardRef<ImageCropRef, ImageCropProps>(({ src, onCropComplet
         setCompletedCrop(convertToPixelCrop(newCrop, width, height))
       }
     }
-  }, [aspectRatio])
+  }, [aspectRatio, crop])
 
   const generateCrop = useCallback(async () => {
     if (
@@ -139,8 +139,9 @@ const ImageCrop = forwardRef<ImageCropRef, ImageCropProps>(({ src, onCropComplet
     const cropX = crop.x * scaleX
     const cropY = crop.y * scaleY
 
-    const centerX = image.naturalWidth / 2
-    const centerY = image.naturalHeight / 2
+    // Center coordinates for potential future use
+    // const centerX = image.naturalWidth / 2
+    // const centerY = image.naturalHeight / 2
 
     ctx!.save()
 

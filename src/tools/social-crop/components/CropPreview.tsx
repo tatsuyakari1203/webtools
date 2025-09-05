@@ -86,7 +86,6 @@ export function CropPreview({ images, mode, className }: CropPreviewProps) {
             </div>
             <PreviewImage 
               imageData={images[0]} 
-              index={0} 
               label="Ảnh chính"
               ref={(el) => { canvasRefs.current[0] = el; }}
             />
@@ -96,13 +95,11 @@ export function CropPreview({ images, mode, className }: CropPreviewProps) {
           <div className="grid grid-cols-2 gap-6">
             <PreviewImage 
               imageData={images[1]} 
-              index={1} 
               label="Ảnh vuông 1"
               ref={(el) => { canvasRefs.current[1] = el; }}
             />
             <PreviewImage 
               imageData={images[2]} 
-              index={2} 
               label="Ảnh vuông 2"
               ref={(el) => { canvasRefs.current[2] = el; }}
             />
@@ -124,13 +121,11 @@ export function CropPreview({ images, mode, className }: CropPreviewProps) {
             <div className="grid grid-cols-2 gap-6">
               <PreviewImage 
                 imageData={images[0]} 
-                index={0} 
                 label="Trên trái"
                 ref={(el) => { canvasRefs.current[0] = el; }}
               />
               <PreviewImage 
                 imageData={images[1]} 
-                index={1} 
                 label="Trên phải"
                 ref={(el) => { canvasRefs.current[1] = el; }}
               />
@@ -147,19 +142,16 @@ export function CropPreview({ images, mode, className }: CropPreviewProps) {
             <div className="grid grid-cols-3 gap-4">
               <PreviewImage 
                 imageData={images[2]} 
-                index={2} 
                 label="Dưới trái"
                 ref={(el) => { canvasRefs.current[2] = el; }}
               />
               <PreviewImage 
                 imageData={images[3]} 
-                index={3} 
                 label="Dưới giữa"
                 ref={(el) => { canvasRefs.current[3] = el; }}
               />
               <PreviewImage 
                 imageData={images[4]} 
-                index={4} 
                 label="Dưới phải"
                 ref={(el) => { canvasRefs.current[4] = el; }}
               />
@@ -222,7 +214,6 @@ export function CropPreview({ images, mode, className }: CropPreviewProps) {
                 <PreviewImage
                   key={index}
                   imageData={imageData}
-                  index={index}
                   label={`Ảnh ${index + 1}`}
                   ref={(el) => { canvasRefs.current[index] = el; }}
                 />
@@ -237,12 +228,11 @@ export function CropPreview({ images, mode, className }: CropPreviewProps) {
 
 interface PreviewImageProps {
   imageData: ImageData;
-  index: number;
   label: string;
 }
 
 const PreviewImage = React.forwardRef<HTMLCanvasElement, PreviewImageProps>(
-  ({ imageData, index, label }, ref) => {
+  ({ imageData, label }, ref) => {
     const handleDownload = () => {
       const canvas = ref as React.RefObject<HTMLCanvasElement>;
       if (canvas.current) {

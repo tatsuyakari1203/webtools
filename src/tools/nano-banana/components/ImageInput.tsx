@@ -3,7 +3,7 @@
 import React, { useRef, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { X, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface ImageInputProps {
@@ -15,7 +15,7 @@ interface ImageInputProps {
   accept?: string
   className?: string
   multiple?: boolean
-  maxFiles?: number
+
 }
 
 // Utility function to resize image
@@ -76,8 +76,7 @@ export const ImageInput: React.FC<ImageInputProps> = ({
   onPreviewChange,
   accept = 'image/*',
   className = '',
-  multiple = false,
-  maxFiles = 1
+  multiple = false
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)

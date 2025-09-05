@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   const ai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
   try {
     const body = await request.json()
-    const { prompt, width = 1024, height = 1024, style = 'photorealistic', quality = 'ultra' } = body
+    const { prompt, width = 1024, height = 1024, style = 'photorealistic' } = body
 
     if (!prompt || !prompt.trim()) {
       return NextResponse.json(

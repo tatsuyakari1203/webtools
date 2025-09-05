@@ -3,17 +3,12 @@ import { AskGeminiRequest, AskGeminiResponse, PromptType } from './types';
 import { selectModel, getModelConfig } from './model-router';
 import { 
   getSafetySettings, 
-  convertToGeminiSafetySettings, 
   isSafetyBlocked, 
   createSafetyBlockedMessage,
   SafetySettings 
 } from './safety-config';
 
-// Cấu hình generation mặc định
-const DEFAULT_GENERATION_CONFIG = {
-  temperature: 0.7,
-  maxTokens: 1000,
-};
+
 
 export class GeminiService {
   private genAI: GoogleGenAI;
