@@ -1,4 +1,4 @@
-import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode, Timer, Banana } from "lucide-react"
+import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode, Timer, Banana, Crop } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -92,6 +92,15 @@ export const toolsRegistry: Tool[] = [
     icon: Banana,
     path: "/tools/nano-banana",
     featured: true,
+  },
+  {
+    id: "social-crop",
+    name: "Social Crop",
+    description: "Crop and resize images for perfect social media posts",
+    category: "Image",
+    icon: Crop,
+    path: "/tools/social-crop",
+    featured: false,
   },
 ]
 
