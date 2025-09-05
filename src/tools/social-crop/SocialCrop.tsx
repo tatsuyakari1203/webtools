@@ -300,19 +300,88 @@ export default function SocialCrop() {
           <div className="bg-card rounded-lg border p-4 min-h-[400px]">
             <h3 className="text-lg font-semibold mb-4">Preview</h3>
             {croppedImages.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {croppedImages.map((imageUrl, index) => (
-                  <div key={index} className="relative">
-                    <img 
-                      src={imageUrl} 
-                      alt={`Cropped ${index + 1}`}
-                      className="w-full h-auto rounded-lg border"
-                    />
-                    <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
-                      {index + 1}
+              <div className={`gap-2 ${
+                aspectRatio === '2' ? 'grid grid-cols-2' :
+                aspectRatio === '3' ? 'grid grid-cols-3' :
+                aspectRatio === 'special2' ? 'space-y-2' :
+                aspectRatio === 'special' ? 'space-y-2' :
+                'grid grid-cols-1 md:grid-cols-2'
+              }`}>
+                {aspectRatio === 'special2' ? (
+                  // Layout cho special2: 1 ảnh rectangle trên, 2 ảnh vuông dưới
+                  <>
+                    <div className="relative">
+                      <img 
+                        src={croppedImages[0]} 
+                        alt="Cropped 1"
+                        className="w-full h-auto rounded-lg border"
+                      />
+                      <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                        1
+                      </div>
                     </div>
-                  </div>
-                ))}
+                    <div className="grid grid-cols-2 gap-2">
+                      {croppedImages.slice(1).map((imageUrl, index) => (
+                        <div key={index + 1} className="relative">
+                          <img 
+                            src={imageUrl} 
+                            alt={`Cropped ${index + 2}`}
+                            className="w-full h-auto rounded-lg border"
+                          />
+                          <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                            {index + 2}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : aspectRatio === 'special' ? (
+                  // Layout cho special: 2 ảnh trên, 3 ảnh dưới
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      {croppedImages.slice(0, 2).map((imageUrl, index) => (
+                        <div key={index} className="relative">
+                          <img 
+                            src={imageUrl} 
+                            alt={`Cropped ${index + 1}`}
+                            className="w-full h-auto rounded-lg border"
+                          />
+                          <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {croppedImages.slice(2).map((imageUrl, index) => (
+                        <div key={index + 2} className="relative">
+                          <img 
+                            src={imageUrl} 
+                            alt={`Cropped ${index + 3}`}
+                            className="w-full h-auto rounded-lg border"
+                          />
+                          <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                            {index + 3}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  // Layout cho crop 2, 3 và các chế độ khác
+                  croppedImages.map((imageUrl, index) => (
+                    <div key={index} className="relative">
+                      <img 
+                        src={imageUrl} 
+                        alt={`Cropped ${index + 1}`}
+                        className="w-full h-auto rounded-lg border"
+                      />
+                      <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                        {index + 1}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-center h-64 text-muted-foreground">
