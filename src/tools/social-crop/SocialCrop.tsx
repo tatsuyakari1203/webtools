@@ -31,7 +31,7 @@ export default function SocialCrop() {
   const imageCropRef = useRef<ImageCropRef>(null);
   
   // Custom hooks
-  const { processImage } = useImageProcessor();
+  const { processImage, isProcessing: workerProcessing } = useImageProcessor();
   
   // Handle file selection
   const handleFileSelect = useCallback((file: File) => {
@@ -58,11 +58,21 @@ export default function SocialCrop() {
     }
   };
   
-  // Handle crop completion - sử dụng ảnh đã crop từ ImageCrop component
+  // Handle crop completion - sử dụng worker để xử lý ảnh
   const handleCropComplete = useCallback(async (croppedImageUrl: string) => {
-    setIsProcessing(true);
+    if (workerProcessing) {
+      toast.error('Already processing an image');
+      return;
+    }
     
     try {
+      // Đối với free form, chỉ cần trả về ảnh đã crop
+      if (aspectRatio === 'free') {
+        setCroppedImages([croppedImageUrl]);
+        toast.success('Crop completed successfully');
+        return;
+      }
+      
       // Load ảnh đã crop sẵn từ ImageCrop component
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -73,166 +83,74 @@ export default function SocialCrop() {
         img.src = croppedImageUrl;
       });
       
-      const images: string[] = [];
+      // Tạo canvas để lấy ImageData cho worker
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       
-      // Đối với free form, chỉ cần trả về ảnh đã crop
-      if (aspectRatio === 'free') {
-        images.push(croppedImageUrl);
-        toast.success('Crop completed successfully');
-      }
-      // Đối với các chế độ khác, cần tạo canvas để chia ảnh
-      else {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d')!;
-        ctx.drawImage(img, 0, 0);
-        
-        // Đối với các chế độ crop thông thường (2, 3 ảnh), chỉ cần chia ảnh đã crop
-        if (aspectRatio === '2') {
-        // Chia ảnh thành 2 phần vuông
-        const squareSize = Math.min(canvas.width / 2, canvas.height);
-        for (let i = 0; i < 2; i++) {
-          const squareCanvas = document.createElement('canvas');
-          squareCanvas.width = squareSize;
-          squareCanvas.height = squareSize;
-          const squareCtx = squareCanvas.getContext('2d')!;
-          squareCtx.drawImage(canvas, i * squareSize, 0, squareSize, squareSize, 0, 0, squareSize, squareSize);
-          images.push(squareCanvas.toDataURL());
-        }
-        toast.success('Successfully created 2 square images');
-      } else if (aspectRatio === '3') {
-        // Chia ảnh thành 3 phần vuông
-        const squareSize = Math.min(canvas.width / 3, canvas.height);
-        for (let i = 0; i < 3; i++) {
-          const squareCanvas = document.createElement('canvas');
-          squareCanvas.width = squareSize;
-          squareCanvas.height = squareSize;
-          const squareCtx = squareCanvas.getContext('2d')!;
-          squareCtx.drawImage(canvas, i * squareSize, 0, squareSize, squareSize, 0, 0, squareSize, squareSize);
-          images.push(squareCanvas.toDataURL());
-        }
-        toast.success('Successfully created 3 square images');
-      } else if (aspectRatio === 'special2') {
-        // Special2 (3 ảnh): 1 hình chữ nhật 2:1 phía trên và 2 hình vuông phía dưới
-        const fullWidth = canvas.width;
-        const rectHeight = fullWidth / 2; // Tỷ lệ 2:1
-        
-        // Ảnh 1: Rectangle 2:1 phía trên
-        const rectCanvas = document.createElement('canvas');
-        rectCanvas.width = fullWidth;
-        rectCanvas.height = rectHeight;
-        const rectCtx = rectCanvas.getContext('2d')!;
-        rectCtx.drawImage(canvas, 0, 0, fullWidth, rectHeight, 0, 0, fullWidth, rectHeight);
-        images.push(rectCanvas.toDataURL());
-        
-        // Ảnh 2,3: 2 hình vuông phía dưới
-        const squareSize = rectHeight;
-        for (let i = 0; i < 2; i++) {
-          const squareCanvas = document.createElement('canvas');
-          squareCanvas.width = squareSize;
-          squareCanvas.height = squareSize;
-          const squareCtx = squareCanvas.getContext('2d')!;
-          squareCtx.drawImage(canvas, i * squareSize, rectHeight, squareSize, squareSize, 0, 0, squareSize, squareSize);
-          images.push(squareCanvas.toDataURL());
-        }
-        
-        toast.success('Successfully created 3 images for special layout');
-      } else if (aspectRatio === 'special') {
-        // Special (5 ảnh): Theo code gốc - crop 6:5 rồi chia thành 5 phần
-        const fullWidth = canvas.width;
-        const fullHeight = canvas.height;
-        
-        // Tính toán kích thước theo tỷ lệ 6:5 (width:height)
-        let cropWidth, cropHeight;
-        const targetRatio = 6 / 5; // width/height = 1.2
-        const currentRatio = fullWidth / fullHeight;
-        
-        if (currentRatio > targetRatio) {
-          // Image quá rộng, crop theo height
-          cropHeight = fullHeight;
-          cropWidth = cropHeight * targetRatio;
-        } else {
-          // Image quá cao, crop theo width
-          cropWidth = fullWidth;
-          cropHeight = cropWidth / targetRatio;
-        }
-        
-        // Tạo canvas với tỷ lệ 6:5
-        const specialCanvas = document.createElement('canvas');
-        specialCanvas.width = cropWidth;
-        specialCanvas.height = cropHeight;
-        const specialCtx = specialCanvas.getContext('2d')!;
-        
-        // Crop từ center
-        const startX = (fullWidth - cropWidth) / 2;
-        const startY = (fullHeight - cropHeight) / 2;
-        specialCtx.drawImage(canvas, startX, startY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-        
-        // Chia thành 2 phần: top (3/5 height) và bottom (2/5 height)
-        const topHeight = (3 / 5) * cropHeight;
-        const bottomHeight = (2 / 5) * cropHeight;
-        
-        // Top canvas
-        const topCanvas = document.createElement('canvas');
-        topCanvas.width = cropWidth;
-        topCanvas.height = topHeight;
-        const topCtx = topCanvas.getContext('2d')!;
-        topCtx.drawImage(specialCanvas, 0, 0, cropWidth, topHeight, 0, 0, cropWidth, topHeight);
-        
-        // Bottom canvas
-        const bottomCanvas = document.createElement('canvas');
-        bottomCanvas.width = cropWidth;
-        bottomCanvas.height = bottomHeight;
-        const bottomCtx = bottomCanvas.getContext('2d')!;
-        bottomCtx.drawImage(specialCanvas, 0, topHeight, cropWidth, bottomHeight, 0, 0, cropWidth, bottomHeight);
-        
-        // Helper function để split canvas theo code gốc
-        const splitCanvas = (sourceCanvas: HTMLCanvasElement, index: number, totalParts: number) => {
-          const partWidth = sourceCanvas.width / totalParts;
-          const partHeight = sourceCanvas.height;
-          const canvas = document.createElement('canvas');
-          canvas.width = partWidth;
-          canvas.height = partHeight;
-          const ctx = canvas.getContext('2d')!;
-          ctx.drawImage(
-            sourceCanvas,
-            index * partWidth,
-            0,
-            partWidth,
-            partHeight,
-            0,
-            0,
-            partWidth,
-            partHeight
-          );
-          return canvas;
-        };
-        
-        // Tạo 5 ảnh theo code gốc
-        const square1 = splitCanvas(topCanvas, 0, 2);
-        const square2 = splitCanvas(topCanvas, 1, 2);
-        const square3 = splitCanvas(bottomCanvas, 0, 3);
-        const square4 = splitCanvas(bottomCanvas, 1, 3);
-        const square5 = splitCanvas(bottomCanvas, 2, 3);
-        
-        [square1, square2, square3, square4, square5].forEach((canvas) => {
-          images.push(canvas.toDataURL());
+      let processedImages: ImageData[];
+      
+      // Sử dụng worker để xử lý ảnh dựa trên aspect ratio
+      if (aspectRatio === '2' || aspectRatio === '3') {
+        // Crop thông thường
+        const ratio = parseInt(aspectRatio);
+        processedImages = await processImage('crop', imageData, {
+          ratio,
+          cropData: { x: 0, y: 0, width: canvas.width, height: canvas.height }
         });
-        
-        toast.success('Successfully created 5 images for special layout');
-        }
+        toast.success(`Successfully created ${ratio} square images`);
+      } else if (aspectRatio === 'special2' || aspectRatio === 'special') {
+        // Special crop modes
+        processedImages = await processImage('special-crop', imageData, {
+          mode: aspectRatio as 'special' | 'special2',
+          cropData: { x: 0, y: 0, width: canvas.width, height: canvas.height }
+        });
+        const count = aspectRatio === 'special2' ? 3 : 5;
+        toast.success(`Successfully created ${count} images for special layout`);
+      } else {
+        // Fallback cho các trường hợp khác
+        setCroppedImages([croppedImageUrl]);
+        toast.success('Crop completed successfully');
+        return;
       }
       
-      setCroppedImages(images);
+      // Chuyển đổi ImageData thành URL để hiển thị
+      const imageUrls = await Promise.all(
+        processedImages.map(imageData => {
+          return new Promise<string>((resolve) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = imageData.width;
+            canvas.height = imageData.height;
+            const ctx = canvas.getContext('2d')!;
+            ctx.putImageData(imageData, 0, 0);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve(URL.createObjectURL(blob));
+              }
+            }, 'image/png');
+          });
+        })
+      );
+      
+      setCroppedImages(imageUrls);
       
     } catch (error) {
       console.error('Crop error:', error);
       toast.error('Failed to process cropped image');
-    } finally {
-      setIsProcessing(false);
     }
-  }, [aspectRatio]);
+  }, [aspectRatio, processImage, workerProcessing]);
+  
+  // Handle crop button click
+  const handleCropButtonClick = useCallback(() => {
+    if (!imageCropRef.current) {
+      toast.error('Image crop component not ready');
+      return;
+    }
+    imageCropRef.current.generateCrop();
+  }, []);
   
   // Download function
   const handleDownload = useCallback(() => {
@@ -318,16 +236,11 @@ export default function SocialCrop() {
                   />
                   <div className="mt-6">
                     <Button 
-                      onClick={() => {
-                        // Trigger generateCrop from ImageCrop component
-                        if (imageCropRef.current) {
-                          imageCropRef.current.generateCrop();
-                        }
-                      }}
+                      onClick={handleCropButtonClick}
                       className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 backdrop-blur-sm"
-                      disabled={isProcessing}
+                      disabled={isProcessing || workerProcessing}
                     >
-                      {isProcessing ? (
+                      {(isProcessing || workerProcessing) ? (
                         <>
                           <RotateCw className="mr-2 h-4 w-4 animate-spin" />
                           Processing...
