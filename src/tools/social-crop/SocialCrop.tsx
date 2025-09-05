@@ -2,6 +2,12 @@
 
 import React, { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Upload, Download, Crop, RotateCw, Image as ImageIcon } from 'lucide-react';
 
 // Import our custom components
 import FileUpload from './components/FileUpload';
@@ -234,12 +240,31 @@ export default function SocialCrop() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold mb-2">Social Media Image Cropper</h1>
-        <p className="text-muted-foreground">
-          Upload an image, adjust the crop layout, and preview the split images. Perfect for social media posts!
-        </p>
-      </div>
+      {/* Header Section with Glassmorphism */}
+      <Card className="mb-8 border-white/20 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-sm">
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <div className="rounded-lg bg-primary/20 backdrop-blur-sm p-2 border border-white/20 dark:border-white/10">
+              <Crop className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-3xl font-bold">Social Media Image Cropper</CardTitle>
+          </div>
+          <CardDescription className="text-lg">
+            Upload an image, adjust the crop layout, and preview the split images. Perfect for social media posts!
+          </CardDescription>
+          <div className="flex flex-wrap justify-center gap-2 mt-4">
+            <Badge variant="secondary" className="bg-white/20 dark:bg-black/20 backdrop-blur-sm border border-white/20 dark:border-white/10">
+              Multiple Layouts
+            </Badge>
+            <Badge variant="secondary" className="bg-white/20 dark:bg-black/20 backdrop-blur-sm border border-white/20 dark:border-white/10">
+              High Quality
+            </Badge>
+            <Badge variant="secondary" className="bg-white/20 dark:bg-black/20 backdrop-blur-sm border border-white/20 dark:border-white/10">
+              Instant Download
+            </Badge>
+          </div>
+        </CardHeader>
+      </Card>
       
       {/* Image element for cropper - will be displayed in container below */}
       
@@ -255,86 +280,144 @@ export default function SocialCrop() {
           ) : (
             /* Crop Interface */
             <>
-              {/* Image Crop Component - Moved to top for better UX */}
-              <div className="bg-card rounded-lg border p-4">
-                <h3 className="text-lg font-semibold mb-4">Crop Image</h3>
-                <ImageCrop
-                  src={imageUrl}
-                  onCropComplete={handleCropComplete}
-                  aspectRatio={getAspectRatio(aspectRatio)}
-                  circular={false}
-                />
-                <div className="mt-6">
-                  <button 
-                    onClick={() => handleCropComplete(imageUrl)}
-                    className="w-full h-12 text-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+              {/* Image Crop Component with Glassmorphism */}
+              <Card className="border-white/20 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-sm hover:border-primary/30 transition-all duration-300">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Crop className="h-5 w-5 text-primary" />
+                    Crop Image
+                  </CardTitle>
+                  <CardDescription>
+                    Adjust the crop area to fit your desired layout
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ImageCrop
+                    src={imageUrl}
+                    onCropComplete={handleCropComplete}
+                    aspectRatio={getAspectRatio(aspectRatio)}
+                    circular={false}
+                  />
+                  <div className="mt-6">
+                    <Button 
+                      onClick={() => handleCropComplete(imageUrl)}
+                      className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 backdrop-blur-sm"
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? (
+                        <>
+                          <RotateCw className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Crop className="mr-2 h-4 w-4" />
+                          Crop Image
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Aspect Ratio Selector with Glassmorphism */}
+              <Card className="border-white/20 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-sm hover:border-primary/30 transition-all duration-300">
+                <CardHeader>
+                  <CardTitle className="text-lg">Layout Options</CardTitle>
+                  <CardDescription>
+                    Choose how to split your image
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AspectRatioSelector
+                    value={aspectRatio}
+                    onValueChange={handleAspectRatioChange}
                     disabled={isProcessing}
+                  />
+                </CardContent>
+              </Card>
+              
+              {/* Upload New Image Button with Glassmorphism */}
+              <Card className="border-white/20 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-sm hover:border-primary/30 transition-all duration-300">
+                <CardContent className="pt-6">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setImageUrl('');
+                      setCroppedImages([]);
+                    }}
+                    className="w-full bg-white/20 dark:bg-black/20 backdrop-blur-sm border-white/30 dark:border-white/20 hover:bg-white/30 dark:hover:bg-black/30"
                   >
-                    Cắt Ảnh
-                  </button>
-                </div>
-              </div>
-              
-              {/* Aspect Ratio Selector */}
-              <AspectRatioSelector
-                value={aspectRatio}
-                onValueChange={handleAspectRatioChange}
-                disabled={isProcessing}
-              />
-              
-              {/* Upload New Image Button */}
-              <div className="bg-card rounded-lg border p-4">
-                <button 
-                  onClick={() => {
-                    setSelectedFile(null);
-                    setImageUrl('');
-                    setCroppedImages([]);
-                  }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  Upload New Image
-                </button>
-              </div>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload New Image
+                  </Button>
+                </CardContent>
+              </Card>
             </>
           )}
         </div>
         
         {/* Right Column - Download & Preview */}
         <div className="xl:col-span-1 space-y-6">
-          {/* Download Controls */}
+          {/* Download Controls with Glassmorphism */}
           {canDownload && (
-            <div className="bg-card rounded-lg border p-4">
-              <h3 className="text-lg font-semibold mb-4">Download Options</h3>
-              <div className="flex items-center gap-4">
-                <select 
-                  value={downloadFormat} 
-                  onChange={(e) => setDownloadFormat(e.target.value)}
-                  className="px-3 py-2 border rounded-md"
-                >
-                  <option value="jpeg">JPEG</option>
-                  <option value="png">PNG</option>
-                </select>
-                <button 
-                  onClick={handleDownload}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Download Images
-                </button>
-              </div>
-            </div>
+            <Card className="border-white/20 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-sm hover:border-primary/30 transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="h-5 w-5 text-primary" />
+                  Download Options
+                </CardTitle>
+                <CardDescription>
+                  Choose format and download your cropped images
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4">
+                  <Select value={downloadFormat} onValueChange={setDownloadFormat}>
+                    <SelectTrigger className="w-32 bg-white/20 dark:bg-black/20 backdrop-blur-sm border-white/30 dark:border-white/20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="jpeg">JPEG</SelectItem>
+                      <SelectItem value="png">PNG</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={handleDownload}
+                    className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 backdrop-blur-sm"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Images
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
           
-          {/* Preview Section */}
-          <div className="bg-card rounded-lg border p-4 min-h-[400px]">
-            <h3 className="text-lg font-semibold mb-4">Preview</h3>
-            {croppedImages.length > 0 ? (
-              <div className={`gap-2 ${
-                aspectRatio === '2' ? 'grid grid-cols-2' :
-                aspectRatio === '3' ? 'grid grid-cols-3' :
-                aspectRatio === 'special2' ? 'space-y-2' :
-                aspectRatio === 'special' ? 'space-y-2' :
-                'grid grid-cols-1 md:grid-cols-2'
-              }`}>
+          {/* Preview Section with Glassmorphism */}
+          <Card className="border-white/20 dark:border-white/10 bg-white/40 dark:bg-black/40 backdrop-blur-sm hover:border-primary/30 transition-all duration-300 min-h-[400px]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5 text-primary" />
+                Preview
+              </CardTitle>
+              <CardDescription>
+                {croppedImages.length > 0 
+                  ? `${croppedImages.length} cropped images ready for download`
+                  : 'Cropped images will appear here after processing'
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {croppedImages.length > 0 ? (
+                <div className={`gap-2 ${
+                  aspectRatio === '2' ? 'grid grid-cols-2' :
+                  aspectRatio === '3' ? 'grid grid-cols-3' :
+                  aspectRatio === 'special2' ? 'space-y-2' :
+                  aspectRatio === 'special' ? 'space-y-2' :
+                  'grid grid-cols-1 md:grid-cols-2'
+                }`}>
                 {aspectRatio === 'special2' ? (
                   // Layout cho special2: 1 ảnh rectangle trên, 2 ảnh vuông dưới
                   <>
@@ -416,7 +499,8 @@ export default function SocialCrop() {
                 <p>Cropped images will appear here</p>
               </div>
             )}
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
