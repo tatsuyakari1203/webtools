@@ -13,6 +13,7 @@ interface ResultDisplayProps {
   image: string | null
   loading: boolean
   setGeneratedImage: (image: string | null) => void
+  originalImage?: string | null
 }
 
 interface ImageHistoryItem {
@@ -24,7 +25,8 @@ interface ImageHistoryItem {
 export const ResultDisplay: React.FC<ResultDisplayProps> = ({ 
   image, 
   loading, 
-  setGeneratedImage
+  setGeneratedImage,
+  originalImage
 }) => {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [showRefineInput, setShowRefineInput] = useState(false)
@@ -33,107 +35,13 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   const [imageHistory, setImageHistory] = useState<ImageHistoryItem[]>([])
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1)
   const [showBeforeAfter, setShowBeforeAfter] = useState(false)
+  const [showOriginal, setShowOriginal] = useState(false)
 
-  // Load refine history from localStorage on mount (session-specific)
-  useEffect(() => {
-    const sessionId = sessionStorage.getItem('nano-banana-session-id') || Date.now().toString()
-    try {
-      sessionStorage.setItem('nano-banana-session-id', sessionId)
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        console.warn('sessionStorage quota exceeded, unable to set session ID')
-      } else {
-        console.error('Error setting session ID:', error)
-      }
-    }
-    
-    const savedHistory = localStorage.getItem(`nano-banana-refine-history-${sessionId}`)
-    const savedIndex = localStorage.getItem(`nano-banana-refine-history-index-${sessionId}`)
-    if (savedHistory) {
-      try {
-        const history = JSON.parse(savedHistory)
-        setImageHistory(history)
-        if (savedIndex) {
-          setCurrentHistoryIndex(parseInt(savedIndex))
-        }
-      } catch (error) {
-        console.error('Error loading refine history from localStorage:', error)
-      }
-    }
-  }, [])
+  // No localStorage - images only stored in memory during session
 
-  // Cleanup old localStorage data when quota is exceeded
-  const cleanupOldData = () => {
-    try {
-      // Get all localStorage keys
-      const keys = Object.keys(localStorage)
-      
-      // Find nano-banana related keys
-      const nanoBananaKeys = keys.filter(key => 
-        key.startsWith('nano-banana-refine-history-') || 
-        key.startsWith('nano-banana-refine-history-index-')
-      )
-      
-      // Sort by timestamp (extract from session ID if possible)
-      const keysByAge = nanoBananaKeys.sort((a, b) => {
-        const sessionIdA = a.split('-').pop() || '0'
-        const sessionIdB = b.split('-').pop() || '0'
-        return parseInt(sessionIdA) - parseInt(sessionIdB)
-      })
-      
-      // Remove oldest 50% of entries
-      const keysToRemove = keysByAge.slice(0, Math.ceil(keysByAge.length / 2))
-      keysToRemove.forEach(key => {
-        localStorage.removeItem(key)
-      })
-      
-      console.log(`Cleaned up ${keysToRemove.length} old storage entries`)
-      return keysToRemove.length > 0
-    } catch (error) {
-      console.error('Error during cleanup:', error)
-      return false
-    }
-  }
 
-  // Save refine history to localStorage whenever it changes (session-specific)
-  useEffect(() => {
-    const sessionId = sessionStorage.getItem('nano-banana-session-id')
-    if (imageHistory.length > 0 && sessionId) {
-      const saveData = () => {
-        try {
-          localStorage.setItem(`nano-banana-refine-history-${sessionId}`, JSON.stringify(imageHistory))
-          localStorage.setItem(`nano-banana-refine-history-index-${sessionId}`, currentHistoryIndex.toString())
-          return true
-        } catch (error) {
-          if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-            console.warn('localStorage quota exceeded, performing emergency cleanup')
-            
-            // Try to cleanup and save again
-            const cleanedUp = cleanupOldData()
-            if (cleanedUp) {
-              try {
-                localStorage.setItem(`nano-banana-refine-history-${sessionId}`, JSON.stringify(imageHistory))
-                localStorage.setItem(`nano-banana-refine-history-index-${sessionId}`, currentHistoryIndex.toString())
-                toast.success('Storage cleaned up and history saved.')
-                return true
-              } catch (retryError) {
-                toast.error('Storage quota exceeded. History may not be saved.')
-                return false
-              }
-            } else {
-              toast.error('Storage quota exceeded. History may not be saved.')
-              return false
-            }
-          } else {
-            console.error('Error saving refine history to localStorage:', error)
-            return false
-          }
-        }
-      }
-      
-      saveData()
-    }
-  }, [imageHistory, currentHistoryIndex])
+
+  // Images are only stored in memory - no localStorage persistence
   const handleDownload = async () => {
     if (!image) return
 
@@ -312,28 +220,103 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
               </div>
             ) : image ? (
               <div className="space-y-4">
-                <div className="relative group">
-                  <img
-                    src={image}
-                    alt="Generated result"
-                    className="w-full rounded-xl border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
-                    style={{ maxHeight: '500px', objectFit: 'contain' }}
-                    onClick={() => setIsLightboxOpen(true)}
-                  />
-                  
-                  {/* Overlay with view button */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <Button
-                      variant="secondary"
-                      size="lg"
-                      className="bg-white/90 hover:bg-white text-black shadow-lg"
-                      onClick={() => setIsLightboxOpen(true)}
-                    >
-                      <Maximize2 className="mr-2 h-5 w-5" />
-                      View Full Size
-                    </Button>
+                {showBeforeAfter && imageHistory.length > 0 ? (
+                  /* Before/After Overlay Comparison View */
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold mb-2">Before vs After Comparison</h3>
+                      <p className="text-sm text-muted-foreground">Toggle between original and refined image</p>
+                    </div>
+                    
+                    {/* Toggle Button */}
+                    <div className="flex justify-center mb-4">
+                      <Button
+                        variant={showOriginal ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setShowOriginal(!showOriginal)}
+                        className="transition-all duration-200"
+                      >
+                        {showOriginal ? "Show Result" : "Show Original"}
+                      </Button>
+                    </div>
+                    
+                    {/* Overlay Image Container */}
+                    <div className="relative">
+                      <div className="relative group">
+                        <img
+                          src={showOriginal ? (originalImage || (imageHistory.length > 0 ? imageHistory[0].image : image)) : image}
+                          alt={showOriginal ? "Original" : "Result"}
+                          className="w-full rounded-xl border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                          style={{ maxHeight: '500px', objectFit: 'contain' }}
+                          onClick={() => setIsLightboxOpen(true)}
+                        />
+                        
+                        {/* Status Badge */}
+                        <div className="absolute top-4 left-4">
+                          <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
+                            showOriginal 
+                              ? 'bg-muted text-muted-foreground' 
+                              : 'bg-primary text-primary-foreground'
+                          }`}>
+                            {showOriginal ? 'Original' : 'Result'}
+                          </span>
+                        </div>
+                        
+                        {/* Hover overlay */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="bg-white/90 hover:bg-white text-black shadow-lg"
+                            onClick={() => setIsLightboxOpen(true)}
+                          >
+                            <Maximize2 className="mr-2 h-4 w-4" />
+                            View Full
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Image Info */}
+                      <div className="mt-2 text-center">
+                        {showOriginal ? (
+                          <div className="text-xs text-muted-foreground truncate">
+                            {originalImage ? "User Input" : (imageHistory.length > 0 ? `"${imageHistory[0].prompt}"` : "Original")}
+                          </div>
+                        ) : (
+                          currentHistoryIndex >= 0 && imageHistory[currentHistoryIndex] && (
+                            <div className="text-xs text-muted-foreground truncate">
+                              "{imageHistory[currentHistoryIndex].prompt}"
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  /* Normal Single Image View */
+                  <div className="relative group">
+                    <img
+                      src={image}
+                      alt="Generated result"
+                      className="w-full rounded-xl border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                      style={{ maxHeight: '500px', objectFit: 'contain' }}
+                      onClick={() => setIsLightboxOpen(true)}
+                    />
+                    
+                    {/* Overlay with view button */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        className="bg-white/90 hover:bg-white text-black shadow-lg"
+                        onClick={() => setIsLightboxOpen(true)}
+                      >
+                        <Maximize2 className="mr-2 h-5 w-5" />
+                        View Full Size
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex gap-2 flex-wrap">
                   <Button
@@ -362,6 +345,19 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                   >
                     <Wand2 className="h-4 w-4 mr-2" />
                     {showRefineInput ? 'Cancel Refine' : 'Refine Image'}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowBeforeAfter(!showBeforeAfter)
+                      if (showBeforeAfter) setShowOriginal(false)
+                    }}
+                    variant={showBeforeAfter ? "default" : "outline"}
+                    size="sm"
+                    disabled={!image || imageHistory.length === 0}
+                    title="Toggle comparison view"
+                  >
+                    <ArrowLeftRight className="h-4 w-4 mr-2" />
+                    {showBeforeAfter ? 'Hide Comparison' : 'Compare'}
                   </Button>
                   <Button
                     onClick={handleUndo}
