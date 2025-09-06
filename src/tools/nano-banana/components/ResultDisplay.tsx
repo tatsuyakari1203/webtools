@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Download, Image as ImageIcon, Loader2, Maximize2, Eye, Wand2, Undo, Redo, X } from 'lucide-react'
+import { Download, Image as ImageIcon, Loader2, Maximize2, Eye, Wand2, Undo, Redo, X, ArrowLeftRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Lightbox } from './Lightbox'
 
@@ -32,6 +32,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   const [refineLoading, setRefineLoading] = useState(false)
   const [imageHistory, setImageHistory] = useState<ImageHistoryItem[]>([])
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1)
+  const [showBeforeAfter, setShowBeforeAfter] = useState(false)
 
   // Load refine history from localStorage on mount (session-specific)
   useEffect(() => {
@@ -59,23 +60,78 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
         console.error('Error loading refine history from localStorage:', error)
       }
     }
-  }, [imageHistory])
+  }, [])
+
+  // Cleanup old localStorage data when quota is exceeded
+  const cleanupOldData = () => {
+    try {
+      // Get all localStorage keys
+      const keys = Object.keys(localStorage)
+      
+      // Find nano-banana related keys
+      const nanoBananaKeys = keys.filter(key => 
+        key.startsWith('nano-banana-refine-history-') || 
+        key.startsWith('nano-banana-refine-history-index-')
+      )
+      
+      // Sort by timestamp (extract from session ID if possible)
+      const keysByAge = nanoBananaKeys.sort((a, b) => {
+        const sessionIdA = a.split('-').pop() || '0'
+        const sessionIdB = b.split('-').pop() || '0'
+        return parseInt(sessionIdA) - parseInt(sessionIdB)
+      })
+      
+      // Remove oldest 50% of entries
+      const keysToRemove = keysByAge.slice(0, Math.ceil(keysByAge.length / 2))
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key)
+      })
+      
+      console.log(`Cleaned up ${keysToRemove.length} old storage entries`)
+      return keysToRemove.length > 0
+    } catch (error) {
+      console.error('Error during cleanup:', error)
+      return false
+    }
+  }
 
   // Save refine history to localStorage whenever it changes (session-specific)
   useEffect(() => {
     const sessionId = sessionStorage.getItem('nano-banana-session-id')
     if (imageHistory.length > 0 && sessionId) {
-      try {
-        localStorage.setItem(`nano-banana-refine-history-${sessionId}`, JSON.stringify(imageHistory))
-        localStorage.setItem(`nano-banana-refine-history-index-${sessionId}`, currentHistoryIndex.toString())
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-           console.warn('localStorage quota exceeded, performing emergency cleanup')
-           toast.error('Storage quota exceeded. History may not be saved.')
-        } else {
-          console.error('Error saving refine history to localStorage:', error)
+      const saveData = () => {
+        try {
+          localStorage.setItem(`nano-banana-refine-history-${sessionId}`, JSON.stringify(imageHistory))
+          localStorage.setItem(`nano-banana-refine-history-index-${sessionId}`, currentHistoryIndex.toString())
+          return true
+        } catch (error) {
+          if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+            console.warn('localStorage quota exceeded, performing emergency cleanup')
+            
+            // Try to cleanup and save again
+            const cleanedUp = cleanupOldData()
+            if (cleanedUp) {
+              try {
+                localStorage.setItem(`nano-banana-refine-history-${sessionId}`, JSON.stringify(imageHistory))
+                localStorage.setItem(`nano-banana-refine-history-index-${sessionId}`, currentHistoryIndex.toString())
+                toast.success('Storage cleaned up and history saved.')
+                return true
+              } catch (retryError) {
+                toast.error('Storage quota exceeded. History may not be saved.')
+                return false
+              }
+            } else {
+              toast.error('Storage quota exceeded. History may not be saved.')
+              return false
+            }
+          } else {
+            console.error('Error saving refine history to localStorage:', error)
+            return false
+          }
         }
       }
+      
+      saveData()
     }
   }, [imageHistory, currentHistoryIndex])
   const handleDownload = async () => {

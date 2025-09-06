@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider'
 import { Loader2, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useNanoBanana } from '../context/NanoBananaContext'
 
 
 interface GenerateTabProps {
@@ -21,12 +22,11 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const [prompt, setPrompt] = useState('')
-  const [style, setStyle] = useState('photorealistic')
-  const [imageSize, setImageSize] = useState([1024])
+  const { state, updateGenerateState } = useNanoBanana()
+  const { generatePrompt, generateStyle, generateImageSize } = state
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) {
+    if (!generatePrompt.trim()) {
       toast.error('Please enter image description')
       return
     }
@@ -34,10 +34,10 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
     setLoading(true)
     try {
       const requestData = {
-        prompt,
-        width: imageSize[0],
-        height: imageSize[0],
-        style,
+        prompt: generatePrompt,
+        width: generateImageSize[0],
+        height: generateImageSize[0],
+        style: generateStyle,
         quality: 'ultra'
       }
 
@@ -81,8 +81,8 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
         <Textarea
           id="prompt"
           placeholder="Describe the image you want to generate..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          value={generatePrompt}
+          onChange={(e) => updateGenerateState({ generatePrompt: e.target.value })}
           rows={4}
           className="mt-1"
         />
@@ -90,7 +90,7 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
 
       <div>
         <Label htmlFor="style">Style</Label>
-        <Select value={style} onValueChange={setStyle}>
+        <Select value={generateStyle} onValueChange={(value) => updateGenerateState({ generateStyle: value })}>
           <SelectTrigger className="mt-1">
             <SelectValue placeholder="Select style" />
           </SelectTrigger>
@@ -105,21 +105,21 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
       </div>
 
       <div>
-        <Label htmlFor="size">Image Size: {imageSize[0]}x{imageSize[0]}</Label>
+        <Label htmlFor="size">Image Size: {generateImageSize[0]}x{generateImageSize[0]}</Label>
         <Slider
           id="size"
           min={512}
           max={2048}
           step={256}
-          value={imageSize}
-          onValueChange={setImageSize}
+          value={generateImageSize}
+          onValueChange={(value) => updateGenerateState({ generateImageSize: value })}
           className="mt-2"
         />
       </div>
 
       <Button 
         onClick={handleGenerate} 
-        disabled={loading || !prompt.trim()}
+        disabled={loading || !generatePrompt.trim()}
         className="w-full"
       >
         {loading ? (

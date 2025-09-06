@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Edit } from 'lucide-react'
 import { toast } from 'sonner'
 import { ImageInput } from './ImageInput'
+import { useNanoBanana } from '../context/NanoBananaContext'
 
 
 interface EditTabProps {
@@ -21,14 +22,17 @@ export const EditTab: React.FC<EditTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const [image, setImage] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [prompt, setPrompt] = useState('')
-  const [editInstruction, setEditInstruction] = useState('')
-  const [style, setStyle] = useState('photorealistic')
+  const { state, updateEditState } = useNanoBanana()
+  const {
+    editImage,
+    editImagePreview,
+    editPrompt,
+    editInstruction,
+    editStyle
+  } = state
 
   const handleEdit = async () => {
-    if (!image || !editInstruction.trim()) {
+    if (!editImage || !editInstruction.trim()) {
       toast.error('Please upload image and enter edit instructions')
       return
     }
@@ -36,10 +40,10 @@ export const EditTab: React.FC<EditTabProps> = ({
     setLoading(true)
     try {
       const formData = new FormData()
-      formData.append('image', image)
-      formData.append('prompt', prompt)
+      formData.append('image', editImage)
+      formData.append('prompt', editPrompt)
       formData.append('edit_instruction', editInstruction)
-      formData.append('style', style)
+      formData.append('style', editStyle)
       formData.append('quality', 'ultra')
 
       const response = await fetch('/api/nano-banana/edit', {
@@ -81,10 +85,10 @@ export const EditTab: React.FC<EditTabProps> = ({
         <div className="mt-1">
           <ImageInput
              label="Upload Image to Edit"
-             value={image}
-             onChange={setImage}
-             preview={imagePreview}
-             onPreviewChange={setImagePreview}
+             value={editImage}
+             onChange={(file) => updateEditState({ editImage: file })}
+             preview={editImagePreview}
+             onPreviewChange={(preview) => updateEditState({ editImagePreview: preview })}
            />
         </div>
       </div>
@@ -94,8 +98,8 @@ export const EditTab: React.FC<EditTabProps> = ({
         <Textarea
           id="edit-prompt"
           placeholder="Describe the current image..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          value={editPrompt}
+          onChange={(e) => updateEditState({ editPrompt: e.target.value })}
           rows={2}
           className="mt-1"
         />
@@ -107,7 +111,7 @@ export const EditTab: React.FC<EditTabProps> = ({
           id="edit-instruction"
           placeholder="Describe what changes you want to make..."
           value={editInstruction}
-          onChange={(e) => setEditInstruction(e.target.value)}
+          onChange={(e) => updateEditState({ editInstruction: e.target.value })}
           rows={3}
           className="mt-1"
         />
@@ -115,7 +119,7 @@ export const EditTab: React.FC<EditTabProps> = ({
 
       <div>
         <Label htmlFor="edit-style">Style</Label>
-        <Select value={style} onValueChange={setStyle}>
+        <Select value={editStyle} onValueChange={(value) => updateEditState({ editStyle: value })}>
           <SelectTrigger className="mt-1">
             <SelectValue placeholder="Select style" />
           </SelectTrigger>
@@ -131,7 +135,7 @@ export const EditTab: React.FC<EditTabProps> = ({
 
       <Button 
         onClick={handleEdit} 
-        disabled={loading || !image || !editInstruction.trim()}
+        disabled={loading || !editImage || !editInstruction.trim()}
         className="w-full"
       >
         {loading ? (

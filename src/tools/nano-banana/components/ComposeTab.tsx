@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Combine } from 'lucide-react'
 import { toast } from 'sonner'
 import { MultiImageInput } from './MultiImageInput'
+import { useNanoBanana } from '../context/NanoBananaContext'
 
 
 interface ComposeTabProps {
@@ -21,16 +22,19 @@ export const ComposeTab: React.FC<ComposeTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const [composeImages, setComposeImages] = useState<File[]>([])
-  const [composeImagePreviews, setComposeImagePreviews] = useState<string[]>([])
-  const [prompt, setPrompt] = useState('')
-  const [compositionType, setCompositionType] = useState('combine')
-  const [style, setStyle] = useState('photorealistic')
+  const { state, updateComposeState } = useNanoBanana()
+  const {
+    composeImages,
+    composeImagePreviews,
+    composePrompt,
+    composeCompositionType,
+    composeStyle
+  } = state
 
 
 
   const handleCompose = async () => {
-    if (composeImages.length < 2 || !prompt.trim()) {
+    if (composeImages.length < 2 || !composePrompt.trim()) {
       toast.error('Please upload at least 2 images and enter description')
       return
     }
@@ -41,9 +45,9 @@ export const ComposeTab: React.FC<ComposeTabProps> = ({
       composeImages.forEach(image => {
         formData.append('images', image)
       })
-      formData.append('prompt', prompt)
-      formData.append('composition_type', compositionType)
-      formData.append('style', style)
+      formData.append('prompt', composePrompt)
+      formData.append('composition_type', composeCompositionType)
+      formData.append('style', composeStyle)
       formData.append('quality', 'ultra')
 
       const response = await fetch('/api/nano-banana/compose', {
@@ -86,9 +90,9 @@ export const ComposeTab: React.FC<ComposeTabProps> = ({
           <MultiImageInput
              label="Upload Images (2-3 images)"
              values={composeImages}
-             onChange={setComposeImages}
+             onChange={(files) => updateComposeState({ composeImages: files })}
              previews={composeImagePreviews}
-             onPreviewsChange={setComposeImagePreviews}
+             onPreviewsChange={(previews) => updateComposeState({ composeImagePreviews: previews })}
              maxFiles={3}
            />
         </div>
@@ -99,8 +103,8 @@ export const ComposeTab: React.FC<ComposeTabProps> = ({
         <Textarea
           id="compose-prompt"
           placeholder="Describe how you want the images to be combined..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          value={composePrompt}
+          onChange={(e) => updateComposeState({ composePrompt: e.target.value })}
           rows={3}
           className="mt-1"
         />
@@ -108,7 +112,7 @@ export const ComposeTab: React.FC<ComposeTabProps> = ({
 
       <div>
         <Label htmlFor="composition-type">Composition Type</Label>
-        <Select value={compositionType} onValueChange={setCompositionType}>
+        <Select value={composeCompositionType} onValueChange={(value) => updateComposeState({ composeCompositionType: value })}>
           <SelectTrigger className="mt-1">
             <SelectValue placeholder="Select composition type" />
           </SelectTrigger>
@@ -123,7 +127,7 @@ export const ComposeTab: React.FC<ComposeTabProps> = ({
 
       <div>
         <Label htmlFor="compose-style">Style</Label>
-        <Select value={style} onValueChange={setStyle}>
+        <Select value={composeStyle} onValueChange={(value) => updateComposeState({ composeStyle: value })}>
           <SelectTrigger className="mt-1">
             <SelectValue placeholder="Select style" />
           </SelectTrigger>
@@ -139,7 +143,7 @@ export const ComposeTab: React.FC<ComposeTabProps> = ({
 
       <Button 
         onClick={handleCompose} 
-        disabled={loading || composeImages.length < 2 || !prompt.trim()}
+        disabled={loading || composeImages.length < 2 || !composePrompt.trim()}
         className="w-full"
       >
         {loading ? (

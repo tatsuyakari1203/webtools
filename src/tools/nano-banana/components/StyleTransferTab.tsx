@@ -8,6 +8,7 @@ import { Slider } from '@/components/ui/slider'
 import { Loader2, Palette } from 'lucide-react'
 import { toast } from 'sonner'
 import { ImageInput } from './ImageInput'
+import { useNanoBanana } from '../context/NanoBananaContext'
 
 
 interface StyleTransferTabProps {
@@ -21,17 +22,20 @@ export const StyleTransferTab: React.FC<StyleTransferTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const [contentImage, setContentImage] = useState<File | null>(null)
-  const [styleImage, setStyleImage] = useState<File | null>(null)
-  const [contentImagePreview, setContentImagePreview] = useState<string>('')
-  const [styleImagePreview, setStyleImagePreview] = useState<string>('')
-  const [prompt, setPrompt] = useState('')
-  const [styleStrength, setStyleStrength] = useState([0.7])
+  const { state, updateStyleState } = useNanoBanana()
+  const {
+    styleContentImage,
+    styleStyleImage,
+    styleContentImagePreview,
+    styleStyleImagePreview,
+    stylePrompt,
+    styleStrength
+  } = state
 
 
 
   const handleStyleTransfer = async () => {
-    if (!contentImage || !styleImage || !prompt.trim()) {
+    if (!styleContentImage || !styleStyleImage || !stylePrompt.trim()) {
       toast.error('Please upload both images and enter description')
       return
     }
@@ -39,9 +43,9 @@ export const StyleTransferTab: React.FC<StyleTransferTabProps> = ({
     setLoading(true)
     try {
       const formData = new FormData()
-      formData.append('content_image', contentImage)
-      formData.append('style_image', styleImage)
-      formData.append('prompt', prompt)
+      formData.append('content_image', styleContentImage)
+      formData.append('style_image', styleStyleImage)
+      formData.append('prompt', stylePrompt)
       formData.append('intensity', styleStrength[0].toString())
       formData.append('quality', 'ultra')
 
@@ -84,10 +88,10 @@ export const StyleTransferTab: React.FC<StyleTransferTabProps> = ({
         <div>
           <ImageInput
              label="Content Image"
-             value={contentImage}
-             onChange={setContentImage}
-             preview={contentImagePreview}
-             onPreviewChange={(preview) => setContentImagePreview(preview || '')}
+             value={styleContentImage}
+             onChange={(file) => updateStyleState({ styleContentImage: file })}
+             preview={styleContentImagePreview}
+             onPreviewChange={(preview) => updateStyleState({ styleContentImagePreview: preview || '' })}
            />
         </div>
 
@@ -95,10 +99,10 @@ export const StyleTransferTab: React.FC<StyleTransferTabProps> = ({
         <div>
           <ImageInput
              label="Style Reference Image"
-             value={styleImage}
-             onChange={setStyleImage}
-             preview={styleImagePreview}
-             onPreviewChange={(preview) => setStyleImagePreview(preview || '')}
+             value={styleStyleImage}
+             onChange={(file) => updateStyleState({ styleStyleImage: file })}
+             preview={styleStyleImagePreview}
+             onPreviewChange={(preview) => updateStyleState({ styleStyleImagePreview: preview || '' })}
            />
         </div>
       </div>
@@ -108,8 +112,8 @@ export const StyleTransferTab: React.FC<StyleTransferTabProps> = ({
         <Textarea
           id="style-prompt"
           placeholder="Describe how you want the style to be applied..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          value={stylePrompt}
+          onChange={(e) => updateStyleState({ stylePrompt: e.target.value })}
           rows={3}
           className="mt-1"
         />
@@ -123,14 +127,14 @@ export const StyleTransferTab: React.FC<StyleTransferTabProps> = ({
           max={1.0}
           step={0.1}
           value={styleStrength}
-          onValueChange={setStyleStrength}
+          onValueChange={(value) => updateStyleState({ styleStrength: value })}
           className="mt-2"
         />
       </div>
 
       <Button 
         onClick={handleStyleTransfer} 
-        disabled={loading || !contentImage || !styleImage || !prompt.trim()}
+        disabled={loading || !styleContentImage || !styleStyleImage || !stylePrompt.trim()}
         className="w-full"
       >
         {loading ? (
