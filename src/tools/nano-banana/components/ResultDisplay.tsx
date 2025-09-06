@@ -288,12 +288,12 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                       <div className="mt-2 text-center">
                         {showOriginal ? (
                           <div className="text-xs text-muted-foreground truncate">
-                            {originalImage ? "User Input" : (imageHistory.length > 0 ? `"${imageHistory[0].prompt}"` : "Original")}
+                            {originalImage ? "User Input" : (imageHistory.length > 0 ? `&quot;${imageHistory[0].prompt}&quot;` : "Original")}
                           </div>
                         ) : (
                           currentHistoryIndex >= 0 && imageHistory[currentHistoryIndex] && (
                             <div className="text-xs text-muted-foreground truncate">
-                              "{imageHistory[currentHistoryIndex].prompt}"
+                              &quot;{imageHistory[currentHistoryIndex].prompt}&quot;
                             </div>
                           )
                         )}
