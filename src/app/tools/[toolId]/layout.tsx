@@ -6,6 +6,7 @@ import { Home } from "lucide-react"
 import ToolsSidebar from "@/components/layout/ToolsSidebar"
 import SidebarToggle from "@/components/layout/SidebarToggle"
 import { SidebarProvider } from "@/components/layout/SidebarContext"
+import QuoteDisplay from "@/components/layout/QuoteDisplay"
 
 interface ToolLayoutProps {
   children: React.ReactNode
@@ -32,10 +33,14 @@ export default async function ToolLayout({ children, params }: ToolLayoutProps) 
         <div className="flex-1 flex flex-col">
           <div className="container mx-auto px-4 py-8">
             {/* Header with toggles */}
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center justify-between gap-4 mb-6">
               <div className="hidden lg:block">
                 <SidebarToggle />
               </div>
+              <div className="flex-1 flex justify-center">
+                <QuoteDisplay className="max-w-md text-center" />
+              </div>
+              <div className="w-10"></div> {/* Spacer for balance */}
             </div>
           
           {/* Breadcrumb Navigation */}
