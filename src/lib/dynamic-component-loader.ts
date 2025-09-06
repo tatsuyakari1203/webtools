@@ -5,22 +5,40 @@ import { toolsRegistry } from "./tools-registry"
 // Cache for dynamic components to avoid recreating them
 const componentCache = new Map<string, React.ComponentType<{ tool: unknown }>>()
 
-// Dynamically create import map from tools registry
-const createComponentImportMap = () => {
-  const importMap = new Map<string, () => Promise<any>>()
-  
-  toolsRegistry.forEach(tool => {
-    if (tool.componentPath) {
-      // Create dynamic import function for each component path
-      importMap.set(tool.componentPath, () => import(tool.componentPath))
-    }
-  })
-  
-  return importMap
-}
+// Static import function for Next.js compatibility
+function getStaticImport(componentPath: string): () => Promise<{ default: React.ComponentType<{ tool: unknown }> }> {
+  // Next.js requires static analysis of import paths
+  switch (componentPath) {
+    case "@/tools/calculator/Calculator":
+      return () => import("@/tools/calculator/Calculator")
+    case "@/components/tools/TextFormatterTool":
+      return () => import("@/components/tools/TextFormatterTool")
+    case "@/tools/image-name-processor/ImageNameProcessor":
+      return () => import("@/tools/image-name-processor/ImageNameProcessor")
+    case "@/tools/image-converter":
+      return () => import("@/tools/image-converter")
+    case "@/tools/google-docs-to-markdown/GoogleDocsToMarkdown":
+      return () => import("@/tools/google-docs-to-markdown/GoogleDocsToMarkdown")
+    case "@/tools/ocr/OCRTool":
+      return () => import("@/tools/ocr/OCRTool")
+    case "@/tools/codebase2json":
+      return () => import("@/tools/codebase2json")
+    case "@/tools/pomodoro/PomodoroTimer":
+      return () => import("@/tools/pomodoro/PomodoroTimer")
+    case "@/tools/nano-banana/NanoBanana":
+      return () => import("@/tools/nano-banana/NanoBanana")
+    case "@/tools/social-crop":
+      return () => import("@/tools/social-crop")
+    case "@/tools/what-is-my-ip":
+      return () => import("@/tools/what-is-my-ip")
+    case "@/tools/token-generator":
+      return () => import("@/tools/token-generator")
 
-// Create the import map once
-const componentImportMap = createComponentImportMap()
+
+    default:
+      throw new Error(`Unknown component path: ${componentPath}`)
+  }
+}
 
 /**
  * Dynamically loads a component from the given path
@@ -39,11 +57,8 @@ export function loadDynamicComponent(componentPath: string): React.ComponentType
     throw new Error(`Component path "${componentPath}" is not registered in tools registry`)
   }
 
-  // Get the import function for this component path
-  const importFunction = componentImportMap.get(componentPath)
-  if (!importFunction) {
-    throw new Error(`No import function found for component path: ${componentPath}`)
-  }
+  // Get the static import function
+  const importFunction = getStaticImport(componentPath)
 
   // Create dynamic component
   const DynamicComponent = dynamic(

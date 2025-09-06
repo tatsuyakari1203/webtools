@@ -1,4 +1,4 @@
-import { Calculator, Type, Image, ImageIcon, FileText, ScanText, FileCode, Timer, Banana, Crop, Globe, Key } from "lucide-react"
+import { Banana, Calculator, Crop, FileCode, FileText, Globe, Image, ImageIcon, Key, ScanText, Settings, Timer, Type } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -133,6 +133,8 @@ export const toolsRegistry: Tool[] = [
     featured: false,
     componentPath: "@/tools/token-generator",
   },
+
+
 ]
 
 export const getToolById = (id: string): Tool | undefined => {

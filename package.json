@@ -13,7 +13,9 @@
     "deploy:prod": "bun install && bun run build && bun run start:prod",
     "deploy:update": "if [ -f app.pid ] && kill -0 $(cat app.pid) 2>/dev/null; then echo 'Server is running, stopping...'; bun run stop:prod; fi; echo 'Updating code...'; git pull && bun install && bun run build && echo 'Starting server...'; bun run start:prod",
     "logs": "tail -f app.log",
-    "lint": "bun run eslint"
+    "lint": "bun run eslint",
+    "add-tool": "node scripts/add-tool.js",
+    "tool:add": "node scripts/add-tool.js"
   },
   "dependencies": {
     "@google/genai": "^1.16.0",
