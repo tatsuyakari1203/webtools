@@ -9,6 +9,7 @@ export interface Tool {
   icon: React.ComponentType<{ className?: string }>
   path: string
   featured?: boolean
+  componentPath: string
 }
 
 export const toolsRegistry: Tool[] = [
@@ -20,6 +21,7 @@ export const toolsRegistry: Tool[] = [
     icon: Calculator,
     path: "/tools/calculator",
     featured: false,
+    componentPath: "@/tools/calculator/Calculator",
   },
   {
     id: "text-formatter",
@@ -29,6 +31,7 @@ export const toolsRegistry: Tool[] = [
     icon: Type,
     path: "/tools/text-formatter",
     featured: false,
+    componentPath: "@/components/tools/TextFormatterTool",
   },
   {
     id: "image-name-processor",
@@ -38,6 +41,7 @@ export const toolsRegistry: Tool[] = [
     icon: Image,
     path: "/tools/image-name-processor",
     featured: true,
+    componentPath: "@/tools/image-name-processor/ImageNameProcessor",
   },
   {
     id: "image-converter",
@@ -47,6 +51,7 @@ export const toolsRegistry: Tool[] = [
     icon: ImageIcon,
     path: "/tools/image-converter",
     featured: false,
+    componentPath: "@/tools/image-converter",
   },
   {
     id: "google-docs-to-markdown",
@@ -56,6 +61,7 @@ export const toolsRegistry: Tool[] = [
     icon: FileText,
     path: "/tools/google-docs-to-markdown",
     featured: true,
+    componentPath: "@/tools/google-docs-to-markdown/GoogleDocsToMarkdown",
   },
   {
     id: "ocr",
@@ -65,6 +71,7 @@ export const toolsRegistry: Tool[] = [
     icon: ScanText,
     path: "/tools/ocr",
     featured: false,
+    componentPath: "@/tools/ocr/OCRTool",
   },
   {
     id: "codebase2json",
@@ -74,6 +81,7 @@ export const toolsRegistry: Tool[] = [
     icon: FileCode,
     path: "/tools/codebase2json",
     featured: false,
+    componentPath: "@/tools/codebase2json",
   },
   {
     id: "pomodoro",
@@ -83,6 +91,7 @@ export const toolsRegistry: Tool[] = [
     icon: Timer,
     path: "/tools/pomodoro",
     featured: true,
+    componentPath: "@/tools/pomodoro/PomodoroTimer",
   },
   {
     id: "nano-banana",
@@ -92,6 +101,7 @@ export const toolsRegistry: Tool[] = [
     icon: Banana,
     path: "/tools/nano-banana",
     featured: true,
+    componentPath: "@/tools/nano-banana/NanoBanana",
   },
   {
     id: "social-crop",
@@ -101,6 +111,7 @@ export const toolsRegistry: Tool[] = [
     icon: Crop,
     path: "/tools/social-crop",
     featured: false,
+    componentPath: "@/tools/social-crop",
   },
   {
     id: "what-is-my-ip",
@@ -110,6 +121,7 @@ export const toolsRegistry: Tool[] = [
     icon: Globe,
     path: "/tools/what-is-my-ip",
     featured: false,
+    componentPath: "@/tools/what-is-my-ip",
   },
   {
     id: "token-generator",
@@ -119,6 +131,7 @@ export const toolsRegistry: Tool[] = [
     icon: Key,
     path: "/tools/token-generator",
     featured: false,
+    componentPath: "@/tools/token-generator",
   },
 ]
 
