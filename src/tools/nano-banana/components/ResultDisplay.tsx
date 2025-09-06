@@ -198,6 +198,10 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
          setGeneratedImage(newImageUrl)
          addToHistory(newImageUrl, refinePrompt)
          
+         // Auto cleanup before adding new item
+         const { autoCleanupHistory } = await import('../utils/globalHistory')
+         autoCleanupHistory()
+         
          // Add refined image to global history
          addToGlobalHistory({
            image: newImageUrl,

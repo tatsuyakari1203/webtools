@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider'
 import { Loader2, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { addToGlobalHistory } from '../utils/globalHistory'
+import { addToGlobalHistory, autoCleanupHistory } from '../utils/globalHistory'
 
 interface GenerateTabProps {
   loading: boolean
@@ -59,6 +59,9 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
       if (data.success && data.image_data) {
         const imageUrl = `data:image/png;base64,${data.image_data}`
         setGeneratedImage(imageUrl)
+        
+        // Auto cleanup before adding new item
+        autoCleanupHistory()
         
         // Add to global history
         addToGlobalHistory({

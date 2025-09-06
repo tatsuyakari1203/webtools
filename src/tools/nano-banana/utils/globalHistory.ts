@@ -13,72 +13,154 @@ const getStorageSize = (data: string): number => {
 }
 
 const compressImageData = (imageData: string): string => {
-  // If it's a data URL, we can't compress it much, but we can validate it
+  // For data URLs, use simple size-based compression
   if (imageData.startsWith('data:image/')) {
-    return imageData
+    try {
+      const base64Data = imageData.split(',')[1]
+      if (!base64Data) return imageData
+      
+      const sizeInBytes = (base64Data.length * 3) / 4
+      const maxSizeBytes = 80 * 1024 // 80KB max
+      
+      if (sizeInBytes > maxSizeBytes) {
+        // Return a small placeholder for oversized images
+        const placeholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+        console.warn(`Image too large (${(sizeInBytes/1024).toFixed(1)}KB), using placeholder`)
+        return placeholder
+      }
+      
+      return imageData
+    } catch (error) {
+      console.warn('Image compression failed, using original:', error)
+      return imageData
+    }
   }
   // For blob URLs, just store the URL
   return imageData
 }
 
+// Synchronous version for immediate use
+const compressImageDataSync = (imageData: string): string => {
+  if (!imageData.startsWith('data:image/')) {
+    return imageData
+  }
+  
+  try {
+    // Simple size-based compression without canvas manipulation
+    const base64Data = imageData.split(',')[1]
+    if (!base64Data) return imageData
+    
+    const sizeInBytes = (base64Data.length * 3) / 4
+    const maxSizeBytes = 100 * 1024 // 100KB max
+    
+    if (sizeInBytes > maxSizeBytes) {
+      // Return a small placeholder for oversized images
+      const placeholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+      console.warn(`Image too large (${(sizeInBytes/1024).toFixed(1)}KB), using placeholder`)
+      return placeholder
+    }
+    
+    return imageData
+  } catch (error) {
+    console.warn('Image compression failed:', error)
+    return imageData
+  }
+}
+
+// Simple compression by reducing base64 data size
+const createCompressedThumbnail = (imageData: string): string => {
+  if (!imageData.startsWith('data:image/')) {
+    return imageData
+  }
+  
+  try {
+    // For immediate storage, we'll use a simple approach:
+    // Store only a truncated version for preview and keep metadata
+    const base64Data = imageData.split(',')[1]
+    if (!base64Data) return imageData
+    
+    // If the image is too large, create a placeholder
+    const sizeInBytes = (base64Data.length * 3) / 4
+    const maxSizeBytes = 50 * 1024 // 50KB max per image
+    
+    if (sizeInBytes > maxSizeBytes) {
+      // Create a small placeholder image (1x1 pixel)
+      const placeholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+      console.warn(`Image too large (${(sizeInBytes/1024).toFixed(1)}KB), using placeholder`)
+      return placeholder
+    }
+    
+    return imageData
+  } catch (error) {
+    console.warn('Image processing failed:', error)
+    return imageData
+  }
+}
+
 export const addToGlobalHistory = (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
   try {
     const existingHistory = getGlobalHistory()
+    
+    // Strict limit: max 20 items to prevent storage issues
+    const MAX_HISTORY_ITEMS = 20
+    
     const newItem: HistoryItem = {
       ...item,
-      image: compressImageData(item.image),
+      image: createCompressedThumbnail(item.image),
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now()
     }
     
-    const updatedHistory = [newItem, ...existingHistory]
+    // Always keep only the latest items
+    const updatedHistory = [newItem, ...existingHistory.slice(0, MAX_HISTORY_ITEMS - 1)]
     
-    // Start with a smaller limit and reduce if storage fails
-    let maxItems = 50
+    // Progressive storage attempt with size checking
+    let maxItems = Math.min(MAX_HISTORY_ITEMS, updatedHistory.length)
     let success = false
     
     while (maxItems > 0 && !success) {
       const limitedHistory = updatedHistory.slice(0, maxItems)
       const dataToStore = JSON.stringify(limitedHistory)
       
-      // Check if the data size is reasonable (< 4MB to be safe)
+      // Check data size (limit to 2MB to be very safe)
       const dataSize = getStorageSize(dataToStore)
-      if (dataSize > 4 * 1024 * 1024) {
-        maxItems = Math.floor(maxItems * 0.7)
+      if (dataSize > 2 * 1024 * 1024) {
+        maxItems = Math.max(1, Math.floor(maxItems * 0.5))
+        console.warn(`Data too large (${(dataSize / 1024 / 1024).toFixed(2)}MB), reducing to ${maxItems} items`)
         continue
       }
       
       try {
+        // Clear existing data first to free up space
+        localStorage.removeItem(GLOBAL_HISTORY_KEY)
         localStorage.setItem(GLOBAL_HISTORY_KEY, dataToStore)
         success = true
         
-        // If we had to reduce the limit, log it
-        if (maxItems < 50) {
-          console.warn(`Reduced history limit to ${maxItems} items due to storage constraints`)
+        if (maxItems < MAX_HISTORY_ITEMS) {
+          console.warn(`History limited to ${maxItems} items due to storage constraints`)
         }
       } catch (storageError) {
         if (storageError instanceof DOMException && storageError.name === 'QuotaExceededError') {
           console.warn('localStorage quota exceeded, reducing history size')
-          // If storage fails due to quota, try with fewer items
-          maxItems = Math.floor(maxItems * 0.7)
-          if (maxItems < 5) {
-            // If we can't even store 5 items, clear the history and try with just the new item
+          maxItems = Math.max(1, Math.floor(maxItems * 0.5))
+          
+          if (maxItems === 1) {
+            // Last resort: store only the new item
             try {
               localStorage.removeItem(GLOBAL_HISTORY_KEY)
               localStorage.setItem(GLOBAL_HISTORY_KEY, JSON.stringify([newItem]))
               success = true
-              console.warn('Cleared history due to storage quota exceeded, keeping only the latest item')
+              console.warn('Emergency: Cleared all history, keeping only latest item')
             } catch (finalError) {
-              console.error('Failed to store even a single item:', finalError)
+              console.error('Critical: Failed to store even a single item:', finalError)
+              // Emergency cleanup
+              emergencyStorageCleanup()
               return null
             }
           }
         } else {
           console.error('Storage error:', storageError)
-          maxItems = Math.floor(maxItems * 0.7)
-          if (maxItems < 5) {
-            return null
-          }
+          maxItems = Math.max(1, Math.floor(maxItems * 0.5))
         }
       }
     }
@@ -170,7 +252,7 @@ export const getStorageInfo = () => {
   }
 }
 
-export const cleanupOldHistory = (maxItems: number = 25) => {
+export const cleanupOldHistory = (maxItems: number = 15) => {
   try {
     const history = getGlobalHistory()
     if (history.length <= maxItems) {
@@ -178,7 +260,12 @@ export const cleanupOldHistory = (maxItems: number = 25) => {
     }
     
     const cleanedHistory = history.slice(0, maxItems)
+    
+    // Clear and re-set to ensure clean storage
+    localStorage.removeItem(GLOBAL_HISTORY_KEY)
     localStorage.setItem(GLOBAL_HISTORY_KEY, JSON.stringify(cleanedHistory))
+    
+    console.log(`Cleaned up history: removed ${history.length - maxItems} old items`)
     
     return {
       cleaned: true,
@@ -186,6 +273,23 @@ export const cleanupOldHistory = (maxItems: number = 25) => {
     }
   } catch (error) {
     console.error('Error cleaning up history:', error)
+    return { cleaned: false, removedCount: 0 }
+  }
+}
+
+// Auto cleanup function that runs periodically
+export const autoCleanupHistory = () => {
+  try {
+    const storageInfo = getStorageInfo()
+    
+    // If storage usage is high or too many items, cleanup
+    if (storageInfo.itemCount > 15 || storageInfo.sizeInMB > 1.5) {
+      return cleanupOldHistory(10) // Keep only 10 most recent items
+    }
+    
+    return { cleaned: false, removedCount: 0 }
+  } catch (error) {
+    console.error('Error in auto cleanup:', error)
     return { cleaned: false, removedCount: 0 }
   }
 }

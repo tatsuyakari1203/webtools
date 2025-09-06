@@ -66,6 +66,10 @@ export const StyleTransferTab: React.FC<StyleTransferTabProps> = ({
       
       setGeneratedImage(imageUrl)
       
+      // Auto cleanup before adding new item
+      const { autoCleanupHistory } = await import('../utils/globalHistory')
+      autoCleanupHistory()
+      
       // Add to global history
       addToGlobalHistory({
         image: imageUrl,
