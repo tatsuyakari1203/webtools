@@ -22,7 +22,7 @@ export const ComposeTab: React.FC<ComposeTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const { state, updateComposeState } = useNanoBanana()
+  const { state, updateComposeState, startNewSession, setLastGeneratedImage } = useNanoBanana()
   const {
     composeImages,
     composeImagePreviews,
@@ -69,9 +69,10 @@ export const ComposeTab: React.FC<ComposeTabProps> = ({
       // Convert base64 to blob URL
       const imageUrl = `data:image/png;base64,${result.image_data}`
       
+      // Start new session for each compose
+      startNewSession()
+      setLastGeneratedImage(imageUrl)
       setGeneratedImage(imageUrl)
-      
-
       
       toast.success('Images composed successfully!')
     } catch (error) {

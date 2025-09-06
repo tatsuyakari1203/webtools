@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, MessageSquare, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { useNanoBanana } from '../context/NanoBananaContext'
 
 interface ConversationTabProps {
   loading: boolean
@@ -26,10 +27,10 @@ export const ConversationTab: React.FC<ConversationTabProps> = ({
   setGeneratedImage,
   currentImage
 }) => {
+  const { state, setConversationId } = useNanoBanana()
   const [conversationHistory, setConversationHistory] = useState<ConversationEntry[]>([])
   const [newInstruction, setNewInstruction] = useState('')
   const [style, setStyle] = useState('photorealistic')
-  const [conversationId, setConversationId] = useState<string | null>(null)
 
   const handleRefine = async () => {
     if (!newInstruction.trim()) {
@@ -64,7 +65,7 @@ export const ConversationTab: React.FC<ConversationTabProps> = ({
 
       const requestData = {
         prompt: 'Refine this image',
-        conversation_id: conversationId,
+        conversation_id: state.conversationId,
         previous_image_data: imageData,
         edit_instruction: newInstruction,
         style,
@@ -103,9 +104,9 @@ export const ConversationTab: React.FC<ConversationTabProps> = ({
       setGeneratedImage(imageUrl)
       setNewInstruction('')
       
-      // Generate conversation ID if first refinement
-      if (!conversationId) {
-        setConversationId(`conv_${Date.now()}`)
+      // Update conversation ID if returned from API
+      if (result.conversation_id) {
+        setConversationId(result.conversation_id)
       }
       
       toast.success('Image refined successfully!')

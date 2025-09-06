@@ -22,7 +22,7 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const { state, updateGenerateState } = useNanoBanana()
+  const { state, updateGenerateState, startNewSession, setLastGeneratedImage } = useNanoBanana()
   const { generatePrompt, generateStyle, generateImageSize } = state
 
   const handleGenerate = async () => {
@@ -58,9 +58,11 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
       
       if (data.success && data.image_data) {
         const imageUrl = `data:image/png;base64,${data.image_data}`
-        setGeneratedImage(imageUrl)
         
-
+        // Start new session for each generation
+        startNewSession()
+        setLastGeneratedImage(imageUrl)
+        setGeneratedImage(imageUrl)
         
         toast.success('Image generated successfully!')
       } else {

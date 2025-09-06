@@ -29,6 +29,10 @@ interface NanoBananaState {
   styleStyleImagePreview: string
   stylePrompt: string
   styleStrength: number[]
+  
+  // Session management
+  conversationId: string | null
+  lastGeneratedImage: string | null
 }
 
 interface NanoBananaContextType {
@@ -37,35 +41,42 @@ interface NanoBananaContextType {
   updateEditState: (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction' | 'editStyle'>>) => void
   updateComposeState: (updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType' | 'composeStyle'>>) => void
   updateStyleState: (updates: Partial<Pick<NanoBananaState, 'styleContentImage' | 'styleStyleImage' | 'styleContentImagePreview' | 'styleStyleImagePreview' | 'stylePrompt' | 'styleStrength'>>) => void
+  startNewSession: () => void
+  setConversationId: (id: string | null) => void
+  setLastGeneratedImage: (image: string | null) => void
 }
 
 const defaultState: NanoBananaState = {
-  // Generate tab
+  // Generate tab state
   generatePrompt: '',
   generateStyle: 'photorealistic',
-  generateImageSize: [1024],
+  generateImageSize: [1024, 1024],
   
-  // Edit tab
+  // Edit tab state
   editImage: null,
-  editImagePreview: null,
+  editImagePreview: '',
   editPrompt: '',
   editInstruction: '',
   editStyle: 'photorealistic',
   
-  // Compose tab
+  // Compose tab state
   composeImages: [],
   composeImagePreviews: [],
   composePrompt: '',
   composeCompositionType: 'combine',
   composeStyle: 'photorealistic',
   
-  // Style Transfer tab
+  // Style Transfer tab state
   styleContentImage: null,
   styleStyleImage: null,
   styleContentImagePreview: '',
   styleStyleImagePreview: '',
   stylePrompt: '',
-  styleStrength: [0.7]
+  styleStrength: [0.5],
+  
+  // Session management
+  conversationId: null,
+  lastGeneratedImage: null
 }
 
 const NanoBananaContext = createContext<NanoBananaContextType | undefined>(undefined)
@@ -89,13 +100,28 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, ...updates }))
   }
   
+  const startNewSession = () => {
+    setState(prev => ({ ...prev, conversationId: null }))
+  }
+  
+  const setConversationId = (id: string | null) => {
+    setState(prev => ({ ...prev, conversationId: id }))
+  }
+  
+  const setLastGeneratedImage = (image: string | null) => {
+    setState(prev => ({ ...prev, lastGeneratedImage: image }))
+  }
+  
   return (
     <NanoBananaContext.Provider value={{
       state,
       updateGenerateState,
       updateEditState,
       updateComposeState,
-      updateStyleState
+      updateStyleState,
+      startNewSession,
+      setConversationId,
+      setLastGeneratedImage
     }}>
       {children}
     </NanoBananaContext.Provider>

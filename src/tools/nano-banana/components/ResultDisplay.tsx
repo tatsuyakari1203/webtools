@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Download, Image as ImageIcon, Loader2, Maximize2, Eye, Wand2, Undo, Redo, X, ArrowLeftRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Lightbox } from './Lightbox'
+import { useNanoBanana } from '../context/NanoBananaContext'
 
 
 interface ResultDisplayProps {
@@ -28,6 +29,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   setGeneratedImage,
   originalImage
 }) => {
+  const { state, setConversationId } = useNanoBanana()
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [showRefineInput, setShowRefineInput] = useState(false)
   const [refinePrompt, setRefinePrompt] = useState('')
@@ -127,9 +129,10 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          conversation_id: state.conversationId, // Use existing conversation_id for refine
           previous_image_data: image.replace(/^data:image\/[a-z]+;base64,/, ''),
           edit_instruction: refinePrompt,
-          style: 'photorealistic',
+          style: state.generateStyle || 'photorealistic',
           quality: 'ultra'
         })
       })
@@ -138,6 +141,11 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
       
       if (data.success && data.image_data) {
          const newImageUrl = `data:image/png;base64,${data.image_data}`
+         
+         // Update conversation_id if returned (for first refine)
+         if (data.conversation_id) {
+           setConversationId(data.conversation_id)
+         }
          
          // Add current image to refine history if it's not already there
          if (image && (imageHistory.length === 0 || imageHistory[currentHistoryIndex]?.image !== image)) {

@@ -22,7 +22,7 @@ export const StyleTransferTab: React.FC<StyleTransferTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const { state, updateStyleState } = useNanoBanana()
+  const { state, updateStyleState, startNewSession, setLastGeneratedImage } = useNanoBanana()
   const {
     styleContentImage,
     styleStyleImage,
@@ -68,9 +68,10 @@ export const StyleTransferTab: React.FC<StyleTransferTabProps> = ({
       // Convert base64 to blob URL
       const imageUrl = `data:image/png;base64,${result.image_data}`
       
+      // Start new session for each style transfer
+      startNewSession()
+      setLastGeneratedImage(imageUrl)
       setGeneratedImage(imageUrl)
-      
-
       
       toast.success('Style transfer completed successfully!')
     } catch (error) {

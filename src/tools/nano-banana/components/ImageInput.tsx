@@ -185,7 +185,7 @@ export const ImageInput: React.FC<ImageInputProps> = ({
               <img
                 src={preview}
                 alt="Preview"
-                className="w-full h-auto object-contain max-h-96"
+                className="w-full h-auto object-contain"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
             </div>

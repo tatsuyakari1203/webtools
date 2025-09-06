@@ -22,7 +22,7 @@ export const EditTab: React.FC<EditTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const { state, updateEditState } = useNanoBanana()
+  const { state, updateEditState, startNewSession, setLastGeneratedImage } = useNanoBanana()
   const {
     editImage,
     editImagePreview,
@@ -65,9 +65,10 @@ export const EditTab: React.FC<EditTabProps> = ({
       // Convert base64 to blob URL
       const imageUrl = `data:image/png;base64,${result.image_data}`
       
+      // Start new session for each edit
+      startNewSession()
+      setLastGeneratedImage(imageUrl)
       setGeneratedImage(imageUrl)
-      
-
       
       toast.success('Image edited successfully!')
     } catch (error) {
