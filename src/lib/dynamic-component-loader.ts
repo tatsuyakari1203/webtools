@@ -5,21 +5,22 @@ import { toolsRegistry } from "./tools-registry"
 // Cache for dynamic components to avoid recreating them
 const componentCache = new Map<string, React.ComponentType<{ tool: unknown }>>()
 
-// Create a map of component paths to their import functions
-const componentImportMap = new Map<string, () => Promise<any>>([
-  ["@/tools/calculator/Calculator", () => import("@/tools/calculator/Calculator")],
-  ["@/components/tools/TextFormatterTool", () => import("@/components/tools/TextFormatterTool")],
-  ["@/tools/image-name-processor/ImageNameProcessor", () => import("@/tools/image-name-processor/ImageNameProcessor")],
-  ["@/tools/image-converter", () => import("@/tools/image-converter")],
-  ["@/tools/google-docs-to-markdown/GoogleDocsToMarkdown", () => import("@/tools/google-docs-to-markdown/GoogleDocsToMarkdown")],
-  ["@/tools/ocr/OCRTool", () => import("@/tools/ocr/OCRTool")],
-  ["@/tools/codebase2json", () => import("@/tools/codebase2json")],
-  ["@/tools/pomodoro/PomodoroTimer", () => import("@/tools/pomodoro/PomodoroTimer")],
-  ["@/tools/nano-banana/NanoBanana", () => import("@/tools/nano-banana/NanoBanana")],
-  ["@/tools/social-crop", () => import("@/tools/social-crop")],
-  ["@/tools/what-is-my-ip", () => import("@/tools/what-is-my-ip")],
-  ["@/tools/token-generator", () => import("@/tools/token-generator")],
-])
+// Dynamically create import map from tools registry
+const createComponentImportMap = () => {
+  const importMap = new Map<string, () => Promise<any>>()
+  
+  toolsRegistry.forEach(tool => {
+    if (tool.componentPath) {
+      // Create dynamic import function for each component path
+      importMap.set(tool.componentPath, () => import(tool.componentPath))
+    }
+  })
+  
+  return importMap
+}
+
+// Create the import map once
+const componentImportMap = createComponentImportMap()
 
 /**
  * Dynamically loads a component from the given path
