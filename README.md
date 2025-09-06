@@ -195,296 +195,36 @@ src/
 
 ## 🚀 Adding New Tools Guide
 
-### 🎯 **Simplified Architecture**
-WebTools now features an **automatic component loading system** that eliminates manual routing configuration. Adding a new tool is now incredibly simple!
+WebTools now features a powerful CLI to automate the process of adding new tools.
 
-### ✨ **Two Simple Steps Only**
+### Usage
 
-#### Step 1: Create the Tool Component
-Create your tool component following the naming convention:
-```
-src/tools/[tool-id]/[ToolName].tsx
-```
+To add a new tool, run the following command:
 
-**Example:** For a tool with ID `my-awesome-tool`:
-```
-src/tools/my-awesome-tool/MyAwesomeTool.tsx
+```bash
+bun run add-tool <tool-id> "<description>" --category="<category>" --icon="<IconName>"
 ```
 
-## 📁 **Recommended Tool Structure**
+**Arguments:**
 
-To ensure consistency and maintainability across all tools, follow this standardized structure:
+*   `<tool-id>`: A unique identifier for the tool (e.g., `my-awesome-tool`).
+*   `<description>`: A short description of what the tool does.
+*   `--category`: The category the tool belongs to (e.g., `Utility`, `Image`, `Text`).
+*   `--icon`: The name of a `lucide-react` icon to use for the tool.
 
-### 🏗️ **Basic Tool Structure**
-```
-src/tools/[tool-id]/
-├── [ToolName].tsx          # Main component (required)
-├── index.tsx               # Export file (optional)
-├── types.ts                # TypeScript interfaces (recommended)
-├── components/             # Sub-components (if needed)
-│   ├── ComponentA.tsx
-│   └── ComponentB.tsx
-├── utils/                  # Utility functions (if needed)
-│   ├── helpers.ts
-│   └── calculations.ts
-├── hooks/                  # Custom hooks (if needed)
-│   └── useToolLogic.ts
-└── workers/                # Web workers (if needed)
-    └── processor.worker.ts
+**Example:**
+
+```bash
+bun run add-tool url-encoder "Encode or decode URLs" --category="Text" --icon="Link"
 ```
 
-### 🎨 **Component Template**
-```tsx
-// src/tools/my-awesome-tool/MyAwesomeTool.tsx
-'use client';
+The CLI will automatically:
+- Create the necessary component files in `src/tools/<tool-id>/`.
+- Register the tool in `src/lib/tools-registry.ts`.
+- Add the component to the dynamic loader in `src/lib/dynamic-component-loader.ts`.
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+You can then start developing your tool's logic in `src/tools/<tool-id>/<ToolName>.tsx`.
 
-export default function MyAwesomeTool() {
-  const [state, setState] = useState('');
-
-  return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold">My Awesome Tool</h1>
-        <p className="text-muted-foreground">
-          Description of what this tool does
-        </p>
-      </div>
-
-      {/* Main Content */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tool Interface</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Your tool logic here */}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-```
-
-### 📋 **TypeScript Types Template**
-```tsx
-// src/tools/my-awesome-tool/types.ts
-export interface ToolState {
-  // Define your tool's state interface
-  value: string;
-  isProcessing: boolean;
-}
-
-export interface ToolSettings {
-  // Define configuration options
-  option1: string;
-  option2: number;
-}
-
-export interface ToolResult {
-  // Define result structure
-  success: boolean;
-  data?: any;
-  error?: string;
-}
-```
-
-## 🎯 **Design Guidelines**
-
-### 🎨 **UI/UX Standards**
-
-1. **Layout Consistency**
-   - Use `max-w-4xl mx-auto p-4 space-y-6` for main container
-   - Center-align headers with `text-center space-y-2`
-   - Use consistent spacing with Tailwind's space utilities
-
-2. **Component Structure**
-   - Always include a descriptive header section
-   - Wrap main functionality in `Card` components
-   - Use semantic HTML and proper accessibility attributes
-
-3. **Color & Theming**
-   - Leverage existing design tokens from `@/components/ui`
-   - Support both light and dark themes automatically
-   - Use `text-muted-foreground` for secondary text
-
-### 🔧 **Technical Standards**
-
-1. **State Management**
-   - Use React hooks for local state (`useState`, `useEffect`)
-   - Consider custom hooks for complex logic
-   - Implement proper error handling and loading states
-
-2. **Performance**
-   - Use `'use client'` directive for interactive components
-   - Implement lazy loading for heavy operations
-   - Consider Web Workers for CPU-intensive tasks
-
-3. **TypeScript**
-   - Define clear interfaces for all data structures
-   - Use proper typing for props and state
-   - Export types for reusability
-
-### 📱 **Responsive Design**
-
-1. **Mobile-First Approach**
-   - Design for mobile screens first
-   - Use responsive grid systems (`grid-cols-1 md:grid-cols-2`)
-   - Test on various screen sizes
-
-2. **Touch-Friendly**
-   - Ensure buttons are at least 44px in height
-   - Provide adequate spacing between interactive elements
-   - Support touch gestures where appropriate
-
-### 📝 **Naming Conventions**
-
-1. **File & Directory Names**
-   - Use kebab-case for tool IDs: `my-awesome-tool`
-   - Use PascalCase for component names: `MyAwesomeTool.tsx`
-   - Use camelCase for utility files: `helperFunctions.ts`
-
-2. **Component Naming**
-   - Main component: `[ToolName].tsx` (e.g., `Calculator.tsx`)
-   - Sub-components: Descriptive names (e.g., `SettingsPanel.tsx`)
-   - Hooks: Prefix with `use` (e.g., `useCalculator.ts`)
-
-3. **Variable & Function Names**
-   - Use camelCase for variables and functions
-   - Use descriptive names that explain purpose
-   - Prefix boolean variables with `is`, `has`, `can`, etc.
-
-### 🧪 **Testing & Quality**
-
-1. **Error Handling**
-   - Implement try-catch blocks for async operations
-   - Show user-friendly error messages
-   - Provide fallback UI for error states
-
-2. **Loading States**
-   - Show loading indicators for async operations
-   - Disable interactive elements during processing
-   - Provide progress feedback when possible
-
-3. **Accessibility**
-   - Use semantic HTML elements
-   - Provide proper ARIA labels
-   - Ensure keyboard navigation support
-   - Test with screen readers
-
-### 🔄 **State Management Patterns**
-
-1. **Simple Tools** (Calculator, Text Formatter)
-   ```tsx
-   const [value, setValue] = useState('');
-   const [isProcessing, setIsProcessing] = useState(false);
-   ```
-
-2. **Complex Tools** (Image Converter, Nano Banana)
-   ```tsx
-   // Use custom hooks for complex state
-   const { files, addFiles, removeFile, processFiles } = useFileManager();
-   const { settings, updateSettings } = useToolSettings();
-   ```
-
-3. **Tools with History** (Calculator, Pomodoro)
-   ```tsx
-   const [history, setHistory] = useState<HistoryEntry[]>([]);
-   const addToHistory = useCallback((entry: HistoryEntry) => {
-     setHistory(prev => [entry, ...prev.slice(0, 99)]); // Keep last 100
-   }, []);
-   ```
-
-### 📦 **Component Organization Examples**
-
-**Simple Tool** (Calculator, Text Formatter):
-```
-src/tools/calculator/
-├── Calculator.tsx          # Main component
-├── types.ts               # Interfaces
-└── utils/
-    └── calculations.ts    # Pure functions
-```
-
-**Medium Tool** (Image Converter, OCR):
-```
-src/tools/image-converter/
-├── ImageConverter.tsx     # Main component
-├── types.ts              # Interfaces
-├── components/           # Sub-components
-│   └── StatisticsPanel.tsx
-├── utils/                # Utilities
-│   └── statistics.ts
-└── workers/              # Web workers
-    └── imageProcessor.worker.ts
-```
-
-**Complex Tool** (Nano Banana, Pomodoro):
-```
-src/tools/nano-banana/
-├── NanoBanana.tsx        # Main component
-├── components/           # Feature components
-│   ├── GenerateTab.tsx
-│   ├── EditTab.tsx
-│   └── ResultDisplay.tsx
-├── hooks/                # Custom hooks
-│   ├── useImageGeneration.ts
-│   └── useHistory.ts
-├── utils/                # Utilities
-│   └── globalHistory.ts
-└── types/                # Type definitions
-    ├── api.ts
-    └── components.ts
-```
-
-#### Step 2: Register Your Tool
-Add your tool to the registry in `/src/lib/tools-registry.ts`:
-
-```typescript
-// src/lib/tools-registry.ts
-import { YourLucideIcon } from 'lucide-react'
-
-export const toolsRegistry: Tool[] = [
-  // ... other tools
-  {
-    id: 'my-awesome-tool',
-    name: 'My Awesome Tool',
-    description: 'A short and clear description of what the tool does.',
-    category: 'Utility',
-    icon: YourLucideIcon,
-    path: '/tools/my-awesome-tool',
-    componentPath: 'my-awesome-tool/MyAwesomeTool', // Auto-loading path
-    featured: false,
-  },
-]
-```
-
-### 🔄 **Automatic Loading System**
-
-**That's it!** The system will automatically:
-- ✅ Load your component dynamically
-- ✅ Handle routing without manual configuration
-- ✅ Provide error boundaries and loading states
-- ✅ Optimize bundle splitting
-
-### 🎨 **Component Naming Convention**
-
-| Tool ID | Directory | Component File | componentPath |
-|---------|-----------|----------------|---------------|
-| `calculator` | `src/tools/calculator/` | `Calculator.tsx` | `calculator/Calculator` |
-| `image-converter` | `src/tools/image-converter/` | `ImageConverter.tsx` | `image-converter/ImageConverter` |
-| `my-awesome-tool` | `src/tools/my-awesome-tool/` | `MyAwesomeTool.tsx` | `my-awesome-tool/MyAwesomeTool` |
-
-### 🚀 **Benefits of New Architecture**
-
-- **🎯 Zero Configuration**: No need to modify routing files
-- **⚡ Performance**: Automatic code splitting and lazy loading
-- **🔧 Maintainable**: Clean separation of concerns
-- **🛡️ Type Safe**: Full TypeScript support with error handling
-- **📦 Scalable**: Easy to add unlimited tools without complexity
 
 ### 🚀 **Performance Optimization**
 
