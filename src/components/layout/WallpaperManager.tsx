@@ -29,6 +29,8 @@ export function WallpaperManager({ onClose }: WallpaperManagerProps) {
     updateRotationSettings,
     nextWallpaper,
     previousWallpaper,
+    enableBackground,
+    setEnableBackground,
     enableBlur,
     setEnableBlur,
     enableZoom,
@@ -115,12 +117,21 @@ export function WallpaperManager({ onClose }: WallpaperManagerProps) {
                 </span>
               </div>
               <div className="flex items-center gap-3">
+                {/* Background Toggle */}
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium">Background</label>
+                  <Switch
+                    checked={enableBackground}
+                    onCheckedChange={setEnableBackground}
+                  />
+                </div>
                 {/* Blur Toggle */}
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium">Blur</label>
                   <Switch
                     checked={enableBlur}
                     onCheckedChange={setEnableBlur}
+                    disabled={!enableBackground}
                   />
                 </div>
                 {/* Zoom Slider */}
@@ -129,10 +140,11 @@ export function WallpaperManager({ onClose }: WallpaperManagerProps) {
                   <Switch
                     checked={enableZoom}
                     onCheckedChange={setEnableZoom}
+                    disabled={!enableBackground}
                   />
                 </div>
                 {/* Zoom Level Slider */}
-                {enableZoom && (
+                {enableZoom && enableBackground && (
                   <div className="flex items-center gap-2 min-w-[120px]">
                     <label className="text-xs text-muted-foreground whitespace-nowrap">Level</label>
                     <Slider

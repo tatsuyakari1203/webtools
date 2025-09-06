@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useWallpaper } from '../providers/WallpaperProvider';
 
 export default function WallpaperBackground() {
-  const { wallpaperUrl, enableBlur, enableZoom, zoomLevel } = useWallpaper();
+  const { wallpaperUrl, enableBackground, enableBlur, enableZoom, zoomLevel } = useWallpaper();
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
@@ -17,8 +17,8 @@ export default function WallpaperBackground() {
     }
   }, [wallpaperUrl]);
 
-  // Don't render if no wallpaper URL is provided
-  if (!wallpaperUrl || hasError) {
+  // Don't render if background is disabled, no wallpaper URL is provided, or has error
+  if (!enableBackground || !wallpaperUrl || hasError) {
     return null;
   }
 

@@ -34,7 +34,12 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
     if (savedConfig) {
       try {
         const parsedConfig = JSON.parse(savedConfig)
-        setConfig(parsedConfig)
+        // Merge with default config to ensure all new properties are present
+        const mergedConfig = {
+          ...DEFAULT_WALLPAPER_CONFIG,
+          ...parsedConfig
+        }
+        setConfig(mergedConfig)
         return
       } catch {
         console.warn('Failed to parse wallpaper config, falling back to legacy format')
@@ -57,6 +62,7 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
         ...DEFAULT_WALLPAPER_CONFIG,
         wallpapers: [legacyWallpaper],
         currentWallpaperId: legacyWallpaper.id,
+        enableBackground: true,
         enableBlur: legacyBlur === 'true'
       }
       
@@ -228,6 +234,16 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
     saveConfig(newConfig)
   }, [config, saveConfig])
 
+  const setEnableBackground = useCallback((enable: boolean) => {
+    const newConfig = {
+      ...config,
+      enableBackground: enable
+    }
+    
+    setConfig(newConfig)
+    saveConfig(newConfig)
+  }, [config, saveConfig])
+
   const setEnableBlur = useCallback((enable: boolean) => {
     const newConfig = {
       ...config,
@@ -290,6 +306,10 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
     updateRotationSettings,
     nextWallpaper,
     previousWallpaper,
+    
+    // Background settings
+    enableBackground: isClient ? config.enableBackground : true,
+    setEnableBackground,
     
     // Blur and other settings
     enableBlur: isClient ? config.enableBlur : false,
