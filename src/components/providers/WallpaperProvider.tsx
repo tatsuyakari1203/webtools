@@ -12,7 +12,6 @@ import {
 
 const WallpaperContext = createContext<WallpaperContextType | undefined>(undefined)
 
-const DEFAULT_WALLPAPER = ''
 const STORAGE_KEY = 'wallpaper-config'
 const LEGACY_URL_KEY = 'custom-wallpaper-url'
 const LEGACY_BLUR_KEY = 'custom-wallpaper-blur'
@@ -37,7 +36,7 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
         const parsedConfig = JSON.parse(savedConfig)
         setConfig(parsedConfig)
         return
-      } catch (e) {
+      } catch {
         console.warn('Failed to parse wallpaper config, falling back to legacy format')
       }
     }
@@ -95,7 +94,8 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
         setRotationTimer(null)
       }
     }
-  }, [config.rotationSettings, config.wallpapers.length])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.rotationSettings, config.wallpapers.length, rotationTimer])
 
   // Get current wallpaper
   const currentWallpaper = config.wallpapers.find(w => w.id === config.currentWallpaperId) || null
@@ -216,7 +216,7 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
         saveConfig(newConfig)
       }
     }
-  }, [isClient, config.rotationSettings.mode, config.wallpapers.length, config.currentWallpaperId, config.rotationSettings.randomOrder, saveConfig]) // Safe dependencies
+  }, [isClient, config.rotationSettings.mode, config.wallpapers.length, config.currentWallpaperId, config.rotationSettings.randomOrder, config, saveConfig]) // Safe dependencies
 
   const updateRotationSettings = useCallback((settings: Partial<WallpaperRotationSettings>) => {
     const newConfig = {

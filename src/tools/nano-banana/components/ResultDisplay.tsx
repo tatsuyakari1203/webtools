@@ -59,7 +59,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
         console.error('Error loading refine history from localStorage:', error)
       }
     }
-  }, [])
+  }, [imageHistory])
 
   // Save refine history to localStorage whenever it changes (session-specific)
   useEffect(() => {

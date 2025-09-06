@@ -2,10 +2,9 @@
 
 import React, { useState } from 'react'
 import { useWallpaper } from '@/components/providers/WallpaperProvider'
-import { WallpaperItem, RotationMode } from '@/types/wallpaper'
+import { WallpaperItem } from '@/types/wallpaper'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +16,8 @@ interface WallpaperManagerProps {
 }
 
 export function WallpaperManager({ onClose }: WallpaperManagerProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _unused = onClose
   const {
     wallpapers,
     currentWallpaper,
@@ -68,9 +69,7 @@ export function WallpaperManager({ onClose }: WallpaperManagerProps) {
     setEditingName('')
   }
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString()
-  }
+
 
   return (
     <div className="w-full space-y-6">

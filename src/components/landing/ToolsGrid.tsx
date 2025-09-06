@@ -3,11 +3,9 @@
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { toolsRegistry, getAllCategories } from '@/lib/tools-registry';
-import { Wrench } from 'lucide-react';
+import { toolsRegistry } from '@/lib/tools-registry';
 
 export default function ToolsGrid() {
-  const categories = getAllCategories();
   
   const getCategoryName = (categoryId: string) => {
     const categoryMap: Record<string, string> = {

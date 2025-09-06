@@ -176,34 +176,62 @@ src/
 ├── app/
 │   ├── tools/
 │   │   └── [toolId]/
-│   │       └── page.tsx          # Dynamic routing for tools
+│   │       └── page.tsx          # Dynamic routing with auto-loading
 │   └── ...
 ├── components/
 │   ├── landing/
 │   │   └── ToolsGrid.tsx          # Displays the list of tools
 │   └── ui/                        # Shadcn/ui components
 ├── lib/
-│   └── tools-registry.ts          # Tool registration and management
+│   ├── tools-registry.ts          # Tool registration and management
+│   └── dynamic-component-loader.ts # Auto-loading system
 └── tools/
     ├── calculator/
+    │   └── Calculator.tsx         # Tool component
     ├── image-converter/
+    │   └── ImageConverter.tsx     # Tool component
     └── ...                        # Each tool in its own directory
 ```
 
 ## 🚀 Adding New Tools Guide
 
-Follow these steps to add a new tool to the WebTools collection.
+### 🎯 **Simplified Architecture**
+WebTools now features an **automatic component loading system** that eliminates manual routing configuration. Adding a new tool is now incredibly simple!
 
-### Step 1: Create the Tool Component
-Create a new directory for your tool inside `src/tools/`. For example, for a tool named "My Awesome Tool":
-`src/tools/my-awesome-tool/MyAwesomeTool.tsx`
+### ✨ **Two Simple Steps Only**
 
-### Step 2: Register Your Tool
-Open `/src/lib/tools-registry.ts` and add a new entry to the `toolsRegistry` array.
+#### Step 1: Create the Tool Component
+Create your tool component following the naming convention:
+```
+src/tools/[tool-id]/[ToolName].tsx
+```
+
+**Example:** For a tool with ID `my-awesome-tool`:
+```
+src/tools/my-awesome-tool/MyAwesomeTool.tsx
+```
+
+**Component Template:**
+```tsx
+// src/tools/my-awesome-tool/MyAwesomeTool.tsx
+'use client'
+
+export default function MyAwesomeTool() {
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">My Awesome Tool</h1>
+      {/* Your tool implementation */}
+    </div>
+  )
+}
+```
+
+#### Step 2: Register Your Tool
+Add your tool to the registry in `/src/lib/tools-registry.ts`:
 
 ```typescript
 // src/lib/tools-registry.ts
-import { YourLucideIcon } from 'lucide-react';
+import { YourLucideIcon } from 'lucide-react'
 
 export const toolsRegistry: Tool[] = [
   // ... other tools
@@ -214,29 +242,49 @@ export const toolsRegistry: Tool[] = [
     category: 'Utility',
     icon: YourLucideIcon,
     path: '/tools/my-awesome-tool',
+    componentPath: 'my-awesome-tool/MyAwesomeTool', // Auto-loading path
     featured: false,
   },
-];
+]
 ```
 
-### Step 3: Add the Tool to the Router
-Open `/src/app/tools/[toolId]/page.tsx`, import your new tool, and add a new `case` to the `switch` statement inside the `renderTool` function.
+### 🔄 **Automatic Loading System**
 
+**That's it!** The system will automatically:
+- ✅ Load your component dynamically
+- ✅ Handle routing without manual configuration
+- ✅ Provide error boundaries and loading states
+- ✅ Optimize bundle splitting
+
+### 🎨 **Component Naming Convention**
+
+| Tool ID | Directory | Component File | componentPath |
+|---------|-----------|----------------|---------------|
+| `calculator` | `src/tools/calculator/` | `Calculator.tsx` | `calculator/Calculator` |
+| `image-converter` | `src/tools/image-converter/` | `ImageConverter.tsx` | `image-converter/ImageConverter` |
+| `my-awesome-tool` | `src/tools/my-awesome-tool/` | `MyAwesomeTool.tsx` | `my-awesome-tool/MyAwesomeTool` |
+
+### 🚀 **Benefits of New Architecture**
+
+- **🎯 Zero Configuration**: No need to modify routing files
+- **⚡ Performance**: Automatic code splitting and lazy loading
+- **🔧 Maintainable**: Clean separation of concerns
+- **🛡️ Type Safe**: Full TypeScript support with error handling
+- **📦 Scalable**: Easy to add unlimited tools without complexity
+
+### 🔍 **Advanced Features**
+
+**Custom Loading States:**
 ```tsx
-// src/app/tools/[toolId]/page.tsx
-import MyAwesomeTool from '@/tools/my-awesome-tool/MyAwesomeTool';
-// ... other imports
-
-const renderTool = () => {
-  switch (toolId) {
-    // ... other cases
-    case 'my-awesome-tool':
-      return <MyAwesomeTool />;
-    default:
-      return <ComingSoonTool tool={tool} />;
-  }
-};
+// Your component can export loading states
+export const Loading = () => <div>Loading My Awesome Tool...</div>
 ```
+
+**Error Boundaries:**
+The system automatically handles errors with graceful fallbacks.
+
+**SEO Optimization:**
+Each tool gets automatic metadata generation based on registry information.
 
 ## 🤖 Gemini AI API Usage
 

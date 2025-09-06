@@ -23,6 +23,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
   // Extract icon from tool to avoid passing non-serializable objects
   const { icon, ...toolWithoutIcon } = tool
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _unused = icon
 
   return (
     <>
