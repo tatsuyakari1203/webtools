@@ -17,6 +17,8 @@ export interface WallpaperConfig {
   wallpapers: WallpaperItem[]
   currentWallpaperId: string | null
   enableBlur: boolean
+  enableZoom: boolean
+  zoomLevel: number
   rotationSettings: WallpaperRotationSettings
 }
 
@@ -42,6 +44,12 @@ export interface WallpaperContextType {
   enableBlur: boolean
   setEnableBlur: (enable: boolean) => void
   
+  // Zoom settings
+  enableZoom: boolean
+  setEnableZoom: (enable: boolean) => void
+  zoomLevel: number
+  setZoomLevel: (level: number) => void
+  
   // Legacy support
   setWallpaperUrl: (url: string) => void
   resetToDefault: () => void
@@ -57,5 +65,7 @@ export const DEFAULT_WALLPAPER_CONFIG: WallpaperConfig = {
   wallpapers: [],
   currentWallpaperId: null,
   enableBlur: false,
+  enableZoom: false,
+  zoomLevel: 1.0,
   rotationSettings: DEFAULT_ROTATION_SETTINGS
 }

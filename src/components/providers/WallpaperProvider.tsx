@@ -238,6 +238,26 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
     saveConfig(newConfig)
   }, [config, saveConfig])
 
+  const setEnableZoom = useCallback((enable: boolean) => {
+    const newConfig = {
+      ...config,
+      enableZoom: enable
+    }
+    
+    setConfig(newConfig)
+    saveConfig(newConfig)
+  }, [config, saveConfig])
+
+  const setZoomLevel = useCallback((level: number) => {
+    const newConfig = {
+      ...config,
+      zoomLevel: Math.max(0.5, Math.min(3, level)) // Clamp between 0.5-3
+    }
+    
+    setConfig(newConfig)
+    saveConfig(newConfig)
+  }, [config, saveConfig])
+
   // Legacy support functions
   const setWallpaperUrl = useCallback((url: string) => {
     if (url) {
@@ -274,6 +294,12 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
     // Blur and other settings
     enableBlur: isClient ? config.enableBlur : false,
     setEnableBlur,
+    
+    // Zoom settings
+    enableZoom: isClient ? config.enableZoom : false,
+    setEnableZoom,
+    zoomLevel: isClient ? config.zoomLevel : 1,
+    setZoomLevel,
     
     // Legacy support
     setWallpaperUrl,

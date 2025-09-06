@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 import { Switch } from '@/components/ui/switch'
+import { Slider } from '@/components/ui/slider'
 import { Badge } from '@/components/ui/badge'
 import { Trash2, Plus, SkipForward, SkipBack, Edit2, Check, X, RotateCcw } from 'lucide-react'
 import { LazyImage } from '@/components/ui/LazyImage'
@@ -29,6 +30,10 @@ export function WallpaperManager({ onClose }: WallpaperManagerProps) {
     previousWallpaper,
     enableBlur,
     setEnableBlur,
+    enableZoom,
+    setEnableZoom,
+    zoomLevel,
+    setZoomLevel,
     resetToDefault
   } = useWallpaper()
 
@@ -119,6 +124,29 @@ export function WallpaperManager({ onClose }: WallpaperManagerProps) {
                     onCheckedChange={setEnableBlur}
                   />
                 </div>
+                {/* Zoom Slider */}
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium">Zoom</label>
+                  <Switch
+                    checked={enableZoom}
+                    onCheckedChange={setEnableZoom}
+                  />
+                </div>
+                {/* Zoom Level Slider */}
+                {enableZoom && (
+                  <div className="flex items-center gap-2 min-w-[120px]">
+                    <label className="text-xs text-muted-foreground whitespace-nowrap">Level</label>
+                    <Slider
+                      value={[zoomLevel || 1.0]}
+                      onValueChange={(value) => setZoomLevel(value[0])}
+                      min={0.5}
+                      max={3}
+                      step={0.1}
+                      className="flex-1"
+                    />
+                    <span className="text-xs text-muted-foreground w-6 text-center">{(zoomLevel || 1.0).toFixed(1)}x</span>
+                  </div>
+                )}
                 {/* Navigation Controls */}
                 <div className="flex items-center gap-1">
                   <Button

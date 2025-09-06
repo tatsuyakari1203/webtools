@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useWallpaper } from '../providers/WallpaperProvider';
 
 export default function WallpaperBackground() {
-  const { wallpaperUrl, enableBlur } = useWallpaper();
+  const { wallpaperUrl, enableBlur, enableZoom, zoomLevel } = useWallpaper();
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
@@ -39,9 +39,13 @@ export default function WallpaperBackground() {
           src={wallpaperUrl}
           alt="Background wallpaper"
           fill
-          className={`object-cover object-center transition-opacity duration-1000 ${enableBlur ? 'blur-sm' : ''} ${
+          className={`object-cover object-center transition-opacity duration-1000 ${
             isLoaded ? 'opacity-100' : 'opacity-0'
           }`}
+          style={{
+            filter: enableBlur ? 'blur(4px)' : undefined,
+            transform: enableZoom ? `scale(${zoomLevel})` : undefined
+          }}
           onLoad={handleLoad}
           onError={handleError}
           priority
@@ -50,6 +54,8 @@ export default function WallpaperBackground() {
           quality={85}
         />
       </div>
+      
+
       
       {/* Overlay (70% opacity) - Dark in light mode, Light in dark mode */}
       <div 
