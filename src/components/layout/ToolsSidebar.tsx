@@ -61,11 +61,11 @@ export default function ToolsSidebar({ className }: ToolsSidebarProps) {
       className
     )}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/20 dark:border-white/10">
+      <div className="flex items-center justify-between p-2 border-b border-white/20 dark:border-white/10">
         {!isCollapsed && (
           <div className="flex items-center gap-2">
-            <h2 className="font-semibold text-lg">Tools</h2>
-            <Badge variant="secondary" className="text-xs">
+            <h2 className="font-medium text-base">Tools</h2>
+            <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
               {toolsRegistry.length}
             </Badge>
           </div>
@@ -79,12 +79,12 @@ export default function ToolsSidebar({ className }: ToolsSidebarProps) {
             // Save collapse state to localStorage
             localStorage.setItem('sidebar-collapsed', JSON.stringify(newState))
           }}
-          className="h-8 w-8 p-0"
+          className="h-7 w-7 p-0"
         >
           {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5" />
           ) : (
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
           )}
         </Button>
       </div>
@@ -92,39 +92,47 @@ export default function ToolsSidebar({ className }: ToolsSidebarProps) {
       {!isCollapsed && (
         <>
           {/* Search */}
-          <div className="p-4 border-b border-white/20 dark:border-white/10">
+          <div className="p-2 border-b border-white/20 dark:border-white/10">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search tools..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-9 bg-white/20 dark:bg-black/20 border-white/30 dark:border-white/20 backdrop-blur-sm"
+                className="pl-8 h-8 text-sm bg-white/20 dark:bg-black/20 border-white/30 dark:border-white/20 backdrop-blur-sm"
               />
             </div>
           </div>
 
           {/* Category Filter */}
-          <div className="p-4 border-b border-white/20 dark:border-white/10">
-            <div className="space-y-2">
-              <Button
-                variant={selectedCategory === "all" ? "default" : "ghost"}
-                size="sm"
+          <div className="p-2 border-b border-white/20 dark:border-white/10">
+            <div className="flex flex-wrap gap-1.5">
+              <Badge
+                variant={selectedCategory === "all" ? "default" : "secondary"}
+                className={cn(
+                  "cursor-pointer transition-all hover:scale-105 text-xs px-2 py-0.5",
+                  selectedCategory === "all" 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-white/20 dark:bg-black/20 hover:bg-white/30 dark:hover:bg-black/30"
+                )}
                 onClick={() => setSelectedCategory("all")}
-                className="w-full justify-start h-8"
               >
-                All Categories
-              </Button>
+                All
+              </Badge>
               {categories.map((category) => (
-                <Button
+                <Badge
                   key={category}
-                  variant={selectedCategory === category ? "default" : "ghost"}
-                  size="sm"
+                  variant={selectedCategory === category ? "default" : "secondary"}
+                  className={cn(
+                    "cursor-pointer transition-all hover:scale-105 text-xs px-2 py-0.5",
+                    selectedCategory === category 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-white/20 dark:bg-black/20 hover:bg-white/30 dark:hover:bg-black/30"
+                  )}
                   onClick={() => setSelectedCategory(category)}
-                  className="w-full justify-start h-8"
                 >
                   {category}
-                </Button>
+                </Badge>
               ))}
             </div>
           </div>
@@ -133,17 +141,18 @@ export default function ToolsSidebar({ className }: ToolsSidebarProps) {
 
       {/* Tools List */}
       <ScrollArea className="flex-1">
-        <div className="p-2">
+        <div className="p-1.5">
           {/* Home Link */}
           <Link href="/">
             <Button
               variant="ghost"
               className={cn(
-                "w-full justify-start mb-2 h-10 hover:bg-white/20 dark:hover:bg-white/10",
+                "w-full mb-1 h-8 hover:bg-white/20 dark:hover:bg-white/10 text-sm",
+                isCollapsed ? "justify-center" : "justify-start",
                 pathname === "/" && "bg-white/30 dark:bg-white/20"
               )}
             >
-              <Home className="h-4 w-4 mr-3" />
+              <Home className={cn("h-3.5 w-3.5", !isCollapsed && "mr-2 mt-0.5")} />
               {!isCollapsed && "Home"}
             </Button>
           </Link>
@@ -151,23 +160,22 @@ export default function ToolsSidebar({ className }: ToolsSidebarProps) {
           {/* Tools */}
           {isCollapsed ? (
             // Collapsed view - show only icons
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {toolsRegistry.map((tool) => {
                 const IconComponent = tool.icon
                 return (
                   <Link key={tool.id} href={tool.path}>
                     <Button
                       variant="ghost"
-                      size="sm"
                       className={cn(
-                        "w-full h-10 p-0 relative hover:bg-white/20 dark:hover:bg-white/10",
+                        "w-full h-8 p-0 relative hover:bg-white/20 dark:hover:bg-white/10",
                         isToolActive(tool.path) && "bg-white/30 dark:bg-white/20"
                       )}
                       title={tool.name}
                     >
-                      <IconComponent className="h-4 w-4" />
+                      <IconComponent className="h-3.5 w-3.5" />
                       {tool.featured && (
-                        <Star className="h-2 w-2 absolute top-1 right-1 fill-yellow-400 text-yellow-400" />
+                        <Star className="h-2 w-2 absolute top-0.5 right-0.5 fill-yellow-400 text-yellow-400" />
                       )}
                     </Button>
                   </Link>
@@ -176,7 +184,7 @@ export default function ToolsSidebar({ className }: ToolsSidebarProps) {
             </div>
           ) : (
             // Expanded view - show full tool info
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {filteredTools.map((tool) => {
                 const IconComponent = tool.icon
                 return (
@@ -184,25 +192,25 @@ export default function ToolsSidebar({ className }: ToolsSidebarProps) {
                     <Button
                       variant="ghost"
                       className={cn(
-                        "w-full justify-start h-auto p-3 relative hover:bg-white/20 dark:hover:bg-white/10 min-h-[80px]",
+                        "w-full justify-start h-auto p-2 relative hover:bg-white/20 dark:hover:bg-white/10 min-h-[60px]",
                         isToolActive(tool.path) && "bg-white/30 dark:bg-white/20"
                       )}
                     >
-                      <div className="flex items-start gap-3 w-full">
-                        <IconComponent className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                      <div className="flex items-start gap-2.5 w-full">
+                        <IconComponent className="h-4 w-4 mt-0.5 flex-shrink-0" />
                         <div className="flex-1 text-left min-w-0 overflow-hidden">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-1.5 mb-0.5">
                             <span className="font-medium text-sm break-words whitespace-normal leading-tight">{tool.name}</span>
+                            <Badge variant="outline" className="text-xs px-1.5 py-0 h-4">
+                              {tool.category}
+                            </Badge>
                             {tool.featured && (
-                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 flex-shrink-0" />
+                              <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-3 leading-relaxed break-words whitespace-normal overflow-wrap-anywhere">
+                          <p className="text-xs text-muted-foreground line-clamp-2 leading-snug break-words whitespace-normal overflow-wrap-anywhere">
                             {tool.description}
                           </p>
-                          <Badge variant="outline" className="text-xs mt-2 w-fit">
-                            {tool.category}
-                          </Badge>
                         </div>
                       </div>
                     </Button>
@@ -214,13 +222,14 @@ export default function ToolsSidebar({ className }: ToolsSidebarProps) {
 
           {/* No results */}
           {!isCollapsed && filteredTools.length === 0 && (
-            <div className="text-center py-8">
+            <div className="text-center py-6">
               <p className="text-sm text-muted-foreground mb-2">
                 No tools found
               </p>
               <Button
                 variant="outline"
                 size="sm"
+                className="h-7 text-xs"
                 onClick={() => {
                   setSearchQuery("")
                   setSelectedCategory("all")
