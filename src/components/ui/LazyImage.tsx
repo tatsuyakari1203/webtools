@@ -13,6 +13,7 @@ interface LazyImageProps {
   placeholder?: string
   onLoad?: () => void
   onError?: () => void
+  style?: React.CSSProperties
 }
 
 export function LazyImage({
@@ -24,6 +25,7 @@ export function LazyImage({
   placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PC9zdmc+',
   onLoad,
   onError,
+  style,
 }: LazyImageProps) {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isInView, setIsInView] = useState(false)
@@ -65,7 +67,7 @@ export function LazyImage({
     <div
       ref={imgRef}
       className={cn('relative overflow-hidden', className)}
-      style={{ width, height }}
+      style={{ width, height, ...style }}
     >
       {!isLoaded && !hasError && (
         <Image

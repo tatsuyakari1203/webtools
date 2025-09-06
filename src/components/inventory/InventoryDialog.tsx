@@ -35,7 +35,8 @@ import {
   ArrowUp,
   ArrowDown,
   Clock,
-  Type
+  Type,
+  Clipboard
 } from 'lucide-react';
 import { toast } from 'sonner';
 // import { formatDistanceToNow } from 'date-fns';
@@ -460,7 +461,14 @@ export function InventoryDialog({ children }: InventoryDialogProps) {
                     <div className="text-center text-muted-foreground p-8">
                       {searchQuery || selectedType !== 'all' || showFavoritesOnly
                         ? 'No items match your filters'
-                        : 'No items in inventory'}
+                        : (
+                          <div className="space-y-2">
+                             <div className="text-lg font-medium">Your inventory is empty</div>
+                             <div className="text-sm text-muted-foreground/80">
+                               Use the <span className="inline-flex items-center px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium mx-1 gap-1"><Clipboard className="w-3 h-3" />Paste</span> button next to the <span className="inline-flex items-center px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium mx-1 gap-1"><Package className="w-3 h-3" />Store</span> button to save useful content here
+                             </div>
+                           </div>
+                        )}
                     </div>
                   ) : (
                     <div className="inventory-container grid gap-4 p-2 grid-cols-1 inventory-grid-2 inventory-grid-3">

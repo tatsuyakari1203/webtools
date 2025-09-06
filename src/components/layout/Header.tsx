@@ -6,7 +6,8 @@ import { InventoryDialog } from '@/components/inventory/InventoryDialog';
 import { ThrowButton } from '@/components/inventory/ThrowButton';
 import { Button } from '@/components/ui/button';
 import { Github, Package, ImageIcon } from 'lucide-react';
-import { WallpaperDialog } from './WallpaperDialog';
+import { WallpaperManager } from './WallpaperManager';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const ToolCaseIcon = () => (
   <svg 
@@ -76,12 +77,23 @@ export default function Header() {
           >
             <Github className="h-5 w-5" />
           </Link>
-          <WallpaperDialog>
-            <Button variant="outline" size="sm" className="flex items-center gap-2" title="Custom Background">
-              <ImageIcon className="h-4 w-4" />
-              <span className="text-xs">Background</span>
-            </Button>
-          </WallpaperDialog>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center gap-2" title="Custom Background">
+                <ImageIcon className="h-4 w-4" />
+                <span className="text-xs">Background</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto bg-white/10 dark:bg-black/10 backdrop-blur-md border border-white/20 dark:border-white/10 p-4">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Wallpaper Settings
+                </DialogTitle>
+              </DialogHeader>
+              <WallpaperManager />
+            </DialogContent>
+          </Dialog>
           <ThemeToggle />
         </div>
       </div>
