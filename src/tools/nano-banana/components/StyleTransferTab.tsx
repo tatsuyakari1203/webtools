@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider'
 import { Loader2, Palette } from 'lucide-react'
 import { toast } from 'sonner'
 import { ImageInput } from './ImageInput'
-import { addToGlobalHistory } from '../utils/globalHistory'
+
 
 interface StyleTransferTabProps {
   loading: boolean
@@ -66,16 +66,7 @@ export const StyleTransferTab: React.FC<StyleTransferTabProps> = ({
       
       setGeneratedImage(imageUrl)
       
-      // Auto cleanup before adding new item
-      const { autoCleanupHistory } = await import('../utils/globalHistory')
-      autoCleanupHistory()
-      
-      // Add to global history
-      addToGlobalHistory({
-        image: imageUrl,
-        prompt: prompt.trim(),
-        type: 'style'
-      })
+
       
       toast.success('Style transfer completed successfully!')
     } catch (error) {

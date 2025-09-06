@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Combine } from 'lucide-react'
 import { toast } from 'sonner'
 import { MultiImageInput } from './MultiImageInput'
-import { addToGlobalHistory } from '../utils/globalHistory'
+
 
 interface ComposeTabProps {
   loading: boolean
@@ -67,12 +67,7 @@ export const ComposeTab: React.FC<ComposeTabProps> = ({
       
       setGeneratedImage(imageUrl)
       
-      // Add to global history
-      addToGlobalHistory({
-        image: imageUrl,
-        prompt: prompt.trim(),
-        type: 'compose'
-      })
+
       
       toast.success('Images composed successfully!')
     } catch (error) {

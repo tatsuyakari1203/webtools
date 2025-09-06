@@ -1,4 +1,4 @@
-import { Banana, Calculator, Crop, FileCode, FileText, Globe, Image, ImageIcon, Key, ScanText, Settings, Timer, Type } from "lucide-react"
+import { Banana, Calculator, Crop, FileCode, FileText, Globe, Image, ImageIcon, Key, ScanText, Timer, Type } from "lucide-react"
 import React from "react"
 
 export interface Tool {

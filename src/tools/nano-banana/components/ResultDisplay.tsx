@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Download, Image as ImageIcon, Loader2, Maximize2, Eye, Wand2, Undo, Redo, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Lightbox } from './Lightbox'
-import { addToGlobalHistory, emergencyStorageCleanup } from '../utils/globalHistory'
+
 
 interface ResultDisplayProps {
   image: string | null
@@ -71,22 +71,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
       } catch (error) {
         if (error instanceof DOMException && error.name === 'QuotaExceededError') {
            console.warn('localStorage quota exceeded, performing emergency cleanup')
-           // Perform emergency cleanup
-           const cleanupSuccess = emergencyStorageCleanup()
-           
-           if (cleanupSuccess) {
-             // Try to save again after cleanup
-             try {
-               localStorage.setItem(`nano-banana-refine-history-${sessionId}`, JSON.stringify(imageHistory))
-               localStorage.setItem(`nano-banana-refine-history-index-${sessionId}`, currentHistoryIndex.toString())
-               toast.success('Storage cleaned up successfully. History saved.')
-             } catch (retryError) {
-               console.error('Failed to save refine history even after emergency cleanup:', retryError)
-               toast.error('Storage quota exceeded. History could not be saved.')
-             }
-           } else {
-             toast.error('Storage quota exceeded and cleanup failed. History may not be saved.')
-           }
+           toast.error('Storage quota exceeded. History may not be saved.')
         } else {
           console.error('Error saving refine history to localStorage:', error)
         }
@@ -160,7 +145,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
         addToHistory(image, 'Generated image')
       }
     }
-  }, [image, imageHistory.length, currentHistoryIndex, addToHistory])
+  }, [image, imageHistory, currentHistoryIndex, addToHistory])
 
   // Handle refine functionality
   const handleRefine = async () => {
@@ -198,16 +183,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
          setGeneratedImage(newImageUrl)
          addToHistory(newImageUrl, refinePrompt)
          
-         // Auto cleanup before adding new item
-         const { autoCleanupHistory } = await import('../utils/globalHistory')
-         autoCleanupHistory()
-         
-         // Add refined image to global history
-         addToGlobalHistory({
-           image: newImageUrl,
-           prompt: refinePrompt.trim(),
-           type: 'refine'
-         })
+
          
          setRefinePrompt('')
          // Keep refine input open for continuous editing
