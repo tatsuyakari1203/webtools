@@ -35,9 +35,9 @@ function getMimeType(file: File): string {
 
 // Function to create detailed prompt for image description
 function createDescriptionPrompt(): string {
-  return `Provide a comprehensive, detailed description of this image in English. Include:
+  return `Provide a comprehensive, detailed description of this image in English. Focus on the actual content and what you see. Include:
 
-1. **Overall Context**: The space, environment, time of day (day/night)
+1. **Overall Context**: The space, environment, setting, time of day (day/night)
 2. **Main Characters/Objects**: 
    - Number, gender, estimated age
    - Clothing, colors, style
@@ -45,19 +45,19 @@ function createDescriptionPrompt(): string {
    - Notable identifying features
 3. **Position and Space**:
    - Position of objects within the frame
-   - Distance, proportions, shooting angle
-   - Foreground, background
+   - Distance, proportions, perspective
+   - Foreground, background elements
 4. **Lighting and Colors**:
    - Light source, direction of lighting
    - Dominant color tones
    - Shadows, contrast
 5. **Special Details**:
-   - Objects, accessories
-   - Textures, materials
-   - Artistic or technical elements
-6. **Emotion and Atmosphere**: Mood, feelings conveyed by the image
+   - Objects, accessories, items visible
+   - Textures, materials, surfaces
+   - Text, signs, or writing if present
+6. **Emotion and Atmosphere**: Mood, feelings, activity happening in the scene
 
-Provide only the description without any introductory phrases or analysis commentary.`;
+Provide only the description without any introductory phrases or analysis commentary. Focus on describing what is actually visible rather than artistic or technical qualities.`;
 }
 
 export async function POST(request: NextRequest) {
