@@ -211,19 +211,233 @@ src/tools/[tool-id]/[ToolName].tsx
 src/tools/my-awesome-tool/MyAwesomeTool.tsx
 ```
 
-**Component Template:**
+## 📁 **Recommended Tool Structure**
+
+To ensure consistency and maintainability across all tools, follow this standardized structure:
+
+### 🏗️ **Basic Tool Structure**
+```
+src/tools/[tool-id]/
+├── [ToolName].tsx          # Main component (required)
+├── index.tsx               # Export file (optional)
+├── types.ts                # TypeScript interfaces (recommended)
+├── components/             # Sub-components (if needed)
+│   ├── ComponentA.tsx
+│   └── ComponentB.tsx
+├── utils/                  # Utility functions (if needed)
+│   ├── helpers.ts
+│   └── calculations.ts
+├── hooks/                  # Custom hooks (if needed)
+│   └── useToolLogic.ts
+└── workers/                # Web workers (if needed)
+    └── processor.worker.ts
+```
+
+### 🎨 **Component Template**
 ```tsx
 // src/tools/my-awesome-tool/MyAwesomeTool.tsx
-'use client'
+'use client';
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export default function MyAwesomeTool() {
+  const [state, setState] = useState('');
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">My Awesome Tool</h1>
-      {/* Your tool implementation */}
+    <div className="max-w-4xl mx-auto p-4 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold">My Awesome Tool</h1>
+        <p className="text-muted-foreground">
+          Description of what this tool does
+        </p>
+      </div>
+
+      {/* Main Content */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Tool Interface</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Your tool logic here */}
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }
+```
+
+### 📋 **TypeScript Types Template**
+```tsx
+// src/tools/my-awesome-tool/types.ts
+export interface ToolState {
+  // Define your tool's state interface
+  value: string;
+  isProcessing: boolean;
+}
+
+export interface ToolSettings {
+  // Define configuration options
+  option1: string;
+  option2: number;
+}
+
+export interface ToolResult {
+  // Define result structure
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+```
+
+## 🎯 **Design Guidelines**
+
+### 🎨 **UI/UX Standards**
+
+1. **Layout Consistency**
+   - Use `max-w-4xl mx-auto p-4 space-y-6` for main container
+   - Center-align headers with `text-center space-y-2`
+   - Use consistent spacing with Tailwind's space utilities
+
+2. **Component Structure**
+   - Always include a descriptive header section
+   - Wrap main functionality in `Card` components
+   - Use semantic HTML and proper accessibility attributes
+
+3. **Color & Theming**
+   - Leverage existing design tokens from `@/components/ui`
+   - Support both light and dark themes automatically
+   - Use `text-muted-foreground` for secondary text
+
+### 🔧 **Technical Standards**
+
+1. **State Management**
+   - Use React hooks for local state (`useState`, `useEffect`)
+   - Consider custom hooks for complex logic
+   - Implement proper error handling and loading states
+
+2. **Performance**
+   - Use `'use client'` directive for interactive components
+   - Implement lazy loading for heavy operations
+   - Consider Web Workers for CPU-intensive tasks
+
+3. **TypeScript**
+   - Define clear interfaces for all data structures
+   - Use proper typing for props and state
+   - Export types for reusability
+
+### 📱 **Responsive Design**
+
+1. **Mobile-First Approach**
+   - Design for mobile screens first
+   - Use responsive grid systems (`grid-cols-1 md:grid-cols-2`)
+   - Test on various screen sizes
+
+2. **Touch-Friendly**
+   - Ensure buttons are at least 44px in height
+   - Provide adequate spacing between interactive elements
+   - Support touch gestures where appropriate
+
+### 📝 **Naming Conventions**
+
+1. **File & Directory Names**
+   - Use kebab-case for tool IDs: `my-awesome-tool`
+   - Use PascalCase for component names: `MyAwesomeTool.tsx`
+   - Use camelCase for utility files: `helperFunctions.ts`
+
+2. **Component Naming**
+   - Main component: `[ToolName].tsx` (e.g., `Calculator.tsx`)
+   - Sub-components: Descriptive names (e.g., `SettingsPanel.tsx`)
+   - Hooks: Prefix with `use` (e.g., `useCalculator.ts`)
+
+3. **Variable & Function Names**
+   - Use camelCase for variables and functions
+   - Use descriptive names that explain purpose
+   - Prefix boolean variables with `is`, `has`, `can`, etc.
+
+### 🧪 **Testing & Quality**
+
+1. **Error Handling**
+   - Implement try-catch blocks for async operations
+   - Show user-friendly error messages
+   - Provide fallback UI for error states
+
+2. **Loading States**
+   - Show loading indicators for async operations
+   - Disable interactive elements during processing
+   - Provide progress feedback when possible
+
+3. **Accessibility**
+   - Use semantic HTML elements
+   - Provide proper ARIA labels
+   - Ensure keyboard navigation support
+   - Test with screen readers
+
+### 🔄 **State Management Patterns**
+
+1. **Simple Tools** (Calculator, Text Formatter)
+   ```tsx
+   const [value, setValue] = useState('');
+   const [isProcessing, setIsProcessing] = useState(false);
+   ```
+
+2. **Complex Tools** (Image Converter, Nano Banana)
+   ```tsx
+   // Use custom hooks for complex state
+   const { files, addFiles, removeFile, processFiles } = useFileManager();
+   const { settings, updateSettings } = useToolSettings();
+   ```
+
+3. **Tools with History** (Calculator, Pomodoro)
+   ```tsx
+   const [history, setHistory] = useState<HistoryEntry[]>([]);
+   const addToHistory = useCallback((entry: HistoryEntry) => {
+     setHistory(prev => [entry, ...prev.slice(0, 99)]); // Keep last 100
+   }, []);
+   ```
+
+### 📦 **Component Organization Examples**
+
+**Simple Tool** (Calculator, Text Formatter):
+```
+src/tools/calculator/
+├── Calculator.tsx          # Main component
+├── types.ts               # Interfaces
+└── utils/
+    └── calculations.ts    # Pure functions
+```
+
+**Medium Tool** (Image Converter, OCR):
+```
+src/tools/image-converter/
+├── ImageConverter.tsx     # Main component
+├── types.ts              # Interfaces
+├── components/           # Sub-components
+│   └── StatisticsPanel.tsx
+├── utils/                # Utilities
+│   └── statistics.ts
+└── workers/              # Web workers
+    └── imageProcessor.worker.ts
+```
+
+**Complex Tool** (Nano Banana, Pomodoro):
+```
+src/tools/nano-banana/
+├── NanoBanana.tsx        # Main component
+├── components/           # Feature components
+│   ├── GenerateTab.tsx
+│   ├── EditTab.tsx
+│   └── ResultDisplay.tsx
+├── hooks/                # Custom hooks
+│   ├── useImageGeneration.ts
+│   └── useHistory.ts
+├── utils/                # Utilities
+│   └── globalHistory.ts
+└── types/                # Type definitions
+    ├── api.ts
+    └── components.ts
 ```
 
 #### Step 2: Register Your Tool
@@ -272,6 +486,78 @@ export const toolsRegistry: Tool[] = [
 - **🛡️ Type Safe**: Full TypeScript support with error handling
 - **📦 Scalable**: Easy to add unlimited tools without complexity
 
+### 🚀 **Performance Optimization**
+
+1. **Code Splitting**
+   ```tsx
+   // Use dynamic imports for heavy dependencies
+   const HeavyLibrary = lazy(() => import('heavy-library'));
+   
+   // Wrap in Suspense
+   <Suspense fallback={<LoadingSpinner />}>
+     <HeavyLibrary />
+   </Suspense>
+   ```
+
+2. **Memory Management**
+   ```tsx
+   // Clean up resources in useEffect
+   useEffect(() => {
+     const worker = new Worker('/worker.js');
+     return () => worker.terminate();
+   }, []);
+   ```
+
+3. **Bundle Size**
+   - Import only needed functions: `import { debounce } from 'lodash/debounce'`
+   - Use tree-shaking friendly libraries
+   - Analyze bundle with `npm run analyze`
+
+### 🔒 **Security Best Practices**
+
+1. **Input Validation**
+   ```tsx
+   const validateInput = (input: string): boolean => {
+     // Sanitize and validate user input
+     return input.length > 0 && input.length < 1000;
+   };
+   ```
+
+2. **File Handling**
+   ```tsx
+   const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+   
+   const validateFile = (file: File): boolean => {
+     return ALLOWED_TYPES.includes(file.type) && file.size <= MAX_FILE_SIZE;
+   };
+   ```
+
+3. **API Security**
+   - Never expose API keys in client code
+   - Use environment variables for sensitive data
+   - Implement rate limiting for API calls
+
+### 📊 **Analytics & Monitoring**
+
+1. **Error Tracking**
+   ```tsx
+   const handleError = (error: Error, context: string) => {
+     console.error(`Error in ${context}:`, error);
+     // Send to monitoring service
+   };
+   ```
+
+2. **Performance Metrics**
+   ```tsx
+   const measurePerformance = (operation: string, fn: () => void) => {
+     const start = performance.now();
+     fn();
+     const end = performance.now();
+     console.log(`${operation} took ${end - start} milliseconds`);
+   };
+   ```
+
 ### 🔍 **Advanced Features**
 
 **Custom Loading States:**
@@ -285,6 +571,12 @@ The system automatically handles errors with graceful fallbacks.
 
 **SEO Optimization:**
 Each tool gets automatic metadata generation based on registry information.
+
+**Progressive Web App:**
+Offline support and installability features.
+
+**Internationalization:**
+Multi-language support ready for global deployment.
 
 ## 🤖 Gemini AI API Usage
 
