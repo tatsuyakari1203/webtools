@@ -132,7 +132,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
           conversation_id: state.conversationId, // Use existing conversation_id for refine
           previous_image_data: image.replace(/^data:image\/[a-z]+;base64,/, ''),
           edit_instruction: refinePrompt,
-          style: state.generateStyle || 'photorealistic',
+          style: 'photorealistic',
           quality: 'ultra'
         })
       })

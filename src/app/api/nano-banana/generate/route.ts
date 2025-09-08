@@ -23,32 +23,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Enhance prompt based on style
-    let enhancedPrompt = prompt
-    switch (style) {
-      case 'photorealistic':
-        enhancedPrompt = `${prompt}, photorealistic, high quality, detailed, professional photography`
-        break
-      case 'artistic':
-        enhancedPrompt = `${prompt}, artistic style, creative, expressive, fine art`
-        break
-      case 'cartoon':
-        enhancedPrompt = `${prompt}, cartoon style, animated, colorful, fun`
-        break
-      case 'anime':
-        enhancedPrompt = `${prompt}, anime style, manga, Japanese animation`
-        break
-      case 'abstract':
-        enhancedPrompt = `${prompt}, abstract art, conceptual, modern art`
-        break
-    }
-
+    // Use original prompt without style-based enhancement to avoid result distortion
     // Add size specification to prompt
-    enhancedPrompt += `, ${width}x${height} resolution`
+    const finalPrompt = `${prompt}, ${width}x${height} resolution`
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image-preview',
-      contents: enhancedPrompt,
+      model: 'models/gemini-2.5-flash-image-preview',
+      contents: [{
+        parts: [{ text: finalPrompt }]
+      }]
     })
 
     // Extract image data from response
@@ -87,7 +70,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       image_data: imageData,
-      prompt: enhancedPrompt,
+      prompt: finalPrompt,
       width,
       height,
       style

@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
 import { Loader2, MessageSquare, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useNanoBanana } from '../context/NanoBananaContext'
@@ -30,7 +30,7 @@ export const ConversationTab: React.FC<ConversationTabProps> = ({
   const { state, setConversationId } = useNanoBanana()
   const [conversationHistory, setConversationHistory] = useState<ConversationEntry[]>([])
   const [newInstruction, setNewInstruction] = useState('')
-  const [style, setStyle] = useState('photorealistic')
+
 
   const handleRefine = async () => {
     if (!newInstruction.trim()) {
@@ -68,7 +68,6 @@ export const ConversationTab: React.FC<ConversationTabProps> = ({
         conversation_id: state.conversationId,
         previous_image_data: imageData,
         edit_instruction: newInstruction,
-        style,
         quality: 'ultra'
       }
 
@@ -167,21 +166,7 @@ export const ConversationTab: React.FC<ConversationTabProps> = ({
         />
       </div>
 
-      <div>
-        <Label htmlFor="refine-style">Style</Label>
-        <Select value={style} onValueChange={setStyle}>
-          <SelectTrigger className="mt-1">
-            <SelectValue placeholder="Select style" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="photorealistic">Photorealistic</SelectItem>
-            <SelectItem value="artistic">Artistic</SelectItem>
-            <SelectItem value="cartoon">Cartoon</SelectItem>
-            <SelectItem value="anime">Anime</SelectItem>
-            <SelectItem value="abstract">Abstract</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+
 
       <Button 
         onClick={handleRefine} 

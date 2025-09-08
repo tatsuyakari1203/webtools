@@ -5,7 +5,6 @@ import React, { createContext, useContext, useState, ReactNode } from 'react'
 interface NanoBananaState {
   // Generate tab state
   generatePrompt: string
-  generateStyle: string
   generateImageSize: number[]
   
   // Edit tab state
@@ -13,14 +12,12 @@ interface NanoBananaState {
   editImagePreview: string | null
   editPrompt: string
   editInstruction: string
-  editStyle: string
   
   // Compose tab state
   composeImages: File[]
   composeImagePreviews: string[]
   composePrompt: string
   composeCompositionType: string
-  composeStyle: string
   
   // Style Transfer tab state
   styleContentImage: File | null
@@ -37,9 +34,9 @@ interface NanoBananaState {
 
 interface NanoBananaContextType {
   state: NanoBananaState
-  updateGenerateState: (updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateStyle' | 'generateImageSize'>>) => void
-  updateEditState: (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction' | 'editStyle'>>) => void
-  updateComposeState: (updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType' | 'composeStyle'>>) => void
+  updateGenerateState: (updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateImageSize'>>) => void
+  updateEditState: (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction'>>) => void
+  updateComposeState: (updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType'>>) => void
   updateStyleState: (updates: Partial<Pick<NanoBananaState, 'styleContentImage' | 'styleStyleImage' | 'styleContentImagePreview' | 'styleStyleImagePreview' | 'stylePrompt' | 'styleStrength'>>) => void
   startNewSession: () => void
   setConversationId: (id: string | null) => void
@@ -49,7 +46,6 @@ interface NanoBananaContextType {
 const defaultState: NanoBananaState = {
   // Generate tab state
   generatePrompt: '',
-  generateStyle: 'photorealistic',
   generateImageSize: [1024, 1024],
   
   // Edit tab state
@@ -57,14 +53,12 @@ const defaultState: NanoBananaState = {
   editImagePreview: '',
   editPrompt: '',
   editInstruction: '',
-  editStyle: 'photorealistic',
   
   // Compose tab state
   composeImages: [],
   composeImagePreviews: [],
   composePrompt: '',
   composeCompositionType: 'combine',
-  composeStyle: 'photorealistic',
   
   // Style Transfer tab state
   styleContentImage: null,
@@ -84,15 +78,15 @@ const NanoBananaContext = createContext<NanoBananaContextType | undefined>(undef
 export function NanoBananaProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<NanoBananaState>(defaultState)
   
-  const updateGenerateState = (updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateStyle' | 'generateImageSize'>>) => {
+  const updateGenerateState = (updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateImageSize'>>) => {
     setState(prev => ({ ...prev, ...updates }))
   }
   
-  const updateEditState = (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction' | 'editStyle'>>) => {
+  const updateEditState = (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction'>>) => {
     setState(prev => ({ ...prev, ...updates }))
   }
   
-  const updateComposeState = (updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType' | 'composeStyle'>>) => {
+  const updateComposeState = (updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType'>>) => {
     setState(prev => ({ ...prev, ...updates }))
   }
   

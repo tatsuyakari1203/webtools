@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
     const images = formData.getAll('images') as File[]
     const prompt = formData.get('prompt') as string
     const compositionType = formData.get('composition_type') as string || 'combine'
-    const style = formData.get('style') as string || 'photorealistic'
     const quality = formData.get('quality') as string || 'ultra'
 
     if (!images || images.length < 2 || !prompt) {
@@ -41,15 +40,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Enhance prompt based on style and composition type
-    const stylePrompts = {
-      photorealistic: 'Create a photorealistic composition with natural lighting and realistic details.',
-      artistic: 'Create an artistic composition with creative flair and expressive style.',
-      cartoon: 'Create a cartoon-style composition with bold colors and simplified forms.',
-      anime: 'Create an anime-style composition with characteristic anime aesthetics.',
-      abstract: 'Create an abstract artistic composition with creative visual elements.'
-    }
-
+    // Enhance prompt based on composition type
     const compositionPrompts = {
       collage: 'Create a collage by arranging the images in an artistic layout.',
       blend: 'Seamlessly blend the images together into a unified composition.',
@@ -57,7 +48,7 @@ export async function POST(request: NextRequest) {
       combine: 'Combine the images into a cohesive scene or narrative.'
     }
 
-    const enhancedPrompt = `${stylePrompts[style as keyof typeof stylePrompts] || stylePrompts.photorealistic} ${compositionPrompts[compositionType as keyof typeof compositionPrompts] || compositionPrompts.combine} ${prompt}. Quality: ${quality}.`
+    const enhancedPrompt = `${compositionPrompts[compositionType as keyof typeof compositionPrompts] || compositionPrompts.combine} ${prompt}. Quality: ${quality}.`
 
     // Prepare the content for Gemini
     const content = [

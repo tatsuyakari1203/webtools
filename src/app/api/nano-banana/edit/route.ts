@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
     const image = formData.get('image') as File
     const prompt = formData.get('prompt') as string || ''
     const editInstruction = formData.get('edit_instruction') as string
-    const style = formData.get('style') as string || 'photorealistic'
     const quality = formData.get('quality') as string || 'ultra'
 
     if (!image || !editInstruction) {
@@ -32,16 +31,8 @@ export async function POST(request: NextRequest) {
     const imageBuffer = await image.arrayBuffer()
     const base64Image = Buffer.from(imageBuffer).toString('base64')
 
-    // Enhance prompt based on style
-    const stylePrompts = {
-      photorealistic: 'Create a photorealistic image with natural lighting and realistic details.',
-      artistic: 'Create an artistic interpretation with creative flair and expressive style.',
-      cartoon: 'Create a cartoon-style image with bold colors and simplified forms.',
-      anime: 'Create an anime-style image with characteristic anime aesthetics.',
-      abstract: 'Create an abstract artistic interpretation with creative visual elements.'
-    }
-
-    const enhancedPrompt = `${stylePrompts[style as keyof typeof stylePrompts] || stylePrompts.photorealistic} ${prompt ? `Image description: ${prompt}. ` : ''}Edit instruction: ${editInstruction}. Quality: ${quality}.`
+    // Create simple prompt for editing
+    const enhancedPrompt = `${prompt ? `Image description: ${prompt}. ` : ''}Edit instruction: ${editInstruction}. Quality: ${quality}.`
 
     // Prepare the content for Gemini
     const content = [
