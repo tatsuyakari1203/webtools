@@ -15,7 +15,9 @@
     "logs": "tail -f app.log",
     "lint": "bun run eslint",
     "add-tool": "node scripts/add-tool.js",
-    "tool:add": "node scripts/add-tool.js"
+    "tool:add": "node scripts/add-tool.js",
+    "add-user": "node scripts/add-user.js",
+    "remove-user": "node scripts/remove-user.js"
   },
   "dependencies": {
     "@google/genai": "^1.16.0",
