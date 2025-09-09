@@ -17,64 +17,68 @@ The WebTools Invite System provides secure access control for premium or restric
 
 ### 1. Environment Setup
 
-Copy the example environment file and configure your invite keys:
+Copy `.env.example` to `.env.local` and configure your invite keys:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and set your invite keys:
+Edit `.env.local` and add your invite keys:
 
 ```env
-# Enable invite system
-INVITE_LOG_ENABLED=true
-INVITE_CONSOLE_LOG=true
-INVITE_FILE_LOG=true
-
-# Configure invite keys (JSON format)
-INVITE_KEYS='{"admin": "your-admin-key", "user1": "user1-key"}'
+# Invite system configuration
+INVITE_KEYS=key1,key2,key3
+JWT_SECRET=your-jwt-secret-here
 ```
 
-### 2. Protect a Tool
+### 2. Protect a Tool (Simplified Process)
 
-Update the tool configuration in `src/lib/tools-registry.ts`:
+**That's it!** Just update the tool configuration in `src/lib/tools-registry.ts`:
 
 ```typescript
 {
   id: "your-tool-id",
   name: "Your Tool Name",
-  // ... other properties
-  requiresInvite: true,
-  inviteDescription: "This tool requires special access.",
-  allowedUsers: ["admin", "premium-user"] // Optional: restrict to specific users
+  description: "Tool description",
+  category: "category",
+  icon: YourIcon,
+  path: "/tools/your-tool",
+  componentPath: "@/tools/your-tool/YourTool",
+  requiresInvite: true, // Enable invite protection
+  inviteDescription: "This tool requires special access", // Optional
+  allowedUsers: ["user1", "user2"] // Optional: restrict to specific users
 }
 ```
 
-### 3. Wrap Your Tool Component
+**No additional configuration needed!** The system automatically:
+- Applies invite protection to your tool component
+- Handles authentication and access control
+- Shows the invite form when needed
+- Manages user sessions
 
-Use the `ToolWrapper` component to protect your tool:
+### 3. Create Your Tool Component (No Wrapping Required)
+
+Simply create your tool component as usual:
 
 ```tsx
-import { ToolWrapper } from '@/components/tool-wrapper';
-
-export default function YourToolPage() {
+export default function YourTool() {
   return (
-    <ToolWrapper toolId="your-tool-id">
-      <YourToolComponent />
-    </ToolWrapper>
-  );
+    <div>
+      {/* Your tool content - no wrapping needed! */}
+      <h1>Your Protected Tool</h1>
+      <p>This content is automatically protected by the invite system.</p>
+    </div>
+  )
 }
 ```
 
-Or use the HOC approach:
+**The system automatically handles protection!** No need to:
+- Import ToolWrapper or HOCs
+- Manually wrap your components
+- Configure middleware separately
+- Manage authentication state
 
-```tsx
-import { withInviteProtection } from '@/components/tool-wrapper';
-
-const ProtectedTool = withInviteProtection(YourToolComponent, 'your-tool-id');
-
-export default ProtectedTool;
-```
+Everything is handled automatically based on your `tools-registry.ts` configuration.
 
 ## API Endpoints
 

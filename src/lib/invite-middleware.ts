@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { toolsRegistry } from './tools-registry';
 
 // Types
 interface SessionPayload {
@@ -14,19 +15,23 @@ interface ProtectedTool {
   allowedUsers?: string[]; // Optional: restrict to specific users
 }
 
-// Configuration for protected tools
-const PROTECTED_TOOLS: ProtectedTool[] = [
-  // Add tool IDs that require invite keys
-  // Example: { id: 'advanced-calculator', requiresInvite: true }
-  // Example: { id: 'premium-converter', requiresInvite: true, allowedUsers: ['admin', 'premium-user'] }
-];
+// Get protected tools from tools-registry automatically
+function getProtectedToolsFromRegistry(): ProtectedTool[] {
+  return toolsRegistry
+    .filter(tool => tool.requiresInvite)
+    .map(tool => ({
+      id: tool.id,
+      requiresInvite: true,
+      allowedUsers: tool.allowedUsers
+    }));
+}
 
 // Parse session token
 function parseSessionToken(token: string): SessionPayload | null {
   try {
     const payload = JSON.parse(Buffer.from(token, 'base64').toString());
     return payload as SessionPayload;
-  } catch (_error) {
+  } catch {
     return null;
   }
 }
@@ -39,7 +44,8 @@ function isTokenExpired(timestamp: number): boolean {
 
 // Get tool configuration
 function getToolConfig(toolId: string): ProtectedTool | null {
-  return PROTECTED_TOOLS.find(tool => tool.id === toolId) || null;
+  const protectedTools = getProtectedToolsFromRegistry();
+  return protectedTools.find((tool: ProtectedTool) => tool.id === toolId) || null;
 }
 
 // Check if user has access to specific tool
@@ -136,26 +142,20 @@ export function createUnauthorizedResponse(reason: string): NextResponse {
 }
 
 // Helper function to add tool to protected list
-export function addProtectedTool(toolConfig: ProtectedTool): void {
-  const existingIndex = PROTECTED_TOOLS.findIndex(tool => tool.id === toolConfig.id);
-  if (existingIndex >= 0) {
-    PROTECTED_TOOLS[existingIndex] = toolConfig;
-  } else {
-    PROTECTED_TOOLS.push(toolConfig);
-  }
+export function addProtectedTool(): void {
+  // This function is deprecated - tools should be configured in tools-registry.ts
+  console.warn('addProtectedTool is deprecated. Configure tools in tools-registry.ts instead.');
 }
 
 // Helper function to remove tool from protected list
-export function removeProtectedTool(toolId: string): void {
-  const index = PROTECTED_TOOLS.findIndex(tool => tool.id === toolId);
-  if (index >= 0) {
-    PROTECTED_TOOLS.splice(index, 1);
-  }
+export function removeProtectedTool(): void {
+  // This function is deprecated - tools should be configured in tools-registry.ts
+  console.warn('removeProtectedTool is deprecated. Configure tools in tools-registry.ts instead.');
 }
 
 // Get all protected tools
 export function getProtectedTools(): ProtectedTool[] {
-  return [...PROTECTED_TOOLS];
+  return getProtectedToolsFromRegistry();
 }
 
 // Middleware wrapper for API routes
@@ -163,21 +163,20 @@ export function withInviteProtection(
   handler: (request: NextRequest, context: { params: Record<string, string> }) => Promise<NextResponse>,
   toolId: string
 ) {
-  return async function(request: NextRequest, context: { params: Record<string, string> }): Promise<NextResponse> {
+  return async (request: NextRequest, context: { params: Record<string, string> }) => {
+    const protectedTools = getProtectedToolsFromRegistry();
+    const toolConfig = protectedTools.find((tool: ProtectedTool) => tool.id === toolId);
+    
+    if (!toolConfig?.requiresInvite) {
+      return handler(request, context);
+    }
+
     const accessCheck = await checkInviteAccess(request, toolId);
     
     if (!accessCheck.allowed) {
       return createUnauthorizedResponse(accessCheck.reason || 'Access denied');
     }
 
-    // Add user info to request headers for the handler
-    const modifiedRequest = new NextRequest(request, {
-      headers: {
-        ...request.headers,
-        'x-invite-user': accessCheck.userName || 'unknown'
-      }
-    });
-
-    return handler(modifiedRequest, context);
+    return handler(request, context);
   };
 }

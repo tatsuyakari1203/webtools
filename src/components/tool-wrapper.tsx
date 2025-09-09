@@ -55,7 +55,7 @@ export function ToolWrapper({ toolId, children, className }: ToolWrapperProps) {
   // Show invite form if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="max-w-2xl mx-auto space-y-8 px-4">
+      <div className="max-w-2xl mx-auto space-y-8 px-4 mt-8">
         {/* Protected tool notice */}
         {inviteInfo.requiresInvite && (
           <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20 shadow-sm">

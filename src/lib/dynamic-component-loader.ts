@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic"
 import React from "react"
 import { toolsRegistry } from "./tools-registry"
+import { createProtectedComponent } from "./auto-invite-wrapper"
 
 // Cache for dynamic components to avoid recreating them
 const componentCache = new Map<string, React.ComponentType<{ tool: unknown }>>()
@@ -42,9 +43,9 @@ function getStaticImport(componentPath: string): () => Promise<{ default: React.
 }
 
 /**
- * Dynamically loads a component from the given path
+ * Dynamically loads a component from the given path with automatic invite protection
  * @param componentPath - The path to the component (e.g., "@/tools/calculator/Calculator")
- * @returns A React component that can be rendered
+ * @returns A React component that can be rendered (with invite protection if required)
  */
 export function loadDynamicComponent(componentPath: string): React.ComponentType<{ tool: unknown }> {
   // Check cache first
@@ -52,9 +53,9 @@ export function loadDynamicComponent(componentPath: string): React.ComponentType
     return componentCache.get(componentPath)!
   }
 
-  // Validate that the component path exists in tools registry
-  const toolExists = toolsRegistry.some(tool => tool.componentPath === componentPath)
-  if (!toolExists) {
+  // Find the tool in registry
+  const tool = toolsRegistry.find(tool => tool.componentPath === componentPath)
+  if (!tool) {
     throw new Error(`Component path "${componentPath}" is not registered in tools registry`)
   }
 
@@ -69,8 +70,11 @@ export function loadDynamicComponent(componentPath: string): React.ComponentType
     }
   ) as React.ComponentType<{ tool: unknown }>
 
-  // Cache the component
-  componentCache.set(componentPath, DynamicComponent)
+  // Automatically apply invite protection if required
+  const ProtectedComponent = createProtectedComponent(DynamicComponent, tool.id)
 
-  return DynamicComponent
+  // Cache the protected component
+  componentCache.set(componentPath, ProtectedComponent)
+
+  return ProtectedComponent
 }

@@ -1,7 +1,7 @@
 import { getToolById } from "@/lib/tools-registry"
 import { notFound } from "next/navigation"
 import { ToolStructuredData } from "@/components/StructuredData"
-import { loadDynamicComponent } from "@/lib/dynamic-component-loader"
+import { ClientToolLoader } from "@/components/client-tool-loader"
 import type { Metadata } from "next"
 
 interface ToolPageProps {
@@ -18,9 +18,6 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
   const toolUrl = `https://webtools.example.com/tools/${toolId}`
 
-  // Load component dynamically from componentPath
-  const ToolComponent = loadDynamicComponent(tool.componentPath)
-
   // Extract icon from tool to avoid passing non-serializable objects
   const { icon, ...toolWithoutIcon } = tool
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -29,7 +26,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
   return (
     <>
       <ToolStructuredData tool={toolWithoutIcon} url={toolUrl} />
-      <ToolComponent tool={toolWithoutIcon} />
+      <ClientToolLoader tool={toolWithoutIcon} />
     </>
   )
 }

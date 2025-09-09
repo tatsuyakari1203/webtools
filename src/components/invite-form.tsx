@@ -102,7 +102,7 @@ export function InviteForm({ toolId, toolName, onSuccess, className }: InviteFor
 
   if (isCheckingSession) {
     return (
-      <Card className={cn('w-full max-w-md mx-auto', className)}>
+      <Card className={cn('w-full max-w-md mx-auto mt-8', className)}>
         <CardContent className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -114,7 +114,7 @@ export function InviteForm({ toolId, toolName, onSuccess, className }: InviteFor
   }
 
   return (
-    <Card className={cn('w-full max-w-md mx-auto', className)}>
+    <Card className={cn('w-full max-w-md mx-auto mt-8', className)}>
       <CardHeader className="text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
           <Lock className="h-6 w-6 text-primary" />
