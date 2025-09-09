@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { cookies } from 'next/headers';
-
-interface InviteKey {
-  name: string;
-  key: string;
-}
 
 interface AccessLog {
   name: string;
@@ -163,7 +157,6 @@ export async function POST(request: NextRequest) {
     });
 
     // Set secure cookie for session
-    const cookieStore = cookies();
     response.cookies.set('invite-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -184,7 +177,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Optional: GET endpoint to check current session
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('invite-token')?.value;
@@ -209,7 +202,7 @@ export async function GET(request: NextRequest) {
         name,
         toolId
       });
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json({ authenticated: false, invalid: true });
     }
 

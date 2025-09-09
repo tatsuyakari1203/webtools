@@ -25,6 +25,11 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
   // Generate unique ID for wallpapers
   const generateId = () => `wallpaper_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
+  // Save config to localStorage
+  const saveConfig = useCallback((newConfig: WallpaperConfig) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newConfig))
+  }, [])
+
   // Load configuration from localStorage on mount
   useEffect(() => {
     setIsClient(true)
@@ -73,12 +78,7 @@ export function WallpaperProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(LEGACY_URL_KEY)
       localStorage.removeItem(LEGACY_BLUR_KEY)
     }
-  }, [])
-
-  // Save config to localStorage
-  const saveConfig = useCallback((newConfig: WallpaperConfig) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newConfig))
-  }, [])
+  }, [saveConfig])
 
   // Setup rotation timer
   useEffect(() => {

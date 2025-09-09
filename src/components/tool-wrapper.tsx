@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { InviteForm, InviteSuccess, useInviteAuth } from '@/components/invite-form';
-import { isToolProtected, getToolInviteInfo, getToolById } from '@/lib/tools-registry';
+import { getToolInviteInfo, getToolById } from '@/lib/tools-registry';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -169,7 +169,6 @@ interface ToolAccessStatusProps {
 
 export function ToolAccessStatus({ toolId, className }: ToolAccessStatusProps) {
   const { hasAccess, isChecking, userName, requiresInvite } = useToolAccess(toolId);
-  const tool = getToolById(toolId);
 
   if (!requiresInvite) {
     return null; // Public tool, no status needed

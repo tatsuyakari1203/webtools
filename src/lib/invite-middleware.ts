@@ -26,7 +26,7 @@ function parseSessionToken(token: string): SessionPayload | null {
   try {
     const payload = JSON.parse(Buffer.from(token, 'base64').toString());
     return payload as SessionPayload;
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }
@@ -160,10 +160,10 @@ export function getProtectedTools(): ProtectedTool[] {
 
 // Middleware wrapper for API routes
 export function withInviteProtection(
-  handler: (request: NextRequest, context: any) => Promise<NextResponse>,
+  handler: (request: NextRequest, context: { params: Record<string, string> }) => Promise<NextResponse>,
   toolId: string
 ) {
-  return async function(request: NextRequest, context: any): Promise<NextResponse> {
+  return async function(request: NextRequest, context: { params: Record<string, string> }): Promise<NextResponse> {
     const accessCheck = await checkInviteAccess(request, toolId);
     
     if (!accessCheck.allowed) {

@@ -146,7 +146,7 @@ export const toolsRegistry: Tool[] = [
     icon: Key,
     path: "/tools/demo-protected",
     featured: false,
-    componentPath: "@/app/tools/demo-protected/page",
+    componentPath: "@/tools/demo-protected/DemoProtected",
     requiresInvite: true,
     inviteDescription: "This tool demonstrates secure access control features and protected functionality.",
   },

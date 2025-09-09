@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,12 +30,7 @@ export function InviteForm({ toolId, toolName, onSuccess, className }: InviteFor
   const [showKey, setShowKey] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
-  // Check for existing session on mount
-  useEffect(() => {
-    checkExistingSession();
-  }, [toolId]);
-
-  const checkExistingSession = async () => {
+  const checkExistingSession = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/verify-invite', {
         method: 'GET',
@@ -54,7 +49,12 @@ export function InviteForm({ toolId, toolName, onSuccess, className }: InviteFor
     } finally {
       setIsCheckingSession(false);
     }
-  };
+  }, [toolId, onSuccess]);
+
+  // Check for existing session on mount
+  useEffect(() => {
+    checkExistingSession();
+  }, [checkExistingSession]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,7 +193,7 @@ export function InviteForm({ toolId, toolName, onSuccess, className }: InviteFor
 
         <div className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an invite key?{' '}
+            Don&apos;t have an invite key?{' '}
             <a 
               href="mailto:admin@webtools.com?subject=Invite Key Request&body=I would like to request access to the tool: ${toolName}"
               className="font-medium text-primary hover:underline"

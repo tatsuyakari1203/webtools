@@ -33,7 +33,8 @@ function getStaticImport(componentPath: string): () => Promise<{ default: React.
       return () => import("@/tools/what-is-my-ip")
     case "@/tools/token-generator":
       return () => import("@/tools/token-generator")
-
+    case "@/tools/demo-protected/DemoProtected":
+      return () => import("@/tools/demo-protected/DemoProtected")
 
     default:
       throw new Error(`Unknown component path: ${componentPath}`)

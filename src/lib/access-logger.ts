@@ -16,7 +16,7 @@ interface AccessLog {
     region: string;
   };
   sessionDuration?: number; // in minutes
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface LogStats {
@@ -70,7 +70,7 @@ async function rotateLogsIfNeeded(): Promise<void> {
         const rotatedFile = logFile.replace('.json', `-${timestamp}.json`);
         await fs.rename(logFile, rotatedFile);
       }
-    } catch (error) {
+    } catch (_error) {
       // File doesn't exist, no need to rotate
     }
   } catch (error) {
@@ -109,7 +109,7 @@ export async function logAccess(
   ip: string,
   userAgent: string,
   location?: AccessLog['location'],
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   if (!LOG_CONFIG.enabled) {
     return;
