@@ -38,6 +38,12 @@ function parseSessionToken(token: string): SessionPayload | null {
 
 // Check if token is expired
 function isTokenExpired(timestamp: number): boolean {
+  // Only apply expiration when strict mode is enabled
+  const strictMode = process.env.INVITE_STRICT_MODE === 'true';
+  if (!strictMode) {
+    return false; // Never expire when strict mode is disabled
+  }
+  
   const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
   return Date.now() - timestamp > TWENTY_FOUR_HOURS;
 }

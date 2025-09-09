@@ -190,8 +190,9 @@ export async function GET(_request: NextRequest) {
       const payload = JSON.parse(Buffer.from(token, 'base64').toString());
       const { name, toolId, timestamp } = payload;
 
-      // Check if token is expired (24 hours)
-      const isExpired = Date.now() - timestamp > 24 * 60 * 60 * 1000;
+      // Check if token is expired (24 hours) - only when strict mode is enabled
+      const strictMode = process.env.INVITE_STRICT_MODE === 'true';
+      const isExpired = strictMode && (Date.now() - timestamp > 24 * 60 * 60 * 1000);
       
       if (isExpired) {
         return NextResponse.json({ authenticated: false, expired: true });
