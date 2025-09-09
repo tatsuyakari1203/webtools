@@ -166,6 +166,13 @@ export async function POST(request: NextRequest) {
       domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined
     });
 
+    // Add CORS headers
+    const origin = request.headers.get('origin');
+    if (origin) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+      response.headers.set('Access-Control-Allow-Credentials', 'true');
+    }
+
     return response;
 
   } catch (error) {
@@ -178,7 +185,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Optional: GET endpoint to check current session
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('invite-token')?.value;
@@ -199,11 +206,20 @@ export async function GET(_request: NextRequest) {
         return NextResponse.json({ authenticated: false, expired: true });
       }
 
-      return NextResponse.json({
+      const response = NextResponse.json({
         authenticated: true,
         name,
         toolId
       });
+
+      // Add CORS headers
+      const origin = request.headers.get('origin');
+      if (origin) {
+        response.headers.set('Access-Control-Allow-Origin', origin);
+        response.headers.set('Access-Control-Allow-Credentials', 'true');
+      }
+
+      return response;
     } catch (_error) {
       return NextResponse.json({ authenticated: false, invalid: true });
     }
@@ -215,4 +231,19 @@ export async function GET(_request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': origin || '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
+    },
+  });
 }
