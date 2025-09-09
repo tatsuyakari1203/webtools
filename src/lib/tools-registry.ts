@@ -10,6 +10,9 @@ export interface Tool {
   path: string
   featured?: boolean
   componentPath: string
+  requiresInvite?: boolean
+  allowedUsers?: string[]
+  inviteDescription?: string
 }
 
 export const toolsRegistry: Tool[] = [
@@ -102,6 +105,8 @@ export const toolsRegistry: Tool[] = [
     path: "/tools/nano-banana",
     featured: true,
     componentPath: "@/tools/nano-banana/NanoBanana",
+    requiresInvite: true,
+    inviteDescription: "This AI tool requires special access due to API costs and usage limits.",
   },
   {
     id: "social-crop",
@@ -133,6 +138,18 @@ export const toolsRegistry: Tool[] = [
     featured: false,
     componentPath: "@/tools/token-generator",
   },
+  {
+    id: "demo-protected",
+    name: "Demo Protected Tool",
+    description: "Demonstration of the invite-only system with protected features",
+    category: "Demo",
+    icon: Key,
+    path: "/tools/demo-protected",
+    featured: false,
+    componentPath: "@/app/tools/demo-protected/page",
+    requiresInvite: true,
+    inviteDescription: "This tool demonstrates secure access control features and protected functionality.",
+  },
 
 
 ]
@@ -151,4 +168,35 @@ export const getFeaturedTools = (): Tool[] => {
 
 export const getAllCategories = (): string[] => {
   return Array.from(new Set(toolsRegistry.map(tool => tool.category)))
+}
+
+export const getProtectedTools = (): Tool[] => {
+  return toolsRegistry.filter(tool => tool.requiresInvite)
+}
+
+export const isToolProtected = (toolId: string): boolean => {
+  const tool = getToolById(toolId)
+  return tool?.requiresInvite || false
+}
+
+export const getToolInviteInfo = (toolId: string): { requiresInvite: boolean; description?: string; allowedUsers?: string[] } => {
+  const tool = getToolById(toolId)
+  return {
+    requiresInvite: tool?.requiresInvite || false,
+    description: tool?.inviteDescription,
+    allowedUsers: tool?.allowedUsers
+  }
+}
+
+export const canUserAccessTool = (toolId: string, userName: string): boolean => {
+  const tool = getToolById(toolId)
+  if (!tool?.requiresInvite) {
+    return true // Public tool
+  }
+  
+  if (!tool.allowedUsers) {
+    return true // No user restrictions
+  }
+  
+  return tool.allowedUsers.includes(userName)
 }
