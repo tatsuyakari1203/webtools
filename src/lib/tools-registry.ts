@@ -138,18 +138,7 @@ export const toolsRegistry: Tool[] = [
     featured: false,
     componentPath: "@/tools/token-generator",
   },
-  {
-    id: "demo-protected",
-    name: "Demo Protected Tool",
-    description: "Demonstration of the invite-only system with protected features",
-    category: "Demo",
-    icon: Key,
-    path: "/tools/demo-protected",
-    featured: false,
-    componentPath: "@/tools/demo-protected/DemoProtected",
-    requiresInvite: true,
-    inviteDescription: "This tool demonstrates secure access control features and protected functionality.",
-  },
+
 
 
 ]
