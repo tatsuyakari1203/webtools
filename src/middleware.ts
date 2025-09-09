@@ -45,7 +45,8 @@ const PROTECTED_API_ROUTES = process.env.CORS_PROTECTED_ROUTES
   ? process.env.CORS_PROTECTED_ROUTES.split(',').map(route => route.trim())
   : [
       '/api/askgemini',
-      '/api/ocr/process'
+      '/api/ocr/process',
+      '/api/auth/verify-invite'
     ];
 
 export function middleware(request: NextRequest) {
