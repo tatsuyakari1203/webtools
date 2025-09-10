@@ -1,4 +1,4 @@
-import { Banana, Calculator, Crop, FileCode, FileText, Globe, Image, ImageIcon, Key, ScanText, Timer, Type } from "lucide-react"
+import { Banana, Calculator, Crop, FileCode, FileText, Globe, Image, ImageIcon, Key, Palette, ScanText, Timer, Type } from "lucide-react"
 import React from "react"
 
 export interface Tool {
@@ -141,7 +141,17 @@ export const toolsRegistry: Tool[] = [
 
 
 
-]
+
+  {
+    id: "seedream-editor",
+    name: "Seedream Editor",
+    description: "AI-powered image editing tool using ByteDance Seedream 4.0 for advanced image composition and editing",
+    category: "AI",
+    icon: Palette,
+    path: "/tools/seedream-editor",
+    featured: false,
+    componentPath: "@/tools/seedream-editor/SeedreamEditor",
+  },]
 
 export const getToolById = (id: string): Tool | undefined => {
   return toolsRegistry.find(tool => tool.id === id)
