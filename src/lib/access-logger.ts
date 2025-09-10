@@ -70,7 +70,7 @@ async function rotateLogsIfNeeded(): Promise<void> {
         const rotatedFile = logFile.replace('.json', `-${timestamp}.json`);
         await fs.rename(logFile, rotatedFile);
       }
-    } catch (_error) {
+    } catch {
       // File doesn't exist, no need to rotate
     }
   } catch (error) {

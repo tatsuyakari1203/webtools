@@ -1,5 +1,3 @@
-import type { Tool } from '@/lib/tools-registry';
-
 export interface SeedreamEditorProps {
   tool: unknown;
 }

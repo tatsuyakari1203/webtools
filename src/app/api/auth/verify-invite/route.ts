@@ -220,7 +220,7 @@ export async function GET(request: NextRequest) {
       }
 
       return response;
-    } catch (_error) {
+    } catch {
       return NextResponse.json({ authenticated: false, invalid: true });
     }
 

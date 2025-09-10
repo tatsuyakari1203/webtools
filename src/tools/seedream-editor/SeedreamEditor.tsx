@@ -351,10 +351,10 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
           </div>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
-              {(tool as any)?.name || 'Seedream Editor'}
+              {(tool as { name?: string })?.name || 'Seedream Editor'}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {(tool as any)?.description || 'Edit and enhance images using AI-powered Seedream technology'}
+              {(tool as { description?: string })?.description || 'Edit and enhance images using AI-powered Seedream technology'}
             </p>
           </div>
         </div>

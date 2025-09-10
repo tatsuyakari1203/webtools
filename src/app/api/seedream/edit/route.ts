@@ -51,7 +51,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare the request payload
-    const payload: any = {
+    const payload: {
+      prompt: string;
+      image_size: { width: number; height: number };
+      num_images: number;
+      sync_mode: boolean;
+      seed?: number;
+      image_urls?: string[];
+      images?: string[];
+    } = {
       prompt: body.prompt,
       image_size: body.image_size || { width: 1280, height: 1280 },
       num_images: body.num_images || 1,
