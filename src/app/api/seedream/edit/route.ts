@@ -51,14 +51,29 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare the request payload
-    const payload = {
+    const payload: any = {
       prompt: body.prompt,
-      image_urls: body.images || body.image_urls, // FAL API expects image_urls field
       image_size: body.image_size || { width: 1280, height: 1280 },
       num_images: body.num_images || 1,
       sync_mode: body.sync_mode || false,
       ...(body.seed && { seed: body.seed })
     };
+
+    // Handle images - FAL API expects image_urls field
+    if (body.images && body.images.length > 0) {
+      // For base64 images, we need to convert them to data URLs
+      payload.image_urls = body.images.map(base64 => {
+        // Check if it's already a data URL
+        if (base64.startsWith('data:')) {
+          return base64;
+        }
+        // Convert base64 to data URL
+        return `data:image/png;base64,${base64}`;
+      });
+    } else if (body.image_urls && body.image_urls.length > 0) {
+      // If we have image URLs, use them directly
+      payload.image_urls = body.image_urls;
+    }
 
     // Make request to FAL API
     const response = await fetch('https://fal.run/fal-ai/bytedance/seedream/v4/edit', {
