@@ -149,8 +149,10 @@ export const toolsRegistry: Tool[] = [
     category: "AI",
     icon: Palette,
     path: "/tools/seedream-editor",
-    featured: false,
+    featured: true,
     componentPath: "@/tools/seedream-editor/SeedreamEditor",
+    requiresInvite: true,
+    inviteDescription: "This AI tool requires special access due to API costs and usage limits.",
   },]
 
 export const getToolById = (id: string): Tool | undefined => {
