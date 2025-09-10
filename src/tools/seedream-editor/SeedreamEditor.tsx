@@ -194,17 +194,22 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
         const base64 = await convertToBase64(file);
         const imageUrl = URL.createObjectURL(file);
         
-        // Get image dimensions for the first image to calculate optimal size
-         if (!originalImageSize && newImageUrls.length === 0 && state.imageUrls.length === 0) {
-           const img = new Image();
-           firstImageDimensions = await new Promise<{ width: number; height: number }>((resolve, reject) => {
-             img.onload = () => {
-               resolve({ width: img.width, height: img.height });
-             };
-             img.onerror = reject;
-             img.src = imageUrl;
-           });
-         }
+        // Get image dimensions for each image to calculate optimal size
+        if (sizeMode === 'auto') {
+          const img = new Image();
+          const imageDimensions = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+            img.onload = () => {
+              resolve({ width: img.width, height: img.height });
+            };
+            img.onerror = reject;
+            img.src = imageUrl;
+          });
+          
+          // Use the first image dimensions or update if this is the first image being added
+          if (!firstImageDimensions) {
+            firstImageDimensions = imageDimensions;
+          }
+        }
         
         newImageUrls.push(imageUrl);
         newBase64Images.push(base64);
@@ -215,20 +220,21 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
     }
 
     // Calculate optimal size if we have the first image dimensions and auto mode is selected
-     let newImageSize = state.imageSize;
-     if (firstImageDimensions && sizeMode === 'auto') {
-       newImageSize = calculateOptimalSize(firstImageDimensions.width, firstImageDimensions.height);
-       setOriginalImageSize(firstImageDimensions);
-     }
+    let newImageSize = state.imageSize;
+    if (firstImageDimensions && sizeMode === 'auto') {
+      newImageSize = calculateOptimalSize(firstImageDimensions.width, firstImageDimensions.height);
+      setOriginalImageSize(firstImageDimensions);
+    }
 
-    // Update state with new images
+    // Update state with new images and reset seed
     setState(prev => ({
       ...prev,
       uploadedImages: [...prev.uploadedImages, ...validFiles],
       imageUrls: [...prev.imageUrls, ...newImageUrls],
       base64Images: [...prev.base64Images, ...newBase64Images],
       imageSize: newImageSize,
-      error: null
+      error: null,
+      seed: undefined // Reset seed when new images are added
     }));
 
     toast.success(`Added ${newImageUrls.length} image${newImageUrls.length > 1 ? 's' : ''}`);
@@ -256,7 +262,8 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
         ...prev,
         uploadedImages: newUploadedImages,
         imageUrls: newImageUrls,
-        base64Images: newBase64Images
+        base64Images: newBase64Images,
+        seed: undefined // Reset seed when images are removed
       };
     });
   };
@@ -328,8 +335,13 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
       isProcessing: false,
       error: null,
       imageSize: { width: 1280, height: 1280 },
-      numImages: 1
+      numImages: 1,
+      seed: undefined
     });
+    
+    // Reset other states
+    setSizeMode('auto');
+    setOriginalImageSize(null);
   };
 
   const downloadImage = (url: string, index: number) => {
@@ -435,12 +447,20 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
+                        // Revoke all object URLs
+                        state.imageUrls.forEach(url => URL.revokeObjectURL(url));
+                        
                         setState(prev => ({
                           ...prev,
                           imageUrls: [],
                           base64Images: [],
-                          uploadedImages: []
+                          uploadedImages: [],
+                          seed: undefined // Reset seed when clearing all images
                         }));
+                        
+                        // Reset size mode and original image size
+                        setSizeMode('auto');
+                        setOriginalImageSize(null);
                       }}
                       className="h-8 text-xs"
                     >
