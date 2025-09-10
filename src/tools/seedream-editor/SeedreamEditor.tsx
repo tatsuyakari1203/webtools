@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Palette, Upload, X, Download, Loader2, Settings, Wand2, Image as ImageIcon, Sparkles } from 'lucide-react';
 import type { SeedreamEditorProps, SeedreamEditorState, SeedreamRequest, SeedreamResponse } from './types';
@@ -85,6 +86,7 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
   const [sizeMode, setSizeMode] = useState<string>('auto');
   const [originalImageSize, setOriginalImageSize] = useState<{ width: number; height: number } | null>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [includeImageContext, setIncludeImageContext] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -121,7 +123,10 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
         },
         body: JSON.stringify({
           prompt: state.prompt,
-          category: 'image-editing'
+          category: 'image-editing',
+          ...(includeImageContext && state.base64Images.length > 0 && {
+            image: state.base64Images[0]
+          })
         })
       });
 
@@ -509,6 +514,17 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
                   onChange={(e) => setState(prev => ({ ...prev, prompt: e.target.value }))}
                   className="min-h-[120px] resize-none"
                 />
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="include-image-context"
+                    checked={includeImageContext}
+                    onCheckedChange={(checked) => setIncludeImageContext(checked as boolean)}
+                    disabled={state.base64Images.length === 0}
+                  />
+                  <Label htmlFor="include-image-context" className="text-xs text-muted-foreground cursor-pointer">
+                    Include image context for more accurate enhancement {state.base64Images.length === 0 && '(upload images first)'}
+                  </Label>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Be specific about the changes you want to make. Use the Enhance button to improve your prompt with AI.
                 </p>

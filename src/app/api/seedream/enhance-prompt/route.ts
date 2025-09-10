@@ -1,23 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 
-function createSeedreamPromptEnhancement(originalPrompt: string, category: string): string {
+function createSeedreamPromptEnhancement(originalPrompt: string, category: string, imageContext?: string): string {
   // Chỉ hỗ trợ image editing
-  const basePrompt = `Enhance this image editing instruction to be more specific and detailed: "${originalPrompt}"
-
-Transform the instruction into a comprehensive editing guide that includes:
-- Specific adjustment values and techniques
-- Target areas or elements to modify
-- Visual effects and enhancements to apply
-- Color, lighting, and composition improvements
-- Professional editing workflow steps
-
-Examples:
-• "Make it brighter" → "Increase overall exposure by +0.7 stops, lift shadows by 25%, enhance highlights in the sky area while preserving detail, boost vibrance by 15% for warmer tones, apply subtle HDR effect to balance contrast"
-• "Add vintage effect" → "Apply warm color grading with lifted blacks and faded highlights, add subtle film grain texture, reduce saturation by 10%, apply vignette effect with 20% opacity, enhance golden hour tones in highlights"
-• "Improve colors" → "Enhance color vibrancy using selective color adjustments, boost blues in sky by +20%, warm up skin tones with +5 temperature, increase saturation in greens by 15%, apply color balance correction for natural look"
-
-Provide the enhanced editing instruction:`;
+  let basePrompt = `You are an expert image editing assistant. Your task is to enhance and refine user editing instructions following Seedream 4.0 guidelines for clear, concise, and natural language commands.`;
+  
+  if (imageContext) {
+    basePrompt += `\n\nImage analysis: ${imageContext}`;
+  }
+  
+  basePrompt += `\n\nUser's editing instruction: "${originalPrompt}"`;
+  
+  basePrompt += `\n\nPlease enhance this instruction by:
+1. Using clear, natural language descriptions (avoid technical jargon and specific numerical values)
+2. Focusing on the desired visual outcome rather than technical steps
+3. Keeping instructions concise and unambiguous
+4. Describing transformations in simple, actionable terms
+5. Avoiding overly detailed technical specifications that may confuse the AI model`;
+  
+  basePrompt += `\n\nExamples of good enhanced commands:
+- "Make the image warmer and more golden, like sunset lighting"
+- "Add a vintage film look with slightly faded colors"
+- "Brighten the subject's eyes and add soft lighting around them"
+- "Convert to black and white but keep the red elements in color"
+- "Make the colors more vibrant and the contrast stronger"
+- "Add a dreamy, soft focus effect to the background"`;
+  
+  basePrompt += `\n\nProvide the enhanced editing instruction as a natural paragraph (not markdown format):`;
 
   return basePrompt;
 }
@@ -34,7 +43,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { prompt, category = 'text-to-image' } = body
+    const { prompt, category = 'image-editing', image } = body
 
     if (!prompt || !prompt.trim()) {
       return NextResponse.json(
@@ -44,8 +53,48 @@ export async function POST(request: NextRequest) {
     }
 
     const genAI = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
+    
+    let imageContext = undefined
+    
+    // Analyze image if provided
+    if (image) {
+      try {
+        const visionResult = await genAI.models.generateContent({
+          model: 'models/gemini-1.5-flash',
+          contents: [{
+            parts: [
+              {
+                text: 'Analyze this image and describe its content, including: objects, people, colors, lighting, composition, style, and any notable visual elements. Be specific and detailed for image editing context.'
+              },
+              {
+                inlineData: {
+                  mimeType: 'image/jpeg',
+                  data: image
+                }
+              }
+            ]
+          }]
+        })
+        
+        const visionCandidates = visionResult.candidates
+        if (visionCandidates && visionCandidates.length > 0) {
+          const visionParts = visionCandidates[0].content?.parts
+          if (visionParts) {
+            imageContext = ''
+            for (const part of visionParts) {
+              if (part.text) {
+                imageContext += part.text
+              }
+            }
+          }
+        }
+      } catch (visionError) {
+        console.error('Vision API error:', visionError)
+        // Continue without image context if vision fails
+      }
+    }
 
-    const enhancementPrompt = createSeedreamPromptEnhancement(prompt, category)
+    const enhancementPrompt = createSeedreamPromptEnhancement(prompt, category, imageContext)
 
     const result = await genAI.models.generateContent({
       model: 'models/gemini-1.5-flash',
