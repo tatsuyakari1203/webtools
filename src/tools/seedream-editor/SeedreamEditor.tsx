@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Palette, Upload, Download, Loader2, Settings as SettingsIcon, Wand2, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Upload, Download, Loader2, Settings as SettingsIcon, Wand2, Image as ImageIcon, Sparkles } from 'lucide-react';
 import ImageUpload from './components/ImageUpload';
 import EditInstructions from './components/EditInstructions';
 import SettingsComponent from './components/Settings';
@@ -264,23 +264,6 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
 
   return (
     <div className="container mx-auto py-6 px-4 max-w-7xl">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-            <Palette className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {(tool as { name?: string })?.name || 'Seedream Editor'}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {(tool as { description?: string })?.description || 'Edit and enhance images using AI-powered Seedream technology'}
-            </p>
-          </div>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column - Controls */}
         <div className="space-y-6">
