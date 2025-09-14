@@ -1,18 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Upload, Download, Loader2, Settings as SettingsIcon, Wand2, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Loader2, Wand2 } from 'lucide-react';
 import ImageUpload from './components/ImageUpload';
 import EditInstructions from './components/EditInstructions';
 import SettingsComponent from './components/Settings';
