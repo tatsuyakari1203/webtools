@@ -12,65 +12,14 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Palette, Upload, Download, Loader2, Settings, Wand2, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Palette, Upload, Download, Loader2, Settings as SettingsIcon, Wand2, Image as ImageIcon, Sparkles } from 'lucide-react';
 import ImageUpload from './components/ImageUpload';
 import EditInstructions from './components/EditInstructions';
+import SettingsComponent from './components/Settings';
+import { calculateOptimalSize } from './components/Settings';
 import type { SeedreamEditorProps, SeedreamEditorState, SeedreamRequest, SeedreamResponse } from './types';
 
-// Preset sizes for common use cases
-const PRESET_SIZES = {
-  'auto': { width: 0, height: 0, label: 'Auto (Keep Original Ratio)' },
-  'square': { width: 1280, height: 1280, label: 'Square (1:1)' },
-  'portrait': { width: 1024, height: 1536, label: 'Portrait (2:3)' },
-  'landscape': { width: 1536, height: 1024, label: 'Landscape (3:2)' },
-  'wide': { width: 1792, height: 1024, label: 'Wide (16:9)' },
-  'ultrawide': { width: 2048, height: 1152, label: 'Ultra Wide (16:8)' }
-};
-
-// Calculate optimal size while maintaining aspect ratio and staying within limits
-const calculateOptimalSize = (originalWidth: number, originalHeight: number) => {
-  const maxSize = 4096;
-  const minSize = 1024;
-  
-  // Calculate aspect ratio
-  const aspectRatio = originalWidth / originalHeight;
-  
-  let width, height;
-  
-  if (aspectRatio >= 1) {
-    // Landscape or square
-    width = Math.min(maxSize, Math.max(minSize, originalWidth));
-    height = Math.round(width / aspectRatio);
-    
-    // Ensure height is within bounds
-    if (height > maxSize) {
-      height = maxSize;
-      width = Math.round(height * aspectRatio);
-    } else if (height < minSize) {
-      height = minSize;
-      width = Math.round(height * aspectRatio);
-    }
-  } else {
-    // Portrait
-    height = Math.min(maxSize, Math.max(minSize, originalHeight));
-    width = Math.round(height * aspectRatio);
-    
-    // Ensure width is within bounds
-    if (width > maxSize) {
-      width = maxSize;
-      height = Math.round(width / aspectRatio);
-    } else if (width < minSize) {
-      width = minSize;
-      height = Math.round(width / aspectRatio);
-    }
-  }
-  
-  // Round to nearest multiple of 64 for better compatibility
-  width = Math.round(width / 64) * 64;
-  height = Math.round(height / 64) * 64;
-  
-  return { width, height };
-};
+// Constants and utility functions moved to Settings.tsx component
 
 export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
   const [state, setState] = useState<SeedreamEditorState>({
@@ -85,27 +34,12 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
     numImages: 1
   });
   
-  const [sizeMode, setSizeMode] = useState<string>('auto');
+  const [sizeMode, setSizeMode] = useState<'auto' | 'square' | 'portrait' | 'landscape' | 'wide' | 'ultrawide' | 'custom'>('auto');
   const [originalImageSize, setOriginalImageSize] = useState<{ width: number; height: number } | null>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [includeImageContext, setIncludeImageContext] = useState(false);
 
-  // Handle size mode change
-  const handleSizeModeChange = (newMode: string) => {
-    setSizeMode(newMode);
-    
-    if (newMode === 'auto' && originalImageSize) {
-      // Recalculate optimal size based on original image
-      const optimalSize = calculateOptimalSize(originalImageSize.width, originalImageSize.height);
-      setState(prev => ({ ...prev, imageSize: optimalSize }));
-    } else if (newMode !== 'auto' && newMode !== 'custom') {
-      // Use preset size
-      const presetSize = PRESET_SIZES[newMode as keyof typeof PRESET_SIZES];
-      if (presetSize && presetSize.width > 0) {
-        setState(prev => ({ ...prev, imageSize: { width: presetSize.width, height: presetSize.height } }));
-      }
-    }
-  };
+  // handleSizeModeChange moved to Settings.tsx component
 
   // Handle prompt enhancement
   const handleEnhancePrompt = async () => {
@@ -364,13 +298,16 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
               // Handle image size calculation for the first image if in auto mode
               if (newImages.length > 0 && sizeMode === 'auto' && newImages.length > state.imageUrls.length) {
                 const img = new Image();
-                img.onload = () => {
-                  const firstImageDimensions = { width: img.width, height: img.height };
-                  const newImageSize = calculateOptimalSize(firstImageDimensions.width, firstImageDimensions.height);
-                  setOriginalImageSize(firstImageDimensions);
-                  setState(prev => ({ ...prev, imageSize: newImageSize }));
-                };
-                img.src = newImages[newImages.length - 1];
+                  img.onload = () => {
+                    const dimensions = { width: img.width, height: img.height };
+                    // Import the function from Settings component
+                    import('./components/Settings').then(module => {
+                      const optimalSize = module.calculateOptimalSize(dimensions.width, dimensions.height);
+                      setOriginalImageSize(dimensions);
+                      setState(prev => ({ ...prev, imageSize: optimalSize }));
+                    });
+                  };
+                  img.src = newImages[newImages.length - 1];
               }
               
               // Reset size mode if all images are removed
@@ -394,112 +331,17 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
           />
 
           {/* Settings */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Image Size Section */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium text-foreground/90">
-                  Image Size
-                </Label>
-                <div className="space-y-3">
-                  <Select value={sizeMode} onValueChange={handleSizeModeChange}>
-                    <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Select size preset" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(PRESET_SIZES).map(([key, preset]) => (
-                        <SelectItem key={key} value={key}>
-                          {preset.label}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="custom">Custom Size</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  {(sizeMode === 'custom' || sizeMode === 'auto') && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="width" className="text-xs text-muted-foreground font-medium">Width</Label>
-                        <Input
-                          id="width"
-                          type="number"
-                          min="1024"
-                          max="4096"
-                          step="64"
-                          value={state.imageSize.width}
-                          onChange={(e) => {
-                            setSizeMode('custom');
-                            setState(prev => ({
-                              ...prev,
-                              imageSize: { ...prev.imageSize, width: parseInt(e.target.value) || 1280 }
-                            }));
-                          }}
-                          disabled={sizeMode === 'auto'}
-                          className="h-9"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="height" className="text-xs text-muted-foreground font-medium">Height</Label>
-                        <Input
-                          id="height"
-                          type="number"
-                          min="1024"
-                          max="4096"
-                          step="64"
-                          value={state.imageSize.height}
-                          onChange={(e) => {
-                            setSizeMode('custom');
-                            setState(prev => ({
-                              ...prev,
-                              imageSize: { ...prev.imageSize, height: parseInt(e.target.value) || 1280 }
-                            }));
-                          }}
-                          disabled={sizeMode === 'auto'}
-                          className="h-9"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {sizeMode === 'auto' && originalImageSize && (
-                    <div className="text-xs text-muted-foreground bg-muted/30 rounded-md px-3 py-2">
-                      <span className="font-medium">Auto-optimized:</span> {originalImageSize.width}×{originalImageSize.height} → {state.imageSize.width}×{state.imageSize.height}
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Number of Results Section */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium text-foreground/90">
-                  Number of Results
-                </Label>
-                <div className="w-32">
-                  <Input
-                    id="numImages"
-                    type="number"
-                    min="1"
-                    max="4"
-                    value={state.numImages}
-                    onChange={(e) => setState(prev => ({ ...prev, numImages: parseInt(e.target.value) || 1 }))}
-                    className="h-9"
-                  />
-                </div>
-              </div>
-              {state.seed && (
-                <div className="space-y-2">
-                  <Label>Seed (for reproducibility)</Label>
-                  <Badge variant="secondary">{state.seed}</Badge>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <SettingsComponent 
+            imageSize={state.imageSize}
+            onImageSizeChange={(newSize: { width: number; height: number }) => setState(prev => ({ ...prev, imageSize: newSize }))}
+            sizeMode={sizeMode}
+            onSizeModeChange={setSizeMode}
+            numImages={state.numImages}
+            onNumImagesChange={(num: number) => setState(prev => ({ ...prev, numImages: num }))}
+            seed={state.seed}
+            originalImageSize={originalImageSize}
+            disabled={state.isProcessing}
+          />
 
           {/* Error Display */}
           {state.error && (
