@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,8 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Palette, Upload, X, Download, Loader2, Settings, Wand2, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Palette, Upload, Download, Loader2, Settings, Wand2, Image as ImageIcon, Sparkles } from 'lucide-react';
+import ImageUpload from './components/ImageUpload';
 import type { SeedreamEditorProps, SeedreamEditorState, SeedreamRequest, SeedreamResponse } from './types';
 
 // Preset sizes for common use cases
@@ -87,8 +88,6 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
   const [originalImageSize, setOriginalImageSize] = useState<{ width: number; height: number } | null>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [includeImageContext, setIncludeImageContext] = useState(false);
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle size mode change
   const handleSizeModeChange = (newMode: string) => {
@@ -240,33 +239,7 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
     toast.success(`Added ${newImageUrls.length} image${newImageUrls.length > 1 ? 's' : ''}`);
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    await processFiles(files);
-  };
 
-  const removeImage = (index: number) => {
-    setState(prev => {
-      const newUploadedImages = [...prev.uploadedImages];
-      const newImageUrls = [...prev.imageUrls];
-      const newBase64Images = [...(prev.base64Images || [])];
-      
-      // Revoke the object URL to free memory
-      URL.revokeObjectURL(newImageUrls[index]);
-      
-      newUploadedImages.splice(index, 1);
-      newImageUrls.splice(index, 1);
-      newBase64Images.splice(index, 1);
-      
-      return {
-        ...prev,
-        uploadedImages: newUploadedImages,
-        imageUrls: newImageUrls,
-        base64Images: newBase64Images,
-        seed: undefined // Reset seed when images are removed
-      };
-    });
-  };
 
   const handleProcess = async () => {
     if (!state.prompt.trim()) {
@@ -376,122 +349,37 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
         {/* Left Column - Controls */}
         <div className="space-y-6">
           {/* Image Upload Section */}
-           <Card>
-             <CardHeader className="pb-3">
-               <CardTitle className="text-base font-medium">Upload Images</CardTitle>
-               <CardDescription>
-                 Upload up to 10 images for AI-powered editing
-               </CardDescription>
-             </CardHeader>
-             <CardContent className="space-y-4">
-               <div 
-                 className="relative border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center transition-colors hover:border-muted-foreground/50 hover:bg-muted/25"
-                 onDragOver={(e) => {
-                   e.preventDefault();
-                   e.currentTarget.classList.add('border-primary', 'bg-primary/5');
-                 }}
-                 onDragLeave={(e) => {
-                   e.preventDefault();
-                   e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
-                 }}
-                 onDrop={async (e) => {
-                   e.preventDefault();
-                   e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
-                   const files = Array.from(e.dataTransfer.files);
-                   if (files.length > 0) {
-                     await processFiles(files);
-                   }
-                 }}
-               >
-                 <input
-                   ref={fileInputRef}
-                   type="file"
-                   multiple
-                   accept="image/*"
-                   onChange={handleImageUpload}
-                   className="hidden"
-                 />
-                 <div className="flex flex-col items-center gap-2">
-                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
-                     <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                   </div>
-                   <div className="space-y-1">
-                     <p className="text-sm font-medium">
-                       Drag and drop images here
-                     </p>
-                     <p className="text-xs text-muted-foreground">
-                       or click to browse files
-                     </p>
-                   </div>
-                   <Button
-                     type="button"
-                     variant="outline"
-                     size="sm"
-                     onClick={() => fileInputRef.current?.click()}
-                     className="mt-2"
-                   >
-                     <Upload className="h-4 w-4 mr-2" />
-                     Browse Files
-                   </Button>
-                 </div>
-               </div>
-
-              {/* Image Preview Grid */}
-              {state.imageUrls.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">
-                      Uploaded Images ({state.imageUrls.length}/10)
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        // Revoke all object URLs
-                        state.imageUrls.forEach(url => URL.revokeObjectURL(url));
-                        
-                        setState(prev => ({
-                          ...prev,
-                          imageUrls: [],
-                          base64Images: [],
-                          uploadedImages: [],
-                          seed: undefined // Reset seed when clearing all images
-                        }));
-                        
-                        // Reset size mode and original image size
-                        setSizeMode('auto');
-                        setOriginalImageSize(null);
-                      }}
-                      className="h-8 text-xs"
-                    >
-                      Clear All
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {state.imageUrls.map((url, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-square overflow-hidden rounded-lg border bg-muted">
-                          <img
-                            src={url}
-                            alt={`Uploaded ${index + 1}`}
-                            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                          />
-                        </div>
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-                          onClick={() => removeImage(index)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ImageUpload 
+            images={state.imageUrls}
+            onImagesChange={(newImages, newBase64Images, newUploadedImages) => {
+              setState(prev => ({
+                ...prev,
+                imageUrls: newImages,
+                base64Images: newBase64Images,
+                uploadedImages: newUploadedImages,
+                seed: undefined // Reset seed when images change
+              }));
+              
+              // Handle image size calculation for the first image if in auto mode
+              if (newImages.length > 0 && sizeMode === 'auto' && newImages.length > state.imageUrls.length) {
+                const img = new Image();
+                img.onload = () => {
+                  const firstImageDimensions = { width: img.width, height: img.height };
+                  const newImageSize = calculateOptimalSize(firstImageDimensions.width, firstImageDimensions.height);
+                  setOriginalImageSize(firstImageDimensions);
+                  setState(prev => ({ ...prev, imageSize: newImageSize }));
+                };
+                img.src = newImages[newImages.length - 1];
+              }
+              
+              // Reset size mode if all images are removed
+              if (newImages.length === 0) {
+                setSizeMode('auto');
+                setOriginalImageSize(null);
+              }
+            }}
+            processFiles={processFiles}
+          />
 
           {/* Prompt Input */}
           <Card>
