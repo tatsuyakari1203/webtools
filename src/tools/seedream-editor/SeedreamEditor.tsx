@@ -17,6 +17,7 @@ import ImageUpload from './components/ImageUpload';
 import EditInstructions from './components/EditInstructions';
 import SettingsComponent from './components/Settings';
 import { calculateOptimalSize } from './components/Settings';
+import Preview from './components/Preview';
 import type { SeedreamEditorProps, SeedreamEditorState, SeedreamRequest, SeedreamResponse } from './types';
 
 // Constants and utility functions moved to Settings.tsx component
@@ -389,80 +390,10 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
         </div>
 
         {/* Right Column - Preview */}
-        <Card className="h-fit">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium">Preview</CardTitle>
-            <CardDescription>
-              Original and edited images will appear here
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Original Images Preview */}
-            {state.imageUrls.length > 0 && (
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium mb-3">Original Images</h4>
-                  <div className="space-y-3">
-                    {state.imageUrls.map((url, index) => (
-                      <div key={index} className="overflow-hidden rounded-lg border bg-muted">
-                        <img
-                          src={url}
-                          alt={`Original ${index + 1}`}
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Results Preview */}
-            {state.resultImages.length > 0 && (
-              <div className="space-y-4 mt-6">
-                <Separator />
-                <h4 className="text-sm font-medium mb-3">Edited Results</h4>
-                <div className="space-y-4">
-                  {state.resultImages.map((imageUrl, index) => (
-                    <div key={index} className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">Result {index + 1}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => downloadImage(imageUrl, index)}
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-                      <div className="overflow-hidden rounded-lg border bg-muted">
-                        <img
-                          src={imageUrl}
-                          alt={`Result ${index + 1}`}
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {state.imageUrls.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted mb-4">
-                  <Upload className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="text-sm font-medium mb-1">No images uploaded yet</h3>
-                <p className="text-xs text-muted-foreground">
-                  Upload images and add edit instructions to get started
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <Preview 
+          resultImages={state.resultImages}
+          onDownload={downloadImage}
+        />
       </div>
     </div>
   );
