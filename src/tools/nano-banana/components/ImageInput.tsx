@@ -18,43 +18,31 @@ interface ImageInputProps {
 
 }
 
-// Utility function to resize image
-const resizeImage = (file: File, maxWidth: number = 1024, maxHeight: number = 1024, quality: number = 0.8): Promise<File> => {
+// Utility function to compress image without resizing
+const compressImage = (file: File, quality: number = 0.8): Promise<File> => {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')!
     const img = new Image()
     
     img.onload = () => {
-      // Calculate new dimensions
-      let { width, height } = img
-      
-      if (width > height) {
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width
-          width = maxWidth
-        }
-      } else {
-        if (height > maxHeight) {
-          width = (width * maxHeight) / height
-          height = maxHeight
-        }
-      }
+      // Keep original dimensions
+      const { width, height } = img
       
       canvas.width = width
       canvas.height = height
       
-      // Draw and compress
+      // Draw at original size and compress
       ctx.drawImage(img, 0, 0, width, height)
       
       canvas.toBlob(
         (blob) => {
           if (blob) {
-            const resizedFile = new File([blob], file.name, {
+            const compressedFile = new File([blob], file.name, {
               type: 'image/jpeg',
               lastModified: Date.now()
             })
-            resolve(resizedFile)
+            resolve(compressedFile)
           } else {
             resolve(file)
           }
@@ -66,6 +54,11 @@ const resizeImage = (file: File, maxWidth: number = 1024, maxHeight: number = 10
     
     img.src = URL.createObjectURL(file)
   })
+}
+
+// Legacy resize function (kept for reference but not used)
+const resizeImage = (file: File, maxWidth: number = 1024, maxHeight: number = 1024, quality: number = 0.8): Promise<File> => {
+  return compressImage(file, quality)
 }
 
 export const ImageInput: React.FC<ImageInputProps> = ({
@@ -90,14 +83,14 @@ export const ImageInput: React.FC<ImageInputProps> = ({
 
     setIsProcessing(true)
     try {
-      // Resize image before processing
-      const resizedFile = await resizeImage(file)
+      // Compress image before processing (maintain original size)
+      const compressedFile = await compressImage(file)
       
       // Create preview
-      const previewUrl = URL.createObjectURL(resizedFile)
+      const previewUrl = URL.createObjectURL(compressedFile)
       onPreviewChange?.(previewUrl)
       
-      return resizedFile
+      return compressedFile
     } catch (error) {
       console.error('Error processing image:', error)
       toast.error('Error processing image')
@@ -209,7 +202,7 @@ export const ImageInput: React.FC<ImageInputProps> = ({
                 {isProcessing ? 'Processing image...' : 'Drop image here or click to browse'}
               </p>
               <p className="text-xs text-muted-foreground">
-                Supports JPG, PNG, GIF, WebP. Images will be automatically resized for optimal processing.
+                Supports JPG, PNG, GIF, WebP. Images will be compressed while maintaining original dimensions.
               </p>
             </div>
           </div>

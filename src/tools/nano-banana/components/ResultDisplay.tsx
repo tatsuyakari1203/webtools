@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useEffect, useRef } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -38,7 +38,6 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1)
   const [showBeforeAfter, setShowBeforeAfter] = useState(false)
   const [showOriginal, setShowOriginal] = useState(false)
-  const originalImageSizeRef = useRef<{ width: number, height: number } | null>(null)
 
   // No localStorage - images only stored in memory during session
 
@@ -81,53 +80,6 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
     }
   }
 
-  // Function to resize image to match original dimensions
-  const resizeImage = async (imageUrl: string): Promise<string | null> => {
-    if (!originalImageSizeRef.current) return null
-    
-    try {
-      // Get the image data
-      let response
-      if (imageUrl.startsWith('blob:') || imageUrl.startsWith('http')) {
-        response = await fetch(imageUrl)
-      } else if (imageUrl.startsWith('data:')) {
-        // For data URLs, we can use them directly
-        response = await fetch(imageUrl)
-      } else {
-        return null
-      }
-      
-      const blob = await response.blob()
-      
-      return new Promise((resolve) => {
-        // Create an image element to load the blob
-        const img = new Image()
-        img.onload = () => {
-          // Create a canvas with the original dimensions
-          const canvas = document.createElement('canvas')
-          const { width, height } = originalImageSizeRef.current!
-          canvas.width = width
-          canvas.height = height
-          
-          // Draw the image resized to the original dimensions
-          const ctx = canvas.getContext('2d')
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height)
-            // Convert canvas to data URL
-            const resizedDataUrl = canvas.toDataURL('image/png')
-            resolve(resizedDataUrl)
-          } else {
-            resolve(null)
-          }
-        }
-        img.src = URL.createObjectURL(blob)
-      })
-    } catch (error) {
-      console.error('Error resizing image:', error)
-      return null
-    }
-  }
-
   // Add image to history when a new image is generated
   const addToHistory = useCallback((newImage: string, prompt: string) => {
     const newItem: ImageHistoryItem = {
@@ -149,50 +101,17 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   // Add current image to history when it changes (for first time generation)
   useEffect(() => {
     if (image && imageHistory.length === 0) {
-      // Store original image size when uploading in edit tab
-      if (state.editImage && state.editImagePreview && !originalImageSizeRef.current) {
-        const img = new Image()
-        img.onload = () => {
-          originalImageSizeRef.current = {
-            width: img.width,
-            height: img.height
-          }
-        }
-        img.src = state.editImagePreview
-      }
-      
-      // Process image if needed
-      if (state.editMaintainOriginalSize && originalImageSizeRef.current) {
-        resizeImage(image).then(resizedImage => {
-          if (resizedImage) {
-            addToHistory(resizedImage, 'Initial generation')
-          } else {
-            addToHistory(image, 'Initial generation')
-          }
-        })
-      } else {
-        // This is the first image, add it to history
-        addToHistory(image, 'Initial generation')
-      }
+      // This is the first image, add it to history
+      addToHistory(image, 'Initial generation')
     } else if (image && imageHistory.length > 0 && currentHistoryIndex >= 0) {
       // Check if current image is different from the one in history
       const currentHistoryImage = imageHistory[currentHistoryIndex]?.image
       if (currentHistoryImage !== image) {
         // Image changed externally (e.g., from other tabs), add to history
-        if (state.editMaintainOriginalSize && originalImageSizeRef.current) {
-          resizeImage(image).then(resizedImage => {
-            if (resizedImage) {
-              addToHistory(resizedImage, 'Generated image')
-            } else {
-              addToHistory(image, 'Generated image')
-            }
-          })
-        } else {
-          addToHistory(image, 'Generated image')
-        }
+        addToHistory(image, 'Generated image')
       }
     }
-  }, [image, imageHistory, currentHistoryIndex, addToHistory, state.editImage, state.editImagePreview, state.editMaintainOriginalSize])
+  }, [image, imageHistory, currentHistoryIndex, addToHistory])
 
   // Handle refine functionality
   const handleRefine = async () => {

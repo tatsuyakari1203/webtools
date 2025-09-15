@@ -17,43 +17,31 @@ interface MultiImageInputProps {
   className?: string
 }
 
-// Utility function to resize image
-const resizeImage = (file: File, maxWidth: number = 1024, maxHeight: number = 1024, quality: number = 0.8): Promise<File> => {
+// Utility function to compress image without resizing
+const compressImage = (file: File, quality: number = 0.8): Promise<File> => {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')!
     const img = new Image()
     
     img.onload = () => {
-      // Calculate new dimensions
-      let { width, height } = img
-      
-      if (width > height) {
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width
-          width = maxWidth
-        }
-      } else {
-        if (height > maxHeight) {
-          width = (width * maxHeight) / height
-          height = maxHeight
-        }
-      }
+      // Keep original dimensions
+      const { width, height } = img
       
       canvas.width = width
       canvas.height = height
       
-      // Draw and compress
+      // Draw at original size and compress
       ctx.drawImage(img, 0, 0, width, height)
       
       canvas.toBlob(
         (blob) => {
           if (blob) {
-            const resizedFile = new File([blob], file.name, {
+            const compressedFile = new File([blob], file.name, {
               type: 'image/jpeg',
               lastModified: Date.now()
             })
-            resolve(resizedFile)
+            resolve(compressedFile)
           } else {
             resolve(file)
           }
@@ -65,6 +53,11 @@ const resizeImage = (file: File, maxWidth: number = 1024, maxHeight: number = 10
     
     img.src = URL.createObjectURL(file)
   })
+}
+
+// Legacy resize function (kept for reference but not used)
+const resizeImage = (file: File, maxWidth: number = 1024, maxHeight: number = 1024, quality: number = 0.8): Promise<File> => {
+  return compressImage(file, quality)
 }
 
 export const MultiImageInput: React.FC<MultiImageInputProps> = ({
@@ -101,10 +94,10 @@ export const MultiImageInput: React.FC<MultiImageInputProps> = ({
       const newPreviews: string[] = []
       
       for (const file of imageFiles) {
-        const resizedFile = await resizeImage(file)
-        const previewUrl = URL.createObjectURL(resizedFile)
+        const compressedFile = await compressImage(file)
+        const previewUrl = URL.createObjectURL(compressedFile)
         
-        processedFiles.push(resizedFile)
+        processedFiles.push(compressedFile)
         newPreviews.push(previewUrl)
       }
       
@@ -248,7 +241,7 @@ export const MultiImageInput: React.FC<MultiImageInputProps> = ({
               <p className="text-xs text-muted-foreground">
                 {previews.length > 0 
                   ? `You can add ${maxFiles - values.length} more image(s)` 
-                  : `Select up to ${maxFiles} images. Supports JPG, PNG, GIF, WebP.`
+                  : `Select up to ${maxFiles} images. Supports JPG, PNG, GIF, WebP. Images will be compressed while maintaining original dimensions.`
                 }
               </p>
             </div>
