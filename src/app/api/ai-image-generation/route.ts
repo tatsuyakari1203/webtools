@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { AVAILABLE_MODELS, getModelByName } from './index';
+import { NextResponse } from 'next/server';
+import { AVAILABLE_MODELS } from './index';
 
 // API to get available models
-export async function GET(request: NextRequest) {
+export async function GET() {
   return NextResponse.json({
     models: AVAILABLE_MODELS
   });
 }
 
 // Handle POST request for model-agnostic operations
-export async function POST(request: NextRequest) {
+export async function POST() {
   // This is a placeholder to ensure Next.js correctly routes POST requests to model-specific endpoints
   return NextResponse.json(
     { error: 'Please use a specific model endpoint' },

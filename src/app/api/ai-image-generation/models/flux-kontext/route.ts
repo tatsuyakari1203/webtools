@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 
 export interface FluxKontextRequest {
   prompt: string;
@@ -29,7 +28,6 @@ export interface FluxKontextResponse {
 
 export async function POST(request: NextRequest) {
   // Kiểm tra API key
-  const headersList = headers();
   const apiKey = process.env.FAL_API_KEY;
   
   if (!apiKey) {
@@ -171,7 +169,7 @@ export async function POST(request: NextRequest) {
           fullError: errorData,
           detail: errorData.detail || 'No detail provided'
         });
-      } catch (parseError) {
+      } catch {
         const errorText = await response.text();
         errorData = { message: errorText };
         console.error('FAL API Text Error:', errorText);
@@ -180,7 +178,7 @@ export async function POST(request: NextRequest) {
       // Trích xuất chi tiết lỗi từ FAL API
       let errorMessage = 'Error from FAL API';
       if (errorData.detail && Array.isArray(errorData.detail)) {
-        errorMessage = errorData.detail.map((item: any) => 
+        errorMessage = errorData.detail.map((item: { loc?: string[], msg: string }) => 
           `${item.loc?.join('.') || 'field'}: ${item.msg}`
         ).join(', ');
       } else if (errorData.detail) {

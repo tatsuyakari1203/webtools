@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Upload, X, ImageIcon, ClipboardPaste } from 'lucide-react';
@@ -22,47 +22,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
   // State to track paste animation
   const [isPasting, setIsPasting] = useState(false);
-
-  // Function to handle paste from clipboard
-  const handlePaste = useCallback(async (e: ClipboardEvent) => {
-    e.preventDefault();
-    
-    if (e.clipboardData && e.clipboardData.items) {
-      const items = Array.from(e.clipboardData.items);
-      const imageFiles: File[] = [];
-      
-      for (const item of items) {
-        // Check if the item is an image
-        if (item.type.indexOf('image') !== -1) {
-          const file = item.getAsFile();
-          if (file) {
-            imageFiles.push(file);
-          }
-        }
-      }
-      
-      if (imageFiles.length > 0) {
-        // Show paste animation
-        setIsPasting(true);
-        
-        // Add visual feedback when pasting
-        if (uploadAreaRef.current) {
-          uploadAreaRef.current.classList.add('border-primary', 'bg-primary/5');
-          setTimeout(() => {
-            uploadAreaRef.current?.classList.remove('border-primary', 'bg-primary/5');
-          }, 500);
-        }
-        
-        await processFiles(imageFiles);
-        toast.success(`Pasted ${imageFiles.length} image(s) from clipboard`);
-        
-        // Reset paste animation
-        setIsPasting(false);
-      } else {
-        toast.error('No images found in clipboard');
-      }
-    }
-  }, [processFiles, uploadAreaRef]);
   
   // Function to request clipboard access and trigger paste programmatically
   const triggerPaste = useCallback(async () => {
@@ -118,85 +77,104 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   // Chỉ sử dụng nút paste để dán ảnh
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    if (files.length > 0) {
+    if (event.target.files && event.target.files.length > 0) {
+      const files = Array.from(event.target.files);
       await processFiles(files);
+      
+      // Reset the input value so the same file can be uploaded again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    uploadAreaRef.current?.classList.add('border-primary', 'bg-primary/5');
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    uploadAreaRef.current?.classList.remove('border-primary', 'bg-primary/5');
+  };
+
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    uploadAreaRef.current?.classList.remove('border-primary', 'bg-primary/5');
+    
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+      const files = Array.from(event.dataTransfer.files).filter(file => 
+        file.type.startsWith('image/')
+      );
+      
+      if (files.length > 0) {
+        await processFiles(files);
+      } else {
+        toast.error('Please drop image files only');
+      }
     }
   };
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-medium">Upload Images</CardTitle>
+      <CardHeader>
+        <CardTitle>Upload Images</CardTitle>
         <CardDescription>
-          Upload up to 10 images for AI-powered editing
+          Upload or paste images to enhance with AI. Supports JPG, PNG, and WebP formats.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div 
+        {/* Upload Area */}
+        <div
           ref={uploadAreaRef}
-          className="relative border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center transition-colors hover:border-muted-foreground/50 hover:bg-muted/25"
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.currentTarget.classList.add('border-primary', 'bg-primary/5');
-          }}
-          onDragLeave={(e) => {
-            e.preventDefault();
-            e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
-          }}
-          onDrop={async (e) => {
-            e.preventDefault();
-            e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
-            const files = Array.from(e.dataTransfer.files);
-            if (files.length > 0) {
-              await processFiles(files);
-            }
-          }}
+          className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-4 transition-colors"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
+          <div className="rounded-full bg-primary/10 p-3">
+            <ImageIcon className="h-6 w-6 text-primary" />
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className="font-medium">Drag and drop your images</h3>
+            <p className="text-sm text-muted-foreground">
+              Or click to browse (max 10 images)
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="secondary"
+              className="gap-2"
+              disabled={images.length >= 10}
+            >
+              <Upload className="h-4 w-4" />
+              Browse Files
+            </Button>
+            <Button
+              onClick={triggerPaste}
+              variant="outline"
+              className="gap-2"
+              disabled={isPasting || images.length >= 10}
+            >
+              <ClipboardPaste className="h-4 w-4" />
+              {isPasting ? 'Pasting...' : 'Paste from Clipboard'}
+            </Button>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
-            multiple
             accept="image/*"
-            onChange={handleImageUpload}
+            multiple
             className="hidden"
+            onChange={handleImageUpload}
+            disabled={images.length >= 10}
           />
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
-              <ImageIcon className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium">
-                Drag and drop images here
-              </p>
-              <p className="text-xs text-muted-foreground">
-                click to browse files or use paste button
-              </p>
-            </div>
-            <div className="flex gap-2 mt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Browse Files
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className={isPasting ? 'animate-pulse border-primary' : ''}
-                onClick={triggerPaste}
-              >
-                <ClipboardPaste className="h-4 w-4 mr-2" />
-                Paste Image
-              </Button>
-            </div>
-          </div>
         </div>
-
+        
         {/* Image Preview Grid */}
         {images.length > 0 && (
           <div className="space-y-3">

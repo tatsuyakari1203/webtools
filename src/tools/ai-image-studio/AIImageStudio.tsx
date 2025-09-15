@@ -4,7 +4,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import ImageUpload from './components/ImageUpload';
 import EditInstructions from './components/EditInstructions';
-import SettingsComponent from './components/Settings';
+import SeedreamSettings from './components/SeedreamSettings';
 import FluxKontextSettings from './components/FluxKontextSettings';
 import Preview from './components/Preview';
 import type { AIImageStudioProps, AIImageStudioState } from './types';
@@ -130,7 +130,7 @@ export default function AIImageStudio({}: AIImageStudioProps) {
           {/* Settings with Reset Button */}
           <div className="space-y-2">
             {state.selectedModel === 'seedream' ? (
-              <SettingsComponent 
+              <SeedreamSettings 
                 imageSize={state.imageSize}
                 onImageSizeChange={(newSize: { width: number; height: number }) => setState(prev => ({ ...prev, imageSize: newSize }))}
                 sizeMode={sizeMode}
