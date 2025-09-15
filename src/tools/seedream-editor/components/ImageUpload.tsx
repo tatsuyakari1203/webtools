@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, X, ImageIcon } from 'lucide-react';
+import { Upload, X, ImageIcon, ClipboardPaste } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ImageUploadProps {
   images?: string[];
@@ -17,6 +18,113 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   processFiles
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadAreaRef = useRef<HTMLDivElement>(null);
+
+  // State to track paste animation
+  const [isPasting, setIsPasting] = useState(false);
+
+  // Function to handle paste from clipboard
+  const handlePaste = async (e: ClipboardEvent) => {
+    e.preventDefault();
+    
+    if (e.clipboardData && e.clipboardData.items) {
+      const items = Array.from(e.clipboardData.items);
+      const imageFiles: File[] = [];
+      
+      for (const item of items) {
+        // Check if the item is an image
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            imageFiles.push(file);
+          }
+        }
+      }
+      
+      if (imageFiles.length > 0) {
+        // Show paste animation
+        setIsPasting(true);
+        
+        // Add visual feedback when pasting
+        if (uploadAreaRef.current) {
+          uploadAreaRef.current.classList.add('border-primary', 'bg-primary/5');
+          setTimeout(() => {
+            uploadAreaRef.current?.classList.remove('border-primary', 'bg-primary/5');
+          }, 500);
+        }
+        
+        await processFiles(imageFiles);
+        toast.success(`Pasted ${imageFiles.length} image(s) from clipboard`);
+        
+        // Reset paste animation
+        setIsPasting(false);
+      } else {
+        toast.error('No images found in clipboard');
+      }
+    }
+  };
+  
+  // Function to request clipboard access and trigger paste programmatically
+  const triggerPaste = async () => {
+    try {
+      // Check if the Clipboard API is available
+      if (navigator.clipboard) {
+        setIsPasting(true);
+        
+        // Try to read image from clipboard using Clipboard API
+        const clipboardItems = await navigator.clipboard.read();
+        const imageFiles: File[] = [];
+        
+        for (const clipboardItem of clipboardItems) {
+          // Check for image types in the clipboard
+          for (const type of clipboardItem.types) {
+            if (type.startsWith('image/')) {
+              const blob = await clipboardItem.getType(type);
+              // Convert blob to file
+              const file = new File([blob], `pasted-image-${Date.now()}.${type.split('/')[1]}`, { type });
+              imageFiles.push(file);
+            }
+          }
+        }
+        
+        if (imageFiles.length > 0) {
+          // Add visual feedback when pasting
+          if (uploadAreaRef.current) {
+            uploadAreaRef.current.classList.add('border-primary', 'bg-primary/5');
+            setTimeout(() => {
+              uploadAreaRef.current?.classList.remove('border-primary', 'bg-primary/5');
+            }, 500);
+          }
+          
+          await processFiles(imageFiles);
+          toast.success(`Pasted ${imageFiles.length} image(s) from clipboard`);
+        } else {
+          // If no images found, show error
+          toast.error('No images found in clipboard');
+        }
+      } else {
+        // Fallback for browsers that don't support Clipboard API
+        toast.info('Press Ctrl+V or Command+V to paste images from clipboard');
+      }
+    } catch (error) {
+      console.error('Error accessing clipboard:', error);
+      toast.error('Cannot access clipboard. Please use Ctrl+V or Command+V keyboard shortcut instead.');
+    } finally {
+      setIsPasting(false);
+    }
+  };
+  
+  // Handle paste from clipboard
+  useEffect(() => {
+
+    // Add event listener to the document
+    document.addEventListener('paste', handlePaste);
+    
+    // Clean up event listener on component unmount
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, []);  // Empty dependency array since handlePaste is now defined outside useEffect
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -35,6 +143,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div 
+          ref={uploadAreaRef}
           className="relative border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center transition-colors hover:border-muted-foreground/50 hover:bg-muted/25"
           onDragOver={(e) => {
             e.preventDefault();
@@ -70,19 +179,30 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 Drag and drop images here
               </p>
               <p className="text-xs text-muted-foreground">
-                or click to browse files
+                click to browse files or paste from clipboard
               </p>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              className="mt-2"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Browse Files
-            </Button>
+            <div className="flex gap-2 mt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Browse Files
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={isPasting ? 'animate-pulse border-primary' : ''}
+                onClick={triggerPaste}
+              >
+                <ClipboardPaste className="h-4 w-4 mr-2" />
+                Paste Image
+              </Button>
+            </div>
           </div>
         </div>
 
