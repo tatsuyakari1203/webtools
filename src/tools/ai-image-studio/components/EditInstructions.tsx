@@ -64,7 +64,6 @@ const EditInstructions: React.FC<EditInstructionsProps> = ({
           toast.error(data.error || 'Failed to enhance prompt');
         }
       } catch (error) {
-        console.error('Error enhancing prompt:', error);
         toast.error('Failed to enhance prompt');
       }
     }

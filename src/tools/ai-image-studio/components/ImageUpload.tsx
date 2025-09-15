@@ -10,12 +10,16 @@ interface ImageUploadProps {
   images?: string[];
   onImagesChange: (newImages: string[], newBase64Images: string[], newUploadedImages: File[]) => void;
   processFiles: (files: File[]) => Promise<void>;
+  selectedModel?: 'seedream' | 'flux-kontext';
+  maxImages?: number;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
   images = [],
   onImagesChange,
-  processFiles
+  processFiles,
+  selectedModel = 'seedream',
+  maxImages = 10
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAreaRef = useRef<HTMLDivElement>(null);
@@ -32,7 +36,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         
         // Try to read image from clipboard using Clipboard API
         const clipboardItems = await navigator.clipboard.read();
-        const imageFiles: File[] = [];
+        let imageFiles: File[] = [];
         
         for (const clipboardItem of clipboardItems) {
           // Check for image types in the clipboard
@@ -47,6 +51,34 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         }
         
         if (imageFiles.length > 0) {
+          // Nếu model là flux-kontext, chỉ cho phép upload 1 ảnh
+          if (selectedModel === 'flux-kontext') {
+            // Nếu đã có ảnh và đang cố gắng thêm ảnh mới
+            if (images.length > 0) {
+              toast.error('Flux Kontext model chỉ hỗ trợ 1 ảnh. Vui lòng xóa ảnh hiện tại trước khi dán ảnh mới.');
+              setIsPasting(false);
+              return;
+            }
+            // Chỉ lấy ảnh đầu tiên
+            imageFiles = [imageFiles[0]];
+            if (imageFiles.length > 1) {
+              toast.info('Chỉ ảnh đầu tiên được sử dụng cho model Flux Kontext.');
+            }
+          } else {
+            // Với model khác, giới hạn theo maxImages
+            const remainingSlots = maxImages - images.length;
+            if (remainingSlots <= 0) {
+              toast.error(`Đã đạt giới hạn tối đa ${maxImages} ảnh. Vui lòng xóa bớt ảnh trước khi dán ảnh mới.`);
+              setIsPasting(false);
+              return;
+            }
+            
+            if (imageFiles.length > remainingSlots) {
+              imageFiles = imageFiles.slice(0, remainingSlots);
+              toast.info(`Chỉ ${remainingSlots} ảnh đầu tiên được thêm vào do đã đạt giới hạn.`);
+            }
+          }
+          
           // Add visual feedback when pasting
           if (uploadAreaRef.current) {
             uploadAreaRef.current.classList.add('border-primary', 'bg-primary/5');
@@ -66,19 +98,49 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         toast.error('Clipboard API not supported in this browser');
       }
     } catch (error) {
-      console.error('Error accessing clipboard:', error);
+      // Xử lý lỗi im lặng
       toast.error('Cannot access clipboard. Please try again or check browser permissions.');
     } finally {
       setIsPasting(false);
     }
-  }, [processFiles, uploadAreaRef]);
+  }, [processFiles, uploadAreaRef, selectedModel, images, maxImages]);
   
   // Không còn lắng nghe sự kiện paste trên document nữa
   // Chỉ sử dụng nút paste để dán ảnh
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      const files = Array.from(event.target.files);
+      let files = Array.from(event.target.files);
+      
+      // Nếu model là flux-kontext, chỉ cho phép upload 1 ảnh
+      if (selectedModel === 'flux-kontext') {
+        // Nếu đã có ảnh và đang cố gắng thêm ảnh mới
+        if (images.length > 0) {
+          toast.error('Flux Kontext model chỉ hỗ trợ 1 ảnh. Vui lòng xóa ảnh hiện tại trước khi thêm ảnh mới.');
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+          return;
+        }
+        // Chỉ lấy ảnh đầu tiên
+        files = [files[0]];
+      } else {
+        // Với model khác, giới hạn theo maxImages
+        const remainingSlots = maxImages - images.length;
+        if (remainingSlots <= 0) {
+          toast.error(`Đã đạt giới hạn tối đa ${maxImages} ảnh. Vui lòng xóa bớt ảnh trước khi thêm mới.`);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+          return;
+        }
+        
+        if (files.length > remainingSlots) {
+          files = files.slice(0, remainingSlots);
+          toast.info(`Chỉ ${remainingSlots} ảnh đầu tiên được thêm vào do đã đạt giới hạn.`);
+        }
+      }
+      
       await processFiles(files);
       
       // Reset the input value so the same file can be uploaded again if needed
@@ -106,11 +168,37 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     uploadAreaRef.current?.classList.remove('border-primary', 'bg-primary/5');
     
     if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
-      const files = Array.from(event.dataTransfer.files).filter(file => 
+      let files = Array.from(event.dataTransfer.files).filter(file => 
         file.type.startsWith('image/')
       );
       
       if (files.length > 0) {
+        // Nếu model là flux-kontext, chỉ cho phép upload 1 ảnh
+        if (selectedModel === 'flux-kontext') {
+          // Nếu đã có ảnh và đang cố gắng thêm ảnh mới
+          if (images.length > 0) {
+            toast.error('Flux Kontext model chỉ hỗ trợ 1 ảnh. Vui lòng xóa ảnh hiện tại trước khi thêm ảnh mới.');
+            return;
+          }
+          // Chỉ lấy ảnh đầu tiên
+          files = [files[0]];
+          if (files.length > 1) {
+            toast.info('Chỉ ảnh đầu tiên được sử dụng cho model Flux Kontext.');
+          }
+        } else {
+          // Với model khác, giới hạn theo maxImages
+          const remainingSlots = maxImages - images.length;
+          if (remainingSlots <= 0) {
+            toast.error(`Đã đạt giới hạn tối đa ${maxImages} ảnh. Vui lòng xóa bớt ảnh trước khi thêm mới.`);
+            return;
+          }
+          
+          if (files.length > remainingSlots) {
+            files = files.slice(0, remainingSlots);
+            toast.info(`Chỉ ${remainingSlots} ảnh đầu tiên được thêm vào do đã đạt giới hạn.`);
+          }
+        }
+        
         await processFiles(files);
       } else {
         toast.error('Please drop image files only');
@@ -139,9 +227,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             <ImageIcon className="h-6 w-6 text-primary" />
           </div>
           <div className="text-center space-y-2">
-            <h3 className="font-medium">Drag and drop your images</h3>
+            <h3 className="font-medium">Drag and drop your {selectedModel === 'flux-kontext' ? 'image' : 'images'}</h3>
             <p className="text-sm text-muted-foreground">
-              Or click to browse (max 10 images)
+              Or click to browse {selectedModel === 'flux-kontext' ? '(max 1 image)' : `(max ${maxImages} images)`}
             </p>
           </div>
           <div className="flex gap-2">

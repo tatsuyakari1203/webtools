@@ -75,8 +75,7 @@ export class ApiService {
         throw new Error('Please upload an image');
       }
       
-      // Log để debug
-      console.log('Base64 image starts with:', base64Images[0]?.substring(0, 20));
+
       
       // Sử dụng ảnh gốc không resize để giữ chất lượng tốt nhất
       let imageBase64 = base64Images[0];
@@ -85,9 +84,6 @@ export class ApiService {
       if (imageBase64 && !imageBase64.startsWith('data:')) {
         imageBase64 = `data:image/png;base64,${imageBase64}`;
       }
-      
-      // Log kích thước ảnh để debug
-      console.log('Original image size:', imageBase64?.length ? Math.round(imageBase64.length/1024) + 'KB' : 'Unknown');
       
       const requestData: FluxKontextRequest = {
         prompt,
@@ -102,19 +98,7 @@ export class ApiService {
         output_format: (outputFormat || 'jpeg') as 'jpeg' | 'png'
       };
       
-      // Ghi log kích thước ảnh để theo dõi
-      if (imageBase64) {
-        console.log('Sending image with size:', Math.round(imageBase64.length/1024) + 'KB');
-      }
-      
-      console.log('Sending request to flux-kontext with data:', {
-        prompt: requestData.prompt,
-        promptLength: requestData.prompt.length,
-        hasImage: !!requestData.image_base64,
-        imageBase64Length: imageBase64?.length,
-        aspectRatio: requestData.aspect_ratio,
-        numImages: requestData.num_images
-      });
+
 
       response = await fetch('/api/ai-image-generation/models/flux-kontext', {
         method: 'POST',

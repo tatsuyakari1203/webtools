@@ -19,7 +19,7 @@ export const useAIImageStudio = () => {
     error: null,
     imageSize: { width: 1024, height: 1024 },
     numImages: 1,
-    maxImages: 4,
+    maxImages: 10,
     enableSafetyChecker: true,
     selectedModel: 'seedream',
     aspectRatio: '1:1',
@@ -83,7 +83,6 @@ export const useAIImageStudio = () => {
       setState(prev => ({ ...prev, prompt: enhancedPrompt }));
       toast.success('Prompt enhanced successfully!');
     } catch (error) {
-      console.error('Error enhancing prompt:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to enhance prompt');
     } finally {
       setIsEnhancing(false);
@@ -128,8 +127,7 @@ export const useAIImageStudio = () => {
           // Process each image to match original dimensions
           const resizedPromises = resultImageUrls.map((url, index) => 
             apiService.resizeImageToOriginal(url, originalImageSize.width, originalImageSize.height)
-              .catch(error => {
-                console.error(`Error resizing image ${index + 1}:`, error);
+              .catch(() => {
                 // Return the original URL if resizing fails
                 return url;
               })
@@ -151,7 +149,6 @@ export const useAIImageStudio = () => {
           
           finalImageUrls = resizedUrls;
         } catch (error) {
-          console.error('Error in image resizing process:', error);
           toast.error('Failed to resize images');
         }
       }

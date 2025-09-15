@@ -126,7 +126,7 @@ export const processFiles = async (
       newImageUrls.push(imageUrl);
       newBase64Images.push(base64);
     } catch (error) {
-      console.error('Error processing file:', error);
+      // Xử lý lỗi im lặng
       toast.error(`Failed to process ${file.name}`);
     }
   }

@@ -25,7 +25,7 @@ export function ModelSelector({
       <Select 
         value={selectedModel} 
         onValueChange={(value: 'seedream' | 'flux-kontext') => {
-          console.log('Model changed to:', value);
+
           onModelChange(value);
         }}
         disabled={disabled}

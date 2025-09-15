@@ -94,7 +94,7 @@ export default function Preview({
                           ]);
                           toast("Image copied to clipboard");
                         } catch (error) {
-                          console.error('Failed to copy image:', error);
+
                           toast.error("Failed to copy image to clipboard");
                         }
                       }}

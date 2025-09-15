@@ -87,13 +87,15 @@ export default function AIImageStudio({}: AIImageStudioProps) {
               }
             }}
             processFiles={handleFileProcess}
+            selectedModel={state.selectedModel}
+            maxImages={state.maxImages}
           />
 
           {/* Model Selection */}
           <ModelSelector
             selectedModel={state.selectedModel}
             onModelChange={(value) => {
-              console.log('Model changed to:', value, 'Images:', state.uploadedImages.length, state.imageUrls.length);
+
               setState(prev => ({ ...prev, selectedModel: value }));
             }}
             disabled={state.isProcessing}
@@ -112,15 +114,7 @@ export default function AIImageStudio({}: AIImageStudioProps) {
           
           {/* Generate Image Button */}
           <GenerateButton
-            onClick={() => {
-              console.log('Generate button clicked:', {
-                isProcessing: state.isProcessing,
-                uploadedImagesCount: state.uploadedImages.length,
-                promptEmpty: !state.prompt.trim(),
-                prompt: state.prompt
-              });
-              handleProcess();
-            }}
+            onClick={handleProcess}
             isProcessing={state.isProcessing}
             disabled={state.isProcessing || state.uploadedImages.length === 0 || !state.prompt.trim()}
             hasPrompt={!!state.prompt.trim()}
