@@ -1,16 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
 import { Loader2, Wand2 } from 'lucide-react';
 import ImageUpload from './components/ImageUpload';
 import EditInstructions from './components/EditInstructions';
 import SettingsComponent from './components/Settings';
 import FluxKontextSettings from './components/FluxKontextSettings';
-import { calculateOptimalSize } from './components/Settings';
 import Preview from './components/Preview';
 import type { AIImageStudioProps, AIImageStudioState } from './types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,262 +18,37 @@ import { ModelSelector } from './components/ModelSelector';
 import { GenerateButton } from './components/GenerateButton';
 import { ErrorDisplay } from './components/ErrorDisplay';
 
-// Services
-import { apiService } from './services/api-service';
-import { convertToBase64, downloadImage } from './utils';
+// Custom hooks and utilities
+import { useAIImageStudio } from './useAIImageStudio';
+import { downloadImage } from './utils';
 
 // Constants and utility functions moved to Settings.tsx component
 
 export default function AIImageStudio({}: AIImageStudioProps) {
-  const [state, setState] = useState<AIImageStudioState>({
-    prompt: '',
-    uploadedImages: [],
-    imageUrls: [],
-    base64Images: [],
-    resultImages: [],
-    isProcessing: false,
-    error: null,
-    imageSize: { width: 1024, height: 1024 },
-    numImages: 1,
-    maxImages: 4,
-    enableSafetyChecker: true,
-    selectedModel: 'seedream',
-    aspectRatio: '1:1',
-    guidanceScale: 7.5,
-    safetyTolerance: '3',
-    enhancePrompt: false,
-    outputFormat: 'jpeg'
-  });
-  
-  const [sizeMode, setSizeMode] = useState<'auto' | 'square' | 'portrait' | 'landscape' | 'wide' | 'ultrawide' | 'custom'>('auto');
-  const [originalImageSize, setOriginalImageSize] = useState<{ width: number; height: number } | null>(null);
-  const [isEnhancing, setIsEnhancing] = useState(false);
-  const [includeImageContext, setIncludeImageContext] = useState(false);
-  const [enableAutoResize, setEnableAutoResize] = useState(true); // State for auto-resize toggle
+  // Use custom hook for state management and actions
+  const {
+    state,
+    setState,
+    sizeMode,
+    setSizeMode,
+    originalImageSize,
+    setOriginalImageSize,
+    isEnhancing,
+    includeImageContext,
+    setIncludeImageContext,
+    enableAutoResize,
+    setEnableAutoResize,
+    handleFileProcess,
+    handleEnhancePrompt,
+    handleProcess,
+    handleReset
+  } = useAIImageStudio();
 
-  // handleSizeModeChange moved to Settings.tsx component
-
-  // Handle prompt enhancement
-  const handleEnhancePrompt = async () => {
-    if (!state.prompt.trim()) {
-      toast.error('Please enter a prompt first');
-      return;
-    }
-
-    setIsEnhancing(true);
-    try {
-      // Sử dụng service để nâng cao prompt
-      const imageParam = includeImageContext && state.base64Images.length > 0 ? state.base64Images[0] : undefined;
-      const enhancedPrompt = await apiService.enhancePrompt({
-        prompt: state.prompt,
-        category: 'image-editing',
-        model: state.selectedModel,
-        image: imageParam
-      });
-      
-      setState(prev => ({ ...prev, prompt: enhancedPrompt }));
-      toast.success('Prompt enhanced successfully!');
-    } catch (error) {
-      console.error('Error enhancing prompt:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to enhance prompt');
-    } finally {
-      setIsEnhancing(false);
-    }
-  };
-
-  // Hàm convertToBase64 đã được chuyển sang utils.ts
-
-  const processFiles = async (files: File[]) => {
-    if (files.length === 0) return;
-
-    // Validate file types and sizes
-    const validFiles = files.filter(file => {
-      if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} is not a valid image file`);
-        return false;
-      }
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
-        toast.error(`${file.name} is too large (max 10MB)`);
-        return false;
-      }
-      return true;
-    });
-
-    if (validFiles.length === 0) return;
-
-    // Check total image limit
-    if (state.imageUrls.length + validFiles.length > 10) {
-      toast.error('Maximum 10 images allowed');
-      return;
-    }
-
-    // Process each file
-    const newImageUrls: string[] = [];
-    const newBase64Images: string[] = [];
-    let firstImageDimensions: { width: number; height: number } | null = null;
-
-    for (const file of validFiles) {
-      try {
-        const base64 = await convertToBase64(file);
-        const imageUrl = URL.createObjectURL(file);
-        
-        // Get image dimensions for each image to calculate optimal size
-        if (sizeMode === 'auto') {
-          const img = new Image();
-          const imageDimensions = await new Promise<{ width: number; height: number }>((resolve, reject) => {
-            img.onload = () => {
-              resolve({ width: img.width, height: img.height });
-            };
-            img.onerror = reject;
-            img.src = imageUrl;
-          });
-          
-          // Use the first image dimensions or update if this is the first image being added
-          if (!firstImageDimensions) {
-            firstImageDimensions = imageDimensions;
-          }
-        }
-        
-        newImageUrls.push(imageUrl);
-        newBase64Images.push(base64);
-      } catch (error) {
-        console.error('Error processing file:', error);
-        toast.error(`Failed to process ${file.name}`);
-      }
-    }
-
-    // Calculate optimal size if we have the first image dimensions and auto mode is selected
-    let newImageSize = state.imageSize;
-    if (firstImageDimensions && sizeMode === 'auto') {
-      newImageSize = calculateOptimalSize(firstImageDimensions.width, firstImageDimensions.height);
-      setOriginalImageSize(firstImageDimensions);
-    }
-
-    // Update state with new images and reset seed
-    setState(prev => ({
-      ...prev,
-      uploadedImages: [...prev.uploadedImages, ...validFiles],
-      imageUrls: [...prev.imageUrls, ...newImageUrls],
-      base64Images: [...prev.base64Images, ...newBase64Images],
-      imageSize: newImageSize,
-      error: null,
-      seed: undefined // Reset seed when new images are added
-    }));
-
-    toast.success(`Added ${newImageUrls.length} image${newImageUrls.length > 1 ? 's' : ''}`);
-  };
+  // Hàm processFiles đã được chuyển sang file-processor.ts
 
 
 
-  // Function resizeImageToOriginal has been moved to ApiService
-  
-  const handleProcess = async () => {
-    // Generate a new random seed for each request
-    const newSeed = Math.floor(Math.random() * 2147483647);
-    
-    setState(prev => ({ ...prev, isProcessing: true, error: null, seed: newSeed }));
-
-    try {
-      // Sử dụng service để xử lý request tạo ảnh
-      const resultImageUrls = await apiService.processImages({
-        prompt: state.prompt,
-        base64Images: state.base64Images,
-        imageUrls: state.imageUrls,
-        selectedModel: state.selectedModel,
-        imageSize: state.imageSize,
-        numImages: state.numImages,
-        maxImages: state.maxImages,
-        enableSafetyChecker: state.enableSafetyChecker,
-        aspectRatio: state.aspectRatio || '1:1',
-        safetyTolerance: state.safetyTolerance || '3',
-        guidanceScale: state.guidanceScale || 7.5,
-        enhancePrompt: state.enhancePrompt || false,
-        outputFormat: state.outputFormat || 'jpeg',
-        seed: newSeed
-      });
-      
-      // If auto-resize is enabled and we have original image dimensions, resize the result images
-      // Only apply auto-resize for Seedream model
-      let finalImageUrls = resultImageUrls;
-      if (enableAutoResize && originalImageSize && sizeMode === 'auto' && state.selectedModel === 'seedream') {
-        try {
-          toast.info('Resizing images to match original dimensions...');
-          
-          // Process each image to match original dimensions
-          const resizedPromises = resultImageUrls.map((url, index) => 
-            apiService.resizeImageToOriginal(url, originalImageSize.width, originalImageSize.height)
-              .catch(error => {
-                console.error(`Error resizing image ${index + 1}:`, error);
-                // Return the original URL if resizing fails
-                return url;
-              })
-          );
-          
-          // Wait for all images to be resized
-          const resizedUrls = await Promise.all(resizedPromises);
-          
-          // Count how many images were successfully resized
-          const successCount = resizedUrls.filter((url, index) => url !== resultImageUrls[index]).length;
-          
-          if (successCount === resultImageUrls.length) {
-            toast.success(`All ${successCount} images resized to match original dimensions (${originalImageSize.width}×${originalImageSize.height})`);
-          } else if (successCount > 0) {
-            toast.success(`${successCount} of ${resultImageUrls.length} images resized to match original dimensions`);
-          } else {
-            toast.error('Could not resize any images');
-          }
-          
-          finalImageUrls = resizedUrls;
-        } catch (error) {
-          console.error('Error in image resizing process:', error);
-          toast.error('Failed to resize images');
-        }
-      }
-      
-      setState(prev => ({ 
-        ...prev, 
-        resultImages: finalImageUrls,
-        isProcessing: false
-        // We don't update seed from response anymore as we generate a new one for each request
-      }));
-    } catch (error) {
-      setState(prev => ({ 
-        ...prev, 
-        error: error instanceof Error ? error.message : 'An error occurred',
-        isProcessing: false 
-      }));
-    }
-  };
-
-  const handleReset = () => {
-    // Revoke all object URLs
-    state.imageUrls.forEach(url => URL.revokeObjectURL(url));
-    
-    setState({
-      prompt: '',
-      uploadedImages: [],
-      imageUrls: [],
-      base64Images: [],
-      resultImages: [],
-      isProcessing: false,
-      error: null,
-      imageSize: { width: 1280, height: 1280 },
-      numImages: 1,
-      maxImages: 4,
-      enableSafetyChecker: true,
-      seed: undefined,
-      selectedModel: 'seedream',
-      aspectRatio: '1:1',
-      guidanceScale: 7.5,
-      safetyTolerance: '3',
-      enhancePrompt: false,
-      outputFormat: 'jpeg'
-    });
-    
-    // Reset other states
-    setSizeMode('auto');
-    setOriginalImageSize(null);
-  };
+  // Các hàm handleProcess và handleReset đã được chuyển sang useAIImageStudio.ts
 
   // Hàm downloadImage đã được chuyển sang utils.ts
 
@@ -317,7 +90,7 @@ export default function AIImageStudio({}: AIImageStudioProps) {
                 setOriginalImageSize(null);
               }
             }}
-            processFiles={processFiles}
+            processFiles={handleFileProcess}
           />
 
           {/* Model Selection */}
