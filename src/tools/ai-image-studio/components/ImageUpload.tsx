@@ -104,27 +104,18 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         }
       } else {
         // Fallback for browsers that don't support Clipboard API
-        toast.info('Press Ctrl+V or Command+V to paste images from clipboard');
+        toast.error('Clipboard API not supported in this browser');
       }
     } catch (error) {
       console.error('Error accessing clipboard:', error);
-      toast.error('Cannot access clipboard. Please use Ctrl+V or Command+V keyboard shortcut instead.');
+      toast.error('Cannot access clipboard. Please try again or check browser permissions.');
     } finally {
       setIsPasting(false);
     }
   }, [processFiles, uploadAreaRef]);
   
-  // Handle paste from clipboard
-  useEffect(() => {
-
-    // Add event listener to the document
-    document.addEventListener('paste', handlePaste);
-    
-    // Clean up event listener on component unmount
-    return () => {
-      document.removeEventListener('paste', handlePaste);
-    };
-  }, [handlePaste]);  // Added handlePaste to dependency array
+  // Không còn lắng nghe sự kiện paste trên document nữa
+  // Chỉ sử dụng nút paste để dán ảnh
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -179,7 +170,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 Drag and drop images here
               </p>
               <p className="text-xs text-muted-foreground">
-                click to browse files or paste from clipboard
+                click to browse files or use paste button
               </p>
             </div>
             <div className="flex gap-2 mt-2">

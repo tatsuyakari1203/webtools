@@ -8,9 +8,47 @@ import { convertToBase64 } from './utils';
  * @returns Optimal image size object
  */
 export const calculateOptimalSize = (width: number, height: number) => {
-  // This function should be imported from Settings.tsx
-  // This is just a placeholder to avoid circular dependencies
-  return { width: 1024, height: 1024 };
+  const maxSize = 4096;
+  const minSize = 1024;
+  
+  // Calculate aspect ratio
+  const aspectRatio = width / height;
+  
+  let newWidth, newHeight;
+  
+  if (aspectRatio >= 1) {
+    // Landscape or square
+    newWidth = Math.min(maxSize, Math.max(minSize, width));
+    newHeight = Math.round(newWidth / aspectRatio);
+    
+    // Ensure height is within bounds
+    if (newHeight > maxSize) {
+      newHeight = maxSize;
+      newWidth = Math.round(newHeight * aspectRatio);
+    } else if (newHeight < minSize) {
+      newHeight = minSize;
+      newWidth = Math.round(newHeight * aspectRatio);
+    }
+  } else {
+    // Portrait
+    newHeight = Math.min(maxSize, Math.max(minSize, height));
+    newWidth = Math.round(newHeight * aspectRatio);
+    
+    // Ensure width is within bounds
+    if (newWidth > maxSize) {
+      newWidth = maxSize;
+      newHeight = Math.round(newWidth / aspectRatio);
+    } else if (newWidth < minSize) {
+      newWidth = minSize;
+      newHeight = Math.round(newWidth / aspectRatio);
+    }
+  }
+  
+  // Round to nearest multiple of 64 for better compatibility
+  newWidth = Math.round(newWidth / 64) * 64;
+  newHeight = Math.round(newHeight / 64) * 64;
+  
+  return { width: newWidth, height: newHeight };
 };
 
 /**

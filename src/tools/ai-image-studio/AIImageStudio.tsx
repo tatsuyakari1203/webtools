@@ -2,16 +2,12 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Label } from '@/components/ui/label';
-import { Loader2, Wand2 } from 'lucide-react';
 import ImageUpload from './components/ImageUpload';
 import EditInstructions from './components/EditInstructions';
 import SettingsComponent from './components/Settings';
 import FluxKontextSettings from './components/FluxKontextSettings';
 import Preview from './components/Preview';
 import type { AIImageStudioProps, AIImageStudioState } from './types';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Custom Components
 import { ModelSelector } from './components/ModelSelector';
