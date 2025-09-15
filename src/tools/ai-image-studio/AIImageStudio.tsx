@@ -12,13 +12,16 @@ import SettingsComponent from './components/Settings';
 import FluxKontextSettings from './components/FluxKontextSettings';
 import { calculateOptimalSize } from './components/Settings';
 import Preview from './components/Preview';
-import type { AIImageStudioProps, AIImageStudioState, SeedreamRequest, SeedreamResponse, FluxKontextRequest, FluxKontextResponse } from './types';
+import type { AIImageStudioProps, AIImageStudioState } from './types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Custom Components
 import { ModelSelector } from './components/ModelSelector';
 import { GenerateButton } from './components/GenerateButton';
 import { ErrorDisplay } from './components/ErrorDisplay';
+
+// Services
+import { apiService } from './services/api-service';
 
 // Constants and utility functions moved to Settings.tsx component
 
@@ -60,32 +63,20 @@ export default function AIImageStudio({}: AIImageStudioProps) {
 
     setIsEnhancing(true);
     try {
-      const response = await fetch('/api/ai-image-generation/enhance-prompt', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: state.prompt,
-          category: 'image-editing',
-          model: state.selectedModel,
-          ...(includeImageContext && state.base64Images.length > 0 && {
-            image: state.base64Images[0]
-          })
-        })
+      // Sử dụng service để nâng cao prompt
+      const imageParam = includeImageContext && state.base64Images.length > 0 ? state.base64Images[0] : undefined;
+      const enhancedPrompt = await apiService.enhancePrompt({
+        prompt: state.prompt,
+        category: 'image-editing',
+        model: state.selectedModel,
+        image: imageParam
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setState(prev => ({ ...prev, prompt: data.enhanced_prompt }));
-        toast.success('Prompt enhanced successfully!');
-      } else {
-        toast.error(data.error || 'Failed to enhance prompt');
-      }
+      
+      setState(prev => ({ ...prev, prompt: enhancedPrompt }));
+      toast.success('Prompt enhanced successfully!');
     } catch (error) {
       console.error('Error enhancing prompt:', error);
-      toast.error('Failed to enhance prompt');
+      toast.error(error instanceof Error ? error.message : 'Failed to enhance prompt');
     } finally {
       setIsEnhancing(false);
     }
@@ -187,179 +178,43 @@ export default function AIImageStudio({}: AIImageStudioProps) {
 
 
 
-  // Function to resize an image to match the original dimensions exactly
-  const resizeImageToOriginal = async (imageUrl: string, originalWidth: number, originalHeight: number): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous'; // Enable CORS for the image
-      
-      // Set a timeout to handle cases where the image might take too long to load
-      const timeoutId = setTimeout(() => {
-        reject(new Error('Image loading timeout'));
-      }, 10000); // 10 seconds timeout
-      
-      img.onload = () => {
-        clearTimeout(timeoutId);
-        
-        try {
-          // Create a canvas with the original dimensions
-          const canvas = document.createElement('canvas');
-          canvas.width = originalWidth;
-          canvas.height = originalHeight;
-          const ctx = canvas.getContext('2d');
-          
-          if (!ctx) {
-            reject(new Error('Could not get canvas context'));
-            return;
-          }
-          
-          // Set image smoothing properties for better quality
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          
-          // Draw the image onto the canvas, scaling it to match original dimensions
-          ctx.drawImage(img, 0, 0, originalWidth, originalHeight);
-          
-          // Convert canvas to data URL
-          const resizedImageUrl = canvas.toDataURL('image/png');
-          resolve(resizedImageUrl);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      
-      img.onerror = () => {
-        clearTimeout(timeoutId);
-        reject(new Error('Failed to load image for resizing'));
-      };
-      
-      img.src = imageUrl;
-    });
-  };
+  // Function resizeImageToOriginal has been moved to ApiService
   
   const handleProcess = async () => {
-    if (!state.prompt.trim()) {
-      setState(prev => ({ ...prev, error: 'Please enter a prompt' }));
-      return;
-    }
-
-    if (state.uploadedImages.length === 0) {
-      setState(prev => ({ ...prev, error: 'Please upload at least one image' }));
-      return;
-    }
-
     // Generate a new random seed for each request
     const newSeed = Math.floor(Math.random() * 2147483647);
     
     setState(prev => ({ ...prev, isProcessing: true, error: null, seed: newSeed }));
 
     try {
-      let response;
-      
-      if (state.selectedModel === 'seedream') {
-        // Use base64 images for the API request
-        const requestData: SeedreamRequest = {
-          prompt: state.prompt,
-          images: state.base64Images,
-          image_size: state.imageSize,
-          num_images: state.numImages,
-          max_images: state.maxImages,
-          sync_mode: true,
-          seed: newSeed,
-          enable_safety_checker: state.enableSafetyChecker
-        };
-
-        response = await fetch('/api/ai-image-generation/models/seedream', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestData),
-        });
-      } else if (state.selectedModel === 'flux-kontext') {
-        // Only use the first image for Flux Kontext
-        if (state.imageUrls.length === 0) {
-          throw new Error('Please upload an image');
-        }
-        
-        // Log để debug
-        console.log('Base64 image starts with:', state.base64Images[0]?.substring(0, 20));
-        
-        // Sử dụng ảnh gốc không resize để giữ chất lượng tốt nhất
-        let imageBase64 = state.base64Images[0];
-        
-        // Đảm bảo định dạng base64 đúng
-        if (imageBase64 && !imageBase64.startsWith('data:')) {
-          imageBase64 = `data:image/png;base64,${imageBase64}`;
-        }
-        
-        // Log kích thước ảnh để debug
-        console.log('Original image size:', imageBase64?.length ? Math.round(imageBase64.length/1024) + 'KB' : 'Unknown');
-        
-        const requestData: FluxKontextRequest = {
-          prompt: state.prompt,
-          image_base64: imageBase64,
-          aspect_ratio: state.aspectRatio,
-          num_images: state.numImages,
-          sync_mode: true,
-          seed: newSeed,
-          safety_tolerance: state.safetyTolerance,
-          guidance_scale: state.guidanceScale,
-          enhance_prompt: state.enhancePrompt || false,
-          output_format: state.outputFormat || 'jpeg'
-        };
-        
-        // Ghi log kích thước ảnh để theo dõi
-        if (imageBase64) {
-          console.log('Sending image with size:', Math.round(imageBase64.length/1024) + 'KB');
-        }
-        
-        console.log('Sending request to flux-kontext with data:', {
-          prompt: requestData.prompt,
-          promptLength: requestData.prompt.length,
-          hasImage: !!requestData.image_base64,
-          imageBase64Length: imageBase64?.length,
-          aspectRatio: requestData.aspect_ratio,
-          numImages: requestData.num_images
-        });
-
-        response = await fetch('/api/ai-image-generation/models/flux-kontext', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestData),
-        });
-      } else {
-        throw new Error('Invalid model selected');
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to process images');
-      }
-
-      let resultImageUrls: string[] = [];
-      
-      if (state.selectedModel === 'seedream') {
-        const result: SeedreamResponse = await response.json();
-        // Get the result images URLs
-        resultImageUrls = result.images.map(img => img.url);
-      } else if (state.selectedModel === 'flux-kontext') {
-        const result: FluxKontextResponse = await response.json();
-        // Get the result images URLs
-        resultImageUrls = result.images.map(img => img.url);
-      }
+      // Sử dụng service để xử lý request tạo ảnh
+      const resultImageUrls = await apiService.processImages({
+        prompt: state.prompt,
+        base64Images: state.base64Images,
+        imageUrls: state.imageUrls,
+        selectedModel: state.selectedModel,
+        imageSize: state.imageSize,
+        numImages: state.numImages,
+        maxImages: state.maxImages,
+        enableSafetyChecker: state.enableSafetyChecker,
+        aspectRatio: state.aspectRatio || '1:1',
+        safetyTolerance: state.safetyTolerance || '3',
+        guidanceScale: state.guidanceScale || 7.5,
+        enhancePrompt: state.enhancePrompt || false,
+        outputFormat: state.outputFormat || 'jpeg',
+        seed: newSeed
+      });
       
       // If auto-resize is enabled and we have original image dimensions, resize the result images
       // Only apply auto-resize for Seedream model
+      let finalImageUrls = resultImageUrls;
       if (enableAutoResize && originalImageSize && sizeMode === 'auto' && state.selectedModel === 'seedream') {
         try {
           toast.info('Resizing images to match original dimensions...');
           
           // Process each image to match original dimensions
           const resizedPromises = resultImageUrls.map((url, index) => 
-            resizeImageToOriginal(url, originalImageSize.width, originalImageSize.height)
+            apiService.resizeImageToOriginal(url, originalImageSize.width, originalImageSize.height)
               .catch(error => {
                 console.error(`Error resizing image ${index + 1}:`, error);
                 // Return the original URL if resizing fails
@@ -381,7 +236,7 @@ export default function AIImageStudio({}: AIImageStudioProps) {
             toast.error('Could not resize any images');
           }
           
-          resultImageUrls = resizedUrls;
+          finalImageUrls = resizedUrls;
         } catch (error) {
           console.error('Error in image resizing process:', error);
           toast.error('Failed to resize images');
@@ -390,7 +245,7 @@ export default function AIImageStudio({}: AIImageStudioProps) {
       
       setState(prev => ({ 
         ...prev, 
-        resultImages: resultImageUrls,
+        resultImages: finalImageUrls,
         isProcessing: false
         // We don't update seed from response anymore as we generate a new one for each request
       }));
