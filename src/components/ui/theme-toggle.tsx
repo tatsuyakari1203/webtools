@@ -6,8 +6,16 @@ import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
 
+// Kiểm tra biến môi trường để vô hiệu hóa light mode
+const DISABLE_LIGHT_MODE = process.env.DISABLE_LIGHT_MODE === 'true'
+
 export function ThemeToggle() {
-  const { setTheme, theme } = useTheme()
+  const { setTheme, theme, forcedTheme } = useTheme()
+  
+  // Nếu light mode bị vô hiệu hóa, không hiển thị nút chuyển đổi theme
+  if (DISABLE_LIGHT_MODE) {
+    return null
+  }
 
   return (
     <Button

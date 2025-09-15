@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Truyền biến môi trường đến client-side
+  env: {
+    DISABLE_LIGHT_MODE: process.env.DISABLE_LIGHT_MODE || 'false',
+  },
   // Cấu hình logging để giảm noise
   logging: {
     fetches: {
