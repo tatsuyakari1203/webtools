@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       numImages: requestData.num_images
     });
 
-    // Chuẩn bị dữ liệu để gửi đến FAL API - chỉ sử dụng các trường được FAL API chấp nhận
+    // Chuẩn bị dữ liệu để gửi đến FAL API - sử dụng các giá trị từ client
     const falRequestData: {
       prompt: string;
       image_url: string;
@@ -82,13 +82,14 @@ export async function POST(request: NextRequest) {
       output_format?: string;
     } = {
       prompt: requestData.prompt,
-      image_url: '', // Sẽ được thiết lập dưới đây
-      num_images: Math.min(requestData.num_images || 1, 4), // Giới hạn 4 images max
+      image_url: '',
       sync_mode: true, // Luôn true để đồng bộ
-      safety_tolerance: '2',
-      guidance_scale: 3.5,
-      enhance_prompt: false,
-      output_format: 'jpeg',
+      // Sử dụng giá trị từ client với giới hạn hợp lý
+      num_images: Math.min(requestData.num_images || 1, 4),
+      safety_tolerance: requestData.safety_tolerance || '2',
+      guidance_scale: requestData.guidance_scale || 3.5,
+      enhance_prompt: requestData.enhance_prompt || false,
+      output_format: requestData.output_format || 'jpeg',
     };
     
     // Chỉ thêm optional fields nếu có giá trị hợp lệ

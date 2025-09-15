@@ -3,15 +3,13 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Loader2, Wand2 } from 'lucide-react';
 import ImageUpload from './components/ImageUpload';
 import EditInstructions from './components/EditInstructions';
 import SettingsComponent from './components/Settings';
+import FluxKontextSettings from './components/FluxKontextSettings';
 import { calculateOptimalSize } from './components/Settings';
 import Preview from './components/Preview';
 import type { AIImageStudioProps, AIImageStudioState, SeedreamRequest, SeedreamResponse, FluxKontextRequest, FluxKontextResponse } from './types';
@@ -35,7 +33,9 @@ export default function AIImageStudio({}: AIImageStudioProps) {
     selectedModel: 'seedream',
     aspectRatio: '1:1',
     guidanceScale: 7.5,
-    safetyTolerance: 'medium'
+    safetyTolerance: '3',
+    enhancePrompt: false,
+    outputFormat: 'jpeg'
   });
   
   const [sizeMode, setSizeMode] = useState<'auto' | 'square' | 'portrait' | 'landscape' | 'wide' | 'ultrawide' | 'custom'>('auto');
@@ -280,57 +280,16 @@ export default function AIImageStudio({}: AIImageStudioProps) {
         // Log để debug
         console.log('Base64 image starts with:', state.base64Images[0]?.substring(0, 20));
         
-        // Resize và compress image cho Flux Kontext để tránh lỗi 422
+        // Sử dụng ảnh gốc không resize để giữ chất lượng tốt nhất
         let imageBase64 = state.base64Images[0];
         
-        // Function để resize image với Promise
-        const resizeImage = (base64: string, maxSize = 1024, quality = 0.8): Promise<string> => {
-          return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d')!;
-              
-              // Tính toán kích thước mới
-              let { width, height } = img;
-              
-              if (width > height) {
-                if (width > maxSize) {
-                  height = Math.round((height * maxSize) / width);
-                  width = maxSize;
-                }
-              } else {
-                if (height > maxSize) {
-                  width = Math.round((width * maxSize) / height);
-                  height = maxSize;
-                }
-              }
-              
-              canvas.width = width;
-              canvas.height = height;
-              
-              // Vẽ và resize image
-              ctx.drawImage(img, 0, 0, width, height);
-              
-              // Convert về base64 với quality thấp hơn
-              const resizedBase64 = canvas.toDataURL('image/jpeg', quality);
-              resolve(resizedBase64);
-            };
-            
-            img.src = base64.startsWith('data:') ? base64 : `data:image/png;base64,${base64}`;
-          });
-        };
-        
-        // Resize image nếu quá lớn (giới hạn 1MB cho Flux Kontext)
-        if (imageBase64 && imageBase64.length > 1000000) {
-          console.log('Image too large, resizing...', imageBase64.length);
-          imageBase64 = await resizeImage(imageBase64, 1024, 0.7);
-          console.log('Resized image size:', imageBase64.length);
-        }
-        
+        // Đảm bảo định dạng base64 đúng
         if (imageBase64 && !imageBase64.startsWith('data:')) {
           imageBase64 = `data:image/png;base64,${imageBase64}`;
         }
+        
+        // Log kích thước ảnh để debug
+        console.log('Original image size:', imageBase64?.length ? Math.round(imageBase64.length/1024) + 'KB' : 'Unknown');
         
         const requestData: FluxKontextRequest = {
           prompt: state.prompt,
@@ -340,12 +299,14 @@ export default function AIImageStudio({}: AIImageStudioProps) {
           sync_mode: true,
           seed: newSeed,
           safety_tolerance: state.safetyTolerance,
-          guidance_scale: state.guidanceScale
+          guidance_scale: state.guidanceScale,
+          enhance_prompt: state.enhancePrompt || false,
+          output_format: state.outputFormat || 'jpeg'
         };
         
-        // Kiểm tra kích thước image và cảnh báo nếu quá lớn
-        if (imageBase64 && imageBase64.length > 2000000) {
-          console.warn('Image is very large, this may cause issues:', Math.round(imageBase64.length/1024) + 'KB');
+        // Ghi log kích thước ảnh để theo dõi
+        if (imageBase64) {
+          console.log('Sending image with size:', Math.round(imageBase64.length/1024) + 'KB');
         }
         
         console.log('Sending request to flux-kontext with data:', {
@@ -457,7 +418,9 @@ export default function AIImageStudio({}: AIImageStudioProps) {
       selectedModel: 'seedream',
       aspectRatio: '1:1',
       guidanceScale: 7.5,
-      safetyTolerance: 'medium'
+      safetyTolerance: '3',
+      enhancePrompt: false,
+      outputFormat: 'jpeg'
     });
     
     // Reset other states
@@ -604,92 +567,22 @@ export default function AIImageStudio({}: AIImageStudioProps) {
                 selectedModel={state.selectedModel}
               />
             ) : (
-              <Card className="shadow-sm">
-                <CardContent className="space-y-3 pt-4">
-                  {/* Aspect Ratio Selection for Flux Kontext */}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-foreground/90">Aspect Ratio</Label>
-                    <Select 
-                      value={state.aspectRatio} 
-                      onValueChange={(value: string) => setState(prev => ({ ...prev, aspectRatio: value as AIImageStudioState['aspectRatio'] }))}
-                      disabled={state.isProcessing}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Select aspect ratio" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1:1">Square (1:1)</SelectItem>
-                  <SelectItem value="4:3">Standard (4:3)</SelectItem>
-                  <SelectItem value="3:2">Photo (3:2)</SelectItem>
-                  <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
-                  <SelectItem value="9:16">Portrait (9:16)</SelectItem>
-                  <SelectItem value="2:3">Portrait (2:3)</SelectItem>
-                  <SelectItem value="21:9">Ultrawide (21:9)</SelectItem>
-                  <SelectItem value="3:4">Portrait (3:4)</SelectItem>
-                  <SelectItem value="9:21">Ultrawide Portrait (9:21)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Number of Images */}
-                  <div className="space-y-0.5">
-                    <Label htmlFor="num-images" className="text-xs">Number of results</Label>
-                    <Input
-                      id="num-images"
-                      type="number"
-                      min={1}
-                      max={4}
-                      value={state.numImages}
-                      onChange={(e) => setState(prev => ({ ...prev, numImages: parseInt(e.target.value) || 1 }))}
-                      disabled={state.isProcessing}
-                      className="h-7 text-xs"
-                    />
-                  </div>
-                  
-                  {/* Guidance Scale */}
-                  <div className="space-y-0.5">
-                    <Label htmlFor="guidance-scale" className="text-xs">Guidance Scale</Label>
-                    <Input
-                      id="guidance-scale"
-                      type="number"
-                      min={1}
-                      max={20}
-                      step={0.1}
-                      value={state.guidanceScale}
-                      onChange={(e) => setState(prev => ({ ...prev, guidanceScale: parseFloat(e.target.value) || 7.5 }))}
-                      disabled={state.isProcessing}
-                      className="h-7 text-xs"
-                    />
-                  </div>
-                  
-                  {/* Safety Tolerance */}
-                  <div className="space-y-0.5">
-                    <Label className="text-xs font-medium text-foreground/90">Safety Tolerance</Label>
-                    <Select 
-                      value={state.safetyTolerance} 
-                      onValueChange={(value: string) => setState(prev => ({ ...prev, safetyTolerance: value }))}
-                      disabled={state.isProcessing}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Select safety tolerance" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {state.seed !== undefined && (
-                    <div className="space-y-1">
-                      <Label className="text-xs">Seed</Label>
-                      <Badge variant="secondary" className="text-xs py-0.5">{state.seed}</Badge>
-                      <div className="text-xs text-muted-foreground">(New seed for each request)</div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <FluxKontextSettings
+                aspectRatio={state.aspectRatio || '1:1'}
+                onAspectRatioChange={(value: string) => setState(prev => ({ ...prev, aspectRatio: value as AIImageStudioState['aspectRatio'] }))}
+                numImages={state.numImages}
+                onNumImagesChange={(numImages: number) => setState(prev => ({ ...prev, numImages: numImages }))}
+                guidanceScale={state.guidanceScale || 7.5}
+                onGuidanceScaleChange={(scale: number) => setState(prev => ({ ...prev, guidanceScale: scale }))}
+                safetyTolerance={state.safetyTolerance || '3'}
+                onSafetyToleranceChange={(value: string) => setState(prev => ({ ...prev, safetyTolerance: value }))}
+                outputFormat={state.outputFormat || 'jpeg'}
+                onOutputFormatChange={(format: 'jpeg' | 'png') => setState(prev => ({ ...prev, outputFormat: format }))}
+                enhancePrompt={state.enhancePrompt || false}
+                onEnhancePromptChange={(checked: boolean) => setState(prev => ({ ...prev, enhancePrompt: checked }))}
+                seed={state.seed}
+                disabled={state.isProcessing}
+              />
             )}
             
             {/* Reset Button - Moved closer to Settings */}

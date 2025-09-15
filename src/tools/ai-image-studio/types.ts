@@ -22,6 +22,8 @@ export interface AIImageStudioState {
   selectedModel: 'seedream' | 'flux-kontext';
   guidanceScale?: number;
   safetyTolerance?: string;
+  enhancePrompt?: boolean;
+  outputFormat?: 'jpeg' | 'png';
 }
 
 export interface SeedreamRequest {
