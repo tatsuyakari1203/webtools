@@ -9,8 +9,10 @@ interface SeedreamRequest {
     height: number;
   };
   num_images?: number;
+  max_images?: number;
   seed?: number;
   sync_mode?: boolean;
+  enable_safety_checker?: boolean;
 }
 
 interface SeedreamResponse {
@@ -55,16 +57,20 @@ export async function POST(request: NextRequest) {
       prompt: string;
       image_size: { width: number; height: number };
       num_images: number;
+      max_images?: number;
       sync_mode: boolean;
       seed?: number;
       image_urls?: string[];
       images?: string[];
+      enable_safety_checker?: boolean;
     } = {
       prompt: body.prompt,
       image_size: body.image_size || { width: 1280, height: 1280 },
       num_images: body.num_images || 1,
       sync_mode: body.sync_mode || false,
-      ...(body.seed && { seed: body.seed })
+      seed: body.seed,
+      ...(body.max_images && { max_images: body.max_images }),
+      ...(body.enable_safety_checker !== undefined && { enable_safety_checker: body.enable_safety_checker })
     };
 
     // Handle images - FAL API expects image_urls field

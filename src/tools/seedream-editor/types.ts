@@ -15,6 +15,8 @@ export interface SeedreamEditorState {
     height: number;
   };
   numImages: number;
+  maxImages: number;
+  enableSafetyChecker: boolean;
   seed?: number;
 }
 
@@ -27,8 +29,10 @@ export interface SeedreamRequest {
     height: number;
   };
   num_images?: number;
+  max_images?: number;
   seed?: number;
   sync_mode?: boolean;
+  enable_safety_checker?: boolean;
 }
 
 export interface SeedreamResponse {

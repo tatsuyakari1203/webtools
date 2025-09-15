@@ -23,8 +23,10 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
     resultImages: [],
     isProcessing: false,
     error: null,
-    imageSize: { width: 1280, height: 1280 },
-    numImages: 1
+    imageSize: { width: 1024, height: 1024 },
+    numImages: 1,
+    maxImages: 4,
+    enableSafetyChecker: true,
   });
   
   const [sizeMode, setSizeMode] = useState<'auto' | 'square' | 'portrait' | 'landscape' | 'wide' | 'ultrawide' | 'custom'>('auto');
@@ -180,17 +182,22 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
       return;
     }
 
-    setState(prev => ({ ...prev, isProcessing: true, error: null }));
+    // Generate a new random seed for each request
+    const newSeed = Math.floor(Math.random() * 2147483647);
+    
+    setState(prev => ({ ...prev, isProcessing: true, error: null, seed: newSeed }));
 
     try {
       // Use base64 images for the API request
       const requestData: SeedreamRequest = {
         prompt: state.prompt,
-        images: state.base64Images || [],
+        images: state.base64Images,
         image_size: state.imageSize,
         num_images: state.numImages,
+        max_images: state.maxImages,
         sync_mode: true,
-        ...(state.seed && { seed: state.seed })
+        seed: newSeed,
+        enable_safety_checker: state.enableSafetyChecker
       };
 
       const response = await fetch('/api/seedream/edit', {
@@ -211,8 +218,8 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
       setState(prev => ({ 
         ...prev, 
         resultImages: result.images.map(img => img.url),
-        isProcessing: false,
-        seed: result.seed
+        isProcessing: false
+        // We don't update seed from response anymore as we generate a new one for each request
       }));
     } catch (error) {
       setState(prev => ({ 
@@ -237,6 +244,8 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
       error: null,
       imageSize: { width: 1280, height: 1280 },
       numImages: 1,
+      maxImages: 4,
+      enableSafetyChecker: true,
       seed: undefined
     });
     
@@ -314,6 +323,10 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
             onSizeModeChange={setSizeMode}
             numImages={state.numImages}
             onNumImagesChange={(num: number) => setState(prev => ({ ...prev, numImages: num }))}
+            maxImages={state.maxImages}
+            onMaxImagesChange={(maxImages: number) => setState(prev => ({ ...prev, maxImages }))}
+            enableSafetyChecker={state.enableSafetyChecker}
+            onEnableSafetyCheckerChange={(enableSafetyChecker: boolean) => setState(prev => ({ ...prev, enableSafetyChecker }))}
             seed={state.seed}
             originalImageSize={originalImageSize}
             disabled={state.isProcessing}

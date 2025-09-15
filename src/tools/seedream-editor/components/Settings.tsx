@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Settings as SettingsIcon } from 'lucide-react';
 
@@ -70,6 +71,10 @@ interface SettingsProps {
   onSizeModeChange: (newMode: keyof typeof PRESET_SIZES | 'custom') => void;
   numImages: number;
   onNumImagesChange: (numImages: number) => void;
+  maxImages: number;
+  onMaxImagesChange: (maxImages: number) => void;
+  enableSafetyChecker: boolean;
+  onEnableSafetyCheckerChange: (enable: boolean) => void;
   seed?: number;
   originalImageSize: { width: number; height: number } | null;
   disabled?: boolean;
@@ -82,9 +87,13 @@ export default function Settings({
   onSizeModeChange,
   numImages,
   onNumImagesChange,
+  maxImages,
+  onMaxImagesChange,
+  enableSafetyChecker,
+  onEnableSafetyCheckerChange,
   seed,
   originalImageSize,
-  disabled = false
+  disabled = false,
 }: SettingsProps) {
   // Handle size mode change
   const handleSizeModeChange = (newMode: keyof typeof PRESET_SIZES | 'custom') => {
@@ -186,27 +195,50 @@ export default function Settings({
         </div>
         
         {/* Number of Results Section */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground/90">
-            Number of Results
-          </Label>
-          <div className="w-32">
-            <Input
-              id="numImages"
-              type="number"
-              min="1"
-              max="4"
-              value={numImages}
-              onChange={(e) => onNumImagesChange(parseInt(e.target.value) || 1)}
-              disabled={disabled}
-              className="h-9"
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="num-images">Number of results</Label>
+          <Input
+            id="num-images"
+            type="number"
+            min={1}
+            max={4}
+            value={numImages}
+            onChange={(e) => onNumImagesChange(parseInt(e.target.value) || 1)}
+            disabled={disabled}
+          />
         </div>
+
+        {/* Max Images Section */}
+        <div className="space-y-2">
+          <Label htmlFor="max-images">Max Images</Label>
+          <Input
+            id="max-images"
+            type="number"
+            min={1}
+            max={10}
+            value={maxImages}
+            onChange={(e) => onMaxImagesChange(parseInt(e.target.value) || 1)}
+            disabled={disabled}
+          />
+        </div>
+
+        {/* Safety Checker Section */}
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="safety-checker"
+            checked={enableSafetyChecker}
+            onCheckedChange={(checked: boolean | 'indeterminate') => 
+              onEnableSafetyCheckerChange(checked === true)}
+            disabled={disabled}
+          />
+          <Label htmlFor="safety-checker">Enable Safety Checker</Label>
+        </div>
+        
         {seed !== undefined && (
           <div className="space-y-2">
             <Label>Seed (for reproducibility)</Label>
             <Badge variant="secondary">{seed}</Badge>
+            <div className="text-xs text-muted-foreground">(New seed generated for each request)</div>
           </div>
         )}
       </CardContent>
