@@ -22,6 +22,7 @@ import { ErrorDisplay } from './components/ErrorDisplay';
 
 // Services
 import { apiService } from './services/api-service';
+import { convertToBase64, downloadImage } from './utils';
 
 // Constants and utility functions moved to Settings.tsx component
 
@@ -82,19 +83,7 @@ export default function AIImageStudio({}: AIImageStudioProps) {
     }
   };
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        // Extract base64 part (remove data:image/...;base64, prefix)
-        const base64 = result.split(',')[1];
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
+  // Hàm convertToBase64 đã được chuyển sang utils.ts
 
   const processFiles = async (files: File[]) => {
     if (files.length === 0) return;
@@ -288,14 +277,7 @@ export default function AIImageStudio({}: AIImageStudioProps) {
     setOriginalImageSize(null);
   };
 
-  const downloadImage = (url: string, index: number) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${state.selectedModel}-result-${index + 1}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // Hàm downloadImage đã được chuyển sang utils.ts
 
   return (
     <div className="container mx-auto py-6 px-4 max-w-7xl">
@@ -435,7 +417,7 @@ export default function AIImageStudio({}: AIImageStudioProps) {
         {/* Right Column - Preview */}
         <Preview 
           resultImages={state.resultImages}
-          onDownload={downloadImage}
+          onDownload={(url, index) => downloadImage(url, `${state.selectedModel}-result-${index + 1}.png`)}
         />
       </div>
     </div>

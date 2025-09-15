@@ -1,4 +1,5 @@
 import { SeedreamRequest, SeedreamResponse, FluxKontextRequest, FluxKontextResponse } from '../types';
+import { resizeImageToOriginal } from '../utils';
 
 /**
  * Service class để xử lý các API request liên quan đến AI Image Studio
@@ -188,53 +189,10 @@ export class ApiService {
 
   /**
    * Resize ảnh để khớp với kích thước gốc
+   * Sử dụng hàm từ utils.ts
    */
   resizeImageToOriginal(imageUrl: string, originalWidth: number, originalHeight: number): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      
-      // Set a timeout to handle cases where the image might not load
-      const timeoutId = setTimeout(() => {
-        reject(new Error('Image loading timeout'));
-      }, 10000); // 10 seconds timeout
-      
-      img.onload = () => {
-        clearTimeout(timeoutId);
-        
-        try {
-          // Create a canvas with the original dimensions
-          const canvas = document.createElement('canvas');
-          canvas.width = originalWidth;
-          canvas.height = originalHeight;
-          const ctx = canvas.getContext('2d');
-          
-          if (!ctx) {
-            reject(new Error('Could not get canvas context'));
-            return;
-          }
-          
-          // Set image smoothing properties for better quality
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          
-          // Draw the image onto the canvas, scaling it to match original dimensions
-          ctx.drawImage(img, 0, 0, originalWidth, originalHeight);
-          
-          // Convert canvas to data URL
-          const resizedImageUrl = canvas.toDataURL('image/png');
-          resolve(resizedImageUrl);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      
-      img.onerror = () => {
-        clearTimeout(timeoutId);
-        reject(new Error('Failed to load image for resizing'));
-      };
-      
-      img.src = imageUrl;
-    });
+    return resizeImageToOriginal(imageUrl, originalWidth, originalHeight);
   }
 }
 
