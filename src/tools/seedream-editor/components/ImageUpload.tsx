@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Upload, X, ImageIcon, ClipboardPaste } from 'lucide-react';
@@ -24,7 +24,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const [isPasting, setIsPasting] = useState(false);
 
   // Function to handle paste from clipboard
-  const handlePaste = async (e: ClipboardEvent) => {
+  const handlePaste = useCallback(async (e: ClipboardEvent) => {
     e.preventDefault();
     
     if (e.clipboardData && e.clipboardData.items) {
@@ -62,10 +62,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         toast.error('No images found in clipboard');
       }
     }
-  };
+  }, [processFiles, uploadAreaRef]);
   
   // Function to request clipboard access and trigger paste programmatically
-  const triggerPaste = async () => {
+  const triggerPaste = useCallback(async () => {
     try {
       // Check if the Clipboard API is available
       if (navigator.clipboard) {
@@ -112,7 +112,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     } finally {
       setIsPasting(false);
     }
-  };
+  }, [processFiles, uploadAreaRef]);
   
   // Handle paste from clipboard
   useEffect(() => {
@@ -124,7 +124,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     return () => {
       document.removeEventListener('paste', handlePaste);
     };
-  }, []);  // Empty dependency array since handlePaste is now defined outside useEffect
+  }, [handlePaste]);  // Added handlePaste to dependency array
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);

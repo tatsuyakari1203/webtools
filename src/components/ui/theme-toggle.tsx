@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 const DISABLE_LIGHT_MODE = process.env.DISABLE_LIGHT_MODE === 'true'
 
 export function ThemeToggle() {
-  const { setTheme, theme, forcedTheme } = useTheme()
+  const { setTheme, theme } = useTheme()
   
   // Nếu light mode bị vô hiệu hóa, không hiển thị nút chuyển đổi theme
   if (DISABLE_LIGHT_MODE) {
