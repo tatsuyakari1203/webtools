@@ -97,7 +97,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         // Fallback for browsers that don't support Clipboard API
         toast.error('Clipboard API not supported in this browser');
       }
-    } catch (error) {
+    } catch { // Bỏ tham số không sử dụng
       // Xử lý lỗi im lặng
       toast.error('Cannot access clipboard. Please try again or check browser permissions.');
     } finally {

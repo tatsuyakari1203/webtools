@@ -125,7 +125,7 @@ export const useAIImageStudio = () => {
           toast.info('Resizing images to match original dimensions...');
           
           // Process each image to match original dimensions
-          const resizedPromises = resultImageUrls.map((url, index) => 
+          const resizedPromises = resultImageUrls.map((url) => 
             apiService.resizeImageToOriginal(url, originalImageSize.width, originalImageSize.height)
               .catch(() => {
                 // Return the original URL if resizing fails
@@ -148,7 +148,7 @@ export const useAIImageStudio = () => {
           }
           
           finalImageUrls = resizedUrls;
-        } catch (error) {
+        } catch { // Bỏ tham số không sử dụng
           toast.error('Failed to resize images');
         }
       }

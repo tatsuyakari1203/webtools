@@ -63,7 +63,7 @@ const EditInstructions: React.FC<EditInstructionsProps> = ({
         } else {
           toast.error(data.error || 'Failed to enhance prompt');
         }
-      } catch (error) {
+      } catch {  // Bỏ tham số không sử dụng
         toast.error('Failed to enhance prompt');
       }
     }

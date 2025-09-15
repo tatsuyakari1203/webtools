@@ -93,7 +93,7 @@ export default function Preview({
                             })
                           ]);
                           toast("Image copied to clipboard");
-                        } catch (error) {
+                        } catch { // Bỏ tham số không sử dụng
 
                           toast.error("Failed to copy image to clipboard");
                         }
