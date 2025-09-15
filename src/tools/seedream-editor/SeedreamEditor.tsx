@@ -14,7 +14,7 @@ import type { SeedreamEditorProps, SeedreamEditorState, SeedreamRequest, Seedrea
 
 // Constants and utility functions moved to Settings.tsx component
 
-export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
+export default function SeedreamEditor({}: SeedreamEditorProps) {
   const [state, setState] = useState<SeedreamEditorState>({
     prompt: '',
     uploadedImages: [],
@@ -314,23 +314,63 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
             isEnhancing={isEnhancing}
             onEnhancePrompt={handleEnhancePrompt}
           />
+          
+          {/* Generate Image Button */}
+          <div className="mt-3 mb-3">
+            <Button
+              onClick={handleProcess}
+              disabled={state.isProcessing || state.uploadedImages.length === 0 || !state.prompt.trim()}
+              className="w-full"
+              size="lg"
+            >
+              {state.isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating Images...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  Generate Edited Images
+                </>
+              )}
+            </Button>
+            {(!state.prompt.trim() || state.uploadedImages.length === 0) && (
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                {!state.prompt.trim() ? 'Enter an edit prompt to continue' : 'Upload images to get started'}
+              </p>
+            )}
+          </div>
 
-          {/* Settings */}
-          <SettingsComponent 
-            imageSize={state.imageSize}
-            onImageSizeChange={(newSize: { width: number; height: number }) => setState(prev => ({ ...prev, imageSize: newSize }))}
-            sizeMode={sizeMode}
-            onSizeModeChange={setSizeMode}
-            numImages={state.numImages}
-            onNumImagesChange={(num: number) => setState(prev => ({ ...prev, numImages: num }))}
-            maxImages={state.maxImages}
-            onMaxImagesChange={(maxImages: number) => setState(prev => ({ ...prev, maxImages }))}
-            enableSafetyChecker={state.enableSafetyChecker}
-            onEnableSafetyCheckerChange={(enableSafetyChecker: boolean) => setState(prev => ({ ...prev, enableSafetyChecker }))}
-            seed={state.seed}
-            originalImageSize={originalImageSize}
-            disabled={state.isProcessing}
-          />
+          {/* Settings with Reset Button */}
+          <div className="space-y-2">
+            <SettingsComponent 
+              imageSize={state.imageSize}
+              onImageSizeChange={(newSize: { width: number; height: number }) => setState(prev => ({ ...prev, imageSize: newSize }))}
+              sizeMode={sizeMode}
+              onSizeModeChange={setSizeMode}
+              numImages={state.numImages}
+              onNumImagesChange={(num: number) => setState(prev => ({ ...prev, numImages: num }))}
+              maxImages={state.maxImages}
+              onMaxImagesChange={(maxImages: number) => setState(prev => ({ ...prev, maxImages }))}
+              enableSafetyChecker={state.enableSafetyChecker}
+              onEnableSafetyCheckerChange={(enableSafetyChecker: boolean) => setState(prev => ({ ...prev, enableSafetyChecker }))}
+              seed={state.seed}
+              originalImageSize={originalImageSize}
+              disabled={state.isProcessing}
+            />
+            
+            {/* Reset Button - Moved closer to Settings */}
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              disabled={state.isProcessing}
+              className="w-full h-8 text-xs"
+              size="sm"
+            >
+              Reset
+            </Button>
+          </div>
 
           {/* Error Display */}
           {state.error && (
@@ -338,43 +378,6 @@ export default function SeedreamEditor({ tool }: SeedreamEditorProps) {
               <AlertDescription>{state.error}</AlertDescription>
             </Alert>
           )}
-
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            <div className="pt-2">
-              <Button
-                onClick={handleProcess}
-                disabled={state.isProcessing || state.uploadedImages.length === 0 || !state.prompt.trim()}
-                className="w-full"
-                size="lg"
-              >
-                {state.isProcessing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Images...
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="mr-2 h-4 w-4" />
-                    Generate Edited Images
-                  </>
-                )}
-              </Button>
-              {(!state.prompt.trim() || state.uploadedImages.length === 0) && (
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  {!state.prompt.trim() ? 'Enter an edit prompt to continue' : 'Upload images to get started'}
-                </p>
-              )}
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleReset}
-              disabled={state.isProcessing}
-              className="w-full"
-            >
-              Reset
-            </Button>
-          </div>
         </div>
 
         {/* Right Column - Preview */}

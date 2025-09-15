@@ -113,26 +113,26 @@ export default function Settings({
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-base flex items-center gap-2">
-          <SettingsIcon className="h-4 w-4" />
+    <Card className="shadow-sm">
+      <CardHeader className="pb-2 pt-3">
+        <CardTitle className="text-sm flex items-center gap-1">
+          <SettingsIcon className="h-3.5 w-3.5" />
           Settings
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-3 pt-0">
         {/* Image Size Section */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground/90">
+        <div className="space-y-2">
+          <Label className="text-xs font-medium text-foreground/90">
             Image Size
           </Label>
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Select 
               value={sizeMode} 
               onValueChange={(value: string) => handleSizeModeChange(value as keyof typeof PRESET_SIZES | 'custom')} 
               disabled={disabled}
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="Select size preset" />
               </SelectTrigger>
               <SelectContent>
@@ -146,8 +146,8 @@ export default function Settings({
             </Select>
             
             {(sizeMode === 'custom' || sizeMode === 'auto') && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-0.5">
                   <Label htmlFor="width" className="text-xs text-muted-foreground font-medium">Width</Label>
                   <Input
                     id="width"
@@ -162,10 +162,10 @@ export default function Settings({
                       onImageSizeChange({ ...imageSize, width });
                     }}
                     disabled={sizeMode === 'auto' || disabled}
-                    className="h-9"
+                    className="h-7 text-xs"
                   />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <Label htmlFor="height" className="text-xs text-muted-foreground font-medium">Height</Label>
                   <Input
                     id="height"
@@ -180,65 +180,68 @@ export default function Settings({
                       onImageSizeChange({ ...imageSize, height });
                     }}
                     disabled={sizeMode === 'auto' || disabled}
-                    className="h-9"
+                    className="h-7 text-xs"
                   />
                 </div>
               </div>
             )}
             
             {sizeMode === 'auto' && originalImageSize && (
-              <div className="text-xs text-muted-foreground bg-muted/30 rounded-md px-3 py-2">
-                <span className="font-medium">Auto-optimized:</span> {originalImageSize.width}×{originalImageSize.height} → {imageSize.width}×{imageSize.height}
+              <div className="text-xs text-muted-foreground bg-muted/30 rounded-md px-2 py-1">
+                <span className="font-medium">Auto:</span> {originalImageSize.width}×{originalImageSize.height} → {imageSize.width}×{imageSize.height}
               </div>
             )}
           </div>
         </div>
         
-        {/* Number of Results Section */}
-        <div className="space-y-2">
-          <Label htmlFor="num-images">Number of results</Label>
-          <Input
-            id="num-images"
-            type="number"
-            min={1}
-            max={4}
-            value={numImages}
-            onChange={(e) => onNumImagesChange(parseInt(e.target.value) || 1)}
-            disabled={disabled}
-          />
-        </div>
-
-        {/* Max Images Section */}
-        <div className="space-y-2">
-          <Label htmlFor="max-images">Max Images</Label>
-          <Input
-            id="max-images"
-            type="number"
-            min={1}
-            max={10}
-            value={maxImages}
-            onChange={(e) => onMaxImagesChange(parseInt(e.target.value) || 1)}
-            disabled={disabled}
-          />
+        {/* Number and Max Images Section - Combined in a grid */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-0.5">
+            <Label htmlFor="num-images" className="text-xs">Number of results</Label>
+            <Input
+              id="num-images"
+              type="number"
+              min={1}
+              max={4}
+              value={numImages}
+              onChange={(e) => onNumImagesChange(parseInt(e.target.value) || 1)}
+              disabled={disabled}
+              className="h-7 text-xs"
+            />
+          </div>
+          <div className="space-y-0.5">
+            <Label htmlFor="max-images" className="text-xs">Max Images</Label>
+            <Input
+              id="max-images"
+              type="number"
+              min={1}
+              max={10}
+              value={maxImages}
+              onChange={(e) => onMaxImagesChange(parseInt(e.target.value) || 1)}
+              disabled={disabled}
+              className="h-7 text-xs"
+            />
+          </div>
         </div>
 
         {/* Safety Checker Section */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1.5">
           <Checkbox
             id="safety-checker"
             checked={enableSafetyChecker}
             onCheckedChange={(checked: boolean | 'indeterminate') => 
               onEnableSafetyCheckerChange(checked === true)}
             disabled={disabled}
+            className="h-3.5 w-3.5"
           />
-          <Label htmlFor="safety-checker">Enable Safety Checker</Label>
+          <Label htmlFor="safety-checker" className="text-xs">Enable Safety Checker</Label>
         </div>
         
         {seed !== undefined && (
-          <div className="space-y-2">
-            <Label>Seed (for reproducibility)</Label>
-            <Badge variant="secondary">{seed}</Badge>
-            <div className="text-xs text-muted-foreground">(New seed generated for each request)</div>
+          <div className="space-y-1">
+            <Label className="text-xs">Seed</Label>
+            <Badge variant="secondary" className="text-xs py-0.5">{seed}</Badge>
+            <div className="text-xs text-muted-foreground">(New seed for each request)</div>
           </div>
         )}
       </CardContent>
