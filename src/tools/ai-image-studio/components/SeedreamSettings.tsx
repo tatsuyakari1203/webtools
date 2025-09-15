@@ -17,8 +17,8 @@ interface SeedreamSettingsProps {
   onSizeModeChange: (newMode: keyof typeof PRESET_SIZES | 'custom') => void;
   numImages: number;
   onNumImagesChange: (numImages: number) => void;
-  maxImages: number;
-  onMaxImagesChange: (maxImages: number) => void;
+  outputImages: number; // Output images setting (default=4, max=6)
+  onOutputImagesChange: (outputImages: number) => void;
   enableSafetyChecker: boolean;
   onEnableSafetyCheckerChange: (enable: boolean) => void;
   enableAutoResize?: boolean;
@@ -36,8 +36,8 @@ export default function SeedreamSettings({
   onSizeModeChange,
   numImages,
   onNumImagesChange,
-  maxImages,
-  onMaxImagesChange,
+  outputImages,
+  onOutputImagesChange,
   enableSafetyChecker,
   onEnableSafetyCheckerChange,
   enableAutoResize,
@@ -161,14 +161,14 @@ export default function SeedreamSettings({
             />
           </div>
           <div className="space-y-0.5">
-            <Label htmlFor="max-images" className="text-xs">Max Images</Label>
+            <Label htmlFor="output-images" className="text-xs">Output Images</Label>
             <Input
-              id="max-images"
+              id="output-images"
               type="number"
               min={1}
-              max={10}
-              value={maxImages}
-              onChange={(e) => onMaxImagesChange(parseInt(e.target.value) || 1)}
+              max={6}
+              value={outputImages}
+              onChange={(e) => onOutputImagesChange(parseInt(e.target.value) || 1)}
               disabled={disabled}
               className="h-7 text-xs"
             />

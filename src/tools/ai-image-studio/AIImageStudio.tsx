@@ -95,8 +95,14 @@ export default function AIImageStudio({}: AIImageStudioProps) {
           <ModelSelector
             selectedModel={state.selectedModel}
             onModelChange={(value) => {
-
-              setState(prev => ({ ...prev, selectedModel: value }));
+              // Update maxImages based on selected model (upload limit)
+              // Seedream: 10 images upload; Flux Kontext: 1 image upload
+              const newMaxImages = value === 'seedream' ? 10 : 1;
+              setState(prev => ({ 
+                ...prev, 
+                selectedModel: value,
+                maxImages: newMaxImages
+              }));
             }}
             disabled={state.isProcessing}
           />
@@ -131,8 +137,8 @@ export default function AIImageStudio({}: AIImageStudioProps) {
                 onSizeModeChange={setSizeMode}
                 numImages={state.numImages}
                 onNumImagesChange={(num: number) => setState(prev => ({ ...prev, numImages: num }))}
-                maxImages={state.maxImages}
-                onMaxImagesChange={(maxImages: number) => setState(prev => ({ ...prev, maxImages }))}
+                outputImages={state.outputImages}
+                onOutputImagesChange={(outputImages: number) => setState(prev => ({ ...prev, outputImages }))}
                 enableSafetyChecker={state.enableSafetyChecker}
                 onEnableSafetyCheckerChange={(enableSafetyChecker: boolean) => setState(prev => ({ ...prev, enableSafetyChecker }))}
                 enableAutoResize={enableAutoResize}

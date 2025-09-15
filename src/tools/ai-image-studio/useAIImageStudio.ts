@@ -5,6 +5,13 @@ import { processFiles } from './file-processor';
 import type { AIImageStudioState } from './types';
 
 /**
+ * Get default maxImages based on selected model (upload limit)
+ */
+const getDefaultMaxImages = (model: 'seedream' | 'flux-kontext'): number => {
+  return model === 'seedream' ? 10 : 1;
+};
+
+/**
  * Custom hook for managing AI Image Studio state and operations
  */
 export const useAIImageStudio = () => {
@@ -19,7 +26,8 @@ export const useAIImageStudio = () => {
     error: null,
     imageSize: { width: 1024, height: 1024 },
     numImages: 1,
-    maxImages: 10,
+    maxImages: 10, // Upload limit for Seedream
+    outputImages: 4, // Output images setting for Seedream (default)
     enableSafetyChecker: true,
     selectedModel: 'seedream',
     aspectRatio: '1:1',
@@ -107,7 +115,7 @@ export const useAIImageStudio = () => {
         selectedModel: state.selectedModel,
         imageSize: state.imageSize,
         numImages: state.numImages,
-        maxImages: state.maxImages,
+        outputImages: state.outputImages,
         enableSafetyChecker: state.enableSafetyChecker,
         aspectRatio: state.aspectRatio || '1:1',
         safetyTolerance: state.safetyTolerance || '3',
@@ -179,6 +187,7 @@ export const useAIImageStudio = () => {
     });
     
     // Reset state
+    const defaultModel = 'seedream';
     setState({
       prompt: '',
       uploadedImages: [],
@@ -189,9 +198,10 @@ export const useAIImageStudio = () => {
       error: null,
       imageSize: { width: 1024, height: 1024 },
       numImages: 1,
-      maxImages: 4,
+      maxImages: getDefaultMaxImages(defaultModel),
+      outputImages: 4, // Default output images for Seedream
       enableSafetyChecker: true,
-      selectedModel: 'seedream',
+      selectedModel: defaultModel,
       aspectRatio: '1:1',
       guidanceScale: 7.5,
       safetyTolerance: '3',

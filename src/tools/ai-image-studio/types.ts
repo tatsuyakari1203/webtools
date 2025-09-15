@@ -16,7 +16,8 @@ export interface AIImageStudioState {
   };
   aspectRatio?: "21:9" | "16:9" | "4:3" | "3:2" | "1:1" | "2:3" | "3:4" | "9:16" | "9:21";
   numImages: number;
-  maxImages: number;
+  maxImages: number; // Upload limit: Seedream=10, Flux=1
+  outputImages: number; // Output images setting (only for Seedream): default=4, max=6
   enableSafetyChecker: boolean;
   seed?: number;
   selectedModel: 'seedream' | 'flux-kontext';

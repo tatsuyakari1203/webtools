@@ -15,7 +15,7 @@ export class ApiService {
     selectedModel,
     imageSize,
     numImages,
-    maxImages,
+    outputImages,
     enableSafetyChecker,
     aspectRatio,
     safetyTolerance,
@@ -30,7 +30,7 @@ export class ApiService {
     selectedModel: 'seedream' | 'flux-kontext';
     imageSize: { width: number; height: number };
     numImages: number;
-    maxImages: number;
+    outputImages: number; // Output images setting for Seedream
     enableSafetyChecker: boolean;
     aspectRatio: "21:9" | "16:9" | "4:3" | "3:2" | "1:1" | "2:3" | "3:4" | "9:16" | "9:21";
     safetyTolerance: string;
@@ -56,7 +56,7 @@ export class ApiService {
         images: base64Images,
         image_size: imageSize,
         num_images: numImages,
-        max_images: maxImages,
+        max_images: outputImages,
         sync_mode: true,
         seed,
         enable_safety_checker: enableSafetyChecker

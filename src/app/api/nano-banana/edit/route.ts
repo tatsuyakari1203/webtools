@@ -54,14 +54,20 @@ export async function POST(request: NextRequest) {
     // Extract image data from response
     const candidates = response.candidates
     if (!candidates || candidates.length === 0) {
-      throw new Error('No image generated')
+      return NextResponse.json(
+        { success: false, error: 'Model cannot generate image. This may be due to content being censored or inappropriate request. Please try again with different content.' },
+        { status: 400 }
+      )
     }
 
     const parts = candidates[0].content?.parts
     let imageData = null
 
-    if (!parts) {
-      throw new Error('No content parts found in response')
+    if (!parts || parts.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Model did not return content. This may be due to edit request being censored or inappropriate. Please try with different edit instructions.' },
+        { status: 400 }
+      )
     }
 
     for (const part of parts) {
@@ -72,7 +78,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!imageData) {
-      throw new Error('No image data found in response')
+      return NextResponse.json(
+        { success: false, error: 'Model did not return image. This may be due to edit content being censored. Please try with different edit request or image.' },
+        { status: 400 }
+      )
     }
 
     return NextResponse.json({

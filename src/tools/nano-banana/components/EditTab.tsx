@@ -224,7 +224,9 @@ export const EditTab: React.FC<EditTabProps> = ({
       const result = await response.json()
       
       if (!result.success) {
-        throw new Error(result.error || 'Edit failed')
+        // Display user-friendly error message from backend
+        toast.error(result.error || 'Edit failed')
+        return
       }
       
       // Convert base64 to blob URL
@@ -243,7 +245,12 @@ export const EditTab: React.FC<EditTabProps> = ({
       toast.success('Image edited successfully!')
     } catch (error) {
       console.error('Error editing image:', error)
-      toast.error('Unable to connect to server')
+      // Check if it's a network error or server error
+      if (error instanceof Error && error.message.includes('HTTP error!')) {
+        toast.error('Server error occurred. Please try again with different content or image.')
+      } else {
+        toast.error('Unable to connect to server. Please check your connection.')
+      }
     } finally {
       setLoading(false)
     }
