@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 
 import { Loader2, Edit, Wand2, Clipboard, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
@@ -27,7 +28,8 @@ export const EditTab: React.FC<EditTabProps> = ({
     editImage,
     editImagePreview,
     editPrompt,
-    editInstruction
+    editInstruction,
+    editMaintainOriginalSize
   } = state
   const [descriptionLoading, setDescriptionLoading] = useState(false)
   const [pasteLoading, setPasteLoading] = useState(false)
@@ -317,6 +319,19 @@ export const EditTab: React.FC<EditTabProps> = ({
       </div>
 
 
+
+      <div className="flex items-center space-x-2 mb-4">
+        <Checkbox 
+          id="maintain-size" 
+          checked={editMaintainOriginalSize}
+          onCheckedChange={(checked) => {
+            updateEditState({ editMaintainOriginalSize: checked === true })
+          }}
+        />
+        <Label htmlFor="maintain-size" className="text-sm font-normal cursor-pointer">
+          Resize output to match original image size
+        </Label>
+      </div>
 
       <Button 
         onClick={handleEdit} 

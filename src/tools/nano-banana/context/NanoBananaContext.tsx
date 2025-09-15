@@ -12,6 +12,7 @@ interface NanoBananaState {
   editImagePreview: string | null
   editPrompt: string
   editInstruction: string
+  editMaintainOriginalSize: boolean
   
   // Compose tab state
   composeImages: File[]
@@ -35,7 +36,7 @@ interface NanoBananaState {
 interface NanoBananaContextType {
   state: NanoBananaState
   updateGenerateState: (updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateImageSize'>>) => void
-  updateEditState: (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction'>>) => void
+  updateEditState: (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction' | 'editMaintainOriginalSize'>>) => void
   updateComposeState: (updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType'>>) => void
   updateStyleState: (updates: Partial<Pick<NanoBananaState, 'styleContentImage' | 'styleStyleImage' | 'styleContentImagePreview' | 'styleStyleImagePreview' | 'stylePrompt' | 'styleStrength'>>) => void
   startNewSession: () => void
@@ -53,6 +54,7 @@ const defaultState: NanoBananaState = {
   editImagePreview: '',
   editPrompt: '',
   editInstruction: '',
+  editMaintainOriginalSize: true,
   
   // Compose tab state
   composeImages: [],
