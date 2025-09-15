@@ -8,14 +8,23 @@ export async function GET(request: NextRequest) {
   });
 }
 
+// Handle POST request for model-agnostic operations
+export async function POST(request: NextRequest) {
+  // This is a placeholder to ensure Next.js correctly routes POST requests to model-specific endpoints
+  return NextResponse.json(
+    { error: 'Please use a specific model endpoint' },
+    { status: 400 }
+  );
+}
+
 // Handle OPTIONS request for CORS
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
   });
 }

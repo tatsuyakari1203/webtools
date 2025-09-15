@@ -80,6 +80,7 @@ interface SettingsProps {
   seed?: number;
   originalImageSize: { width: number; height: number } | null;
   disabled?: boolean;
+  selectedModel?: 'seedream' | 'flux-kontext';
 }
 
 export default function Settings({
@@ -97,14 +98,15 @@ export default function Settings({
   onEnableAutoResizeChange,
   seed,
   originalImageSize,
-  disabled = false
+  disabled = false,
+  selectedModel
 }: SettingsProps) {
   // Handle size mode change
   const handleSizeModeChange = (newMode: keyof typeof PRESET_SIZES | 'custom') => {
     onSizeModeChange(newMode);
     
-    if (newMode === 'auto' && originalImageSize) {
-      // Recalculate optimal size based on original image
+    if (newMode === 'auto' && originalImageSize && selectedModel === 'seedream') {
+      // Only recalculate optimal size for Seedream model
       const optimalSize = calculateOptimalSize(originalImageSize.width, originalImageSize.height);
       onImageSizeChange(optimalSize);
     } else if (newMode !== 'auto' && newMode !== 'custom') {

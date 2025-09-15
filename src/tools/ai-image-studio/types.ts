@@ -14,10 +14,14 @@ export interface AIImageStudioState {
     width: number;
     height: number;
   };
+  aspectRatio?: "21:9" | "16:9" | "4:3" | "3:2" | "1:1" | "2:3" | "3:4" | "9:16" | "9:21";
   numImages: number;
   maxImages: number;
   enableSafetyChecker: boolean;
   seed?: number;
+  selectedModel: 'seedream' | 'flux-kontext';
+  guidanceScale?: number;
+  safetyTolerance?: string;
 }
 
 export interface SeedreamRequest {
@@ -40,6 +44,32 @@ export interface SeedreamResponse {
     url: string;
   }>;
   seed: number;
+}
+
+export interface FluxKontextRequest {
+  prompt: string;
+  image_url?: string;
+  image_base64?: string;
+  aspect_ratio?: "21:9" | "16:9" | "4:3" | "3:2" | "1:1" | "2:3" | "3:4" | "9:16" | "9:21";
+  num_images?: number;
+  output_format?: 'jpeg' | 'png';
+  sync_mode?: boolean;
+  safety_tolerance?: string;
+  guidance_scale?: number;
+  seed?: number;
+  enhance_prompt?: boolean;
+}
+
+export interface FluxKontextResponse {
+  images: Array<{
+    url: string;
+    width?: number;
+    height?: number;
+  }>;
+  prompt: string;
+  seed: number;
+  has_nsfw_concepts: boolean[];
+  timings: Record<string, number>;
 }
 
 export interface ImageUploadResult {

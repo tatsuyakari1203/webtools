@@ -1,161 +1,251 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 
 export interface FluxKontextRequest {
   prompt: string;
-  image_url: string;
-  aspect_ratio?: string;
+  image_url?: string;
+  image_base64?: string; // Will be converted to image_url
+  aspect_ratio?: "21:9" | "16:9" | "4:3" | "3:2" | "1:1" | "2:3" | "3:4" | "9:16" | "9:21";
   num_images?: number;
-  output_format?: 'jpeg' | 'png';
   sync_mode?: boolean;
+  seed?: number;
   safety_tolerance?: string;
   guidance_scale?: number;
-  seed?: number;
   enhance_prompt?: boolean;
+  output_format?: string;
 }
 
 export interface FluxKontextResponse {
-  images: Array<{
+  images: {
+    height: number;
     url: string;
-    width?: number;
-    height?: number;
-  }>;
-  prompt: string;
+    width: number;
+  }[];
+  timings: Record<string, number>;
   seed: number;
   has_nsfw_concepts: boolean[];
-  timings: Record<string, number>;
+  prompt: string;
 }
 
 export async function POST(request: NextRequest) {
+  // Kiểm tra API key
+  const headersList = headers();
+  const apiKey = process.env.FAL_API_KEY;
+  
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: 'FAL API key is not configured' },
+      { status: 500 }
+    );
+  }
+
   try {
-    const falApiKey = process.env.FAL_API_KEY;
-    
-    if (!falApiKey) {
+    // Lấy dữ liệu từ request
+    const requestData: FluxKontextRequest = await request.json();
+
+    // Kiểm tra các trường bắt buộc
+    if (!requestData.prompt || (!requestData.image_url && !requestData.image_base64)) {
       return NextResponse.json(
-        { error: 'FAL API key not configured' },
-        { status: 500 }
+        { error: 'Missing required fields: prompt and either image_url or image_base64 are required' },
+        { status: 400 }
       );
     }
-
-    const body: FluxKontextRequest = await request.json();
     
-    // Validate required fields
-    if (!body.prompt || !body.image_url) {
+    // Validate prompt length (FAL có thể có giới hạn)
+    if (requestData.prompt.length > 4000) {
       return NextResponse.json(
-        { error: 'Missing required fields: prompt and image_url are required' },
+        { error: 'Prompt too long, maximum 4000 characters' },
         { status: 400 }
       );
     }
 
-    // Prepare the request payload
-    const payload: FluxKontextRequest = {
-      prompt: body.prompt,
-      image_url: body.image_url,
-      aspect_ratio: body.aspect_ratio || '1:1',
-      num_images: body.num_images || 1,
-      output_format: body.output_format || 'jpeg',
-      sync_mode: body.sync_mode || false,
-      safety_tolerance: body.safety_tolerance || '2',
-      guidance_scale: body.guidance_scale || 3.5,
-      seed: body.seed,
-      enhance_prompt: body.enhance_prompt || false
-    };
+    // Log để debug - kiểm tra dữ liệu nhận được
+    console.log('Flux Kontext request received:', {
+      hasPrompt: !!requestData.prompt,
+      hasImageUrl: !!requestData.image_url,
+      hasImageBase64: !!requestData.image_base64,
+      aspectRatio: requestData.aspect_ratio,
+      numImages: requestData.num_images
+    });
 
-    // Make request to FAL API
-    const response = await fetch('https://queue.fal.run/fal-ai/flux-pro/kontext', {
+    // Chuẩn bị dữ liệu để gửi đến FAL API - chỉ sử dụng các trường được FAL API chấp nhận
+    const falRequestData: {
+      prompt: string;
+      image_url: string;
+      aspect_ratio?: string;
+      num_images?: number;
+      sync_mode?: boolean;
+      seed?: number;
+      safety_tolerance?: string;
+      guidance_scale?: number;
+      enhance_prompt?: boolean;
+      output_format?: string;
+    } = {
+      prompt: requestData.prompt,
+      image_url: '', // Sẽ được thiết lập dưới đây
+      num_images: Math.min(requestData.num_images || 1, 4), // Giới hạn 4 images max
+      sync_mode: true, // Luôn true để đồng bộ
+      safety_tolerance: '2',
+      guidance_scale: 3.5,
+      enhance_prompt: false,
+      output_format: 'jpeg',
+    };
+    
+    // Chỉ thêm optional fields nếu có giá trị hợp lệ
+    if (requestData.aspect_ratio) {
+      falRequestData.aspect_ratio = requestData.aspect_ratio;
+    }
+    if (requestData.seed !== undefined) {
+      falRequestData.seed = requestData.seed;
+    }
+    
+    // Xử lý hình ảnh - chỉ sử dụng image_url như yêu cầu của FAL API
+    try {
+      if (requestData.image_base64) {
+        // Chuyển đổi base64 thành data URL giống Seedream
+        if (requestData.image_base64.startsWith('data:')) {
+          falRequestData.image_url = requestData.image_base64;
+        } else {
+          // Đảm bảo đúng định dạng MIME type cho data URL
+          falRequestData.image_url = `data:image/png;base64,${requestData.image_base64}`;
+        }
+      } else if (requestData.image_url) {
+        // Sử dụng image_url trực tiếp
+        falRequestData.image_url = requestData.image_url;
+      }
+      
+      // Log để debug image processing
+      console.log('Processed image URL:', {
+        hasImageUrl: !!falRequestData.image_url,
+        urlLength: falRequestData.image_url?.length,
+        urlPrefix: falRequestData.image_url?.substring(0, 50)
+      });
+      
+      // Kiểm tra xem image_url có hợp lệ không
+      if (!falRequestData.image_url) {
+        return NextResponse.json(
+          { error: 'No valid image data provided' },
+          { status: 400 }
+        );
+      }
+    } catch (error) {
+      console.error('Error processing image data:', error);
+      return NextResponse.json(
+        { error: 'Error processing image data', details: error instanceof Error ? error.message : String(error) },
+        { status: 400 }
+      );
+    }
+
+    // Log payload sẽ gửi đến FAL API để debug
+    console.log('Sending to FAL API:', {
+      url: 'https://fal.run/fal-ai/flux-pro/kontext',
+      promptLength: falRequestData.prompt.length,
+      hasImageUrl: !!falRequestData.image_url,
+      imageUrlLength: falRequestData.image_url?.length,
+      imageUrlPrefix: falRequestData.image_url?.substring(0, 50),
+      aspectRatio: falRequestData.aspect_ratio,
+      numImages: falRequestData.num_images,
+      syncMode: falRequestData.sync_mode,
+      fullPayload: falRequestData
+    });
+
+    // Gọi API của FAL
+    const response = await fetch('https://fal.run/fal-ai/flux-pro/kontext', {
       method: 'POST',
       headers: {
-        'Authorization': `Key ${falApiKey}`,
+        'Authorization': `Key ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(falRequestData),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('FAL API Error:', errorText);
+      let errorData;
+      try {
+        errorData = await response.json();
+        // Log chi tiết validation errors
+        console.error('FAL API Error Details:', {
+          status: response.status,
+          statusText: response.statusText,
+          fullError: errorData,
+          detail: errorData.detail || 'No detail provided'
+        });
+      } catch (parseError) {
+        const errorText = await response.text();
+        errorData = { message: errorText };
+        console.error('FAL API Text Error:', errorText);
+      }
+      
+      // Trích xuất chi tiết lỗi từ FAL API
+      let errorMessage = 'Error from FAL API';
+      if (errorData.detail && Array.isArray(errorData.detail)) {
+        errorMessage = errorData.detail.map((item: any) => 
+          `${item.loc?.join('.') || 'field'}: ${item.msg}`
+        ).join(', ');
+      } else if (errorData.detail) {
+        errorMessage = typeof errorData.detail === 'string' 
+          ? errorData.detail 
+          : JSON.stringify(errorData.detail);
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to process image generation request' },
+        { 
+          error: errorMessage,
+          details: errorData,
+          originalError: 'FAL API validation error'
+        },
         { status: response.status }
       );
     }
 
-    // For flux-kontext, we need to handle the queue response
-    const queueResponse = await response.json();
-    
-    // If sync_mode is false, return the queue response directly
-    if (!body.sync_mode) {
-      return NextResponse.json(queueResponse);
+    // Xử lý phản hồi từ FAL API
+    const responseData = await response.json();
+
+    // Nếu sync_mode là false, trả về response ngay lập tức
+    if (!falRequestData.sync_mode) {
+      return NextResponse.json(responseData);
     }
-    
-    // If sync_mode is true, we need to poll for the result
-    const requestId = queueResponse.request_id;
-    if (!requestId) {
-      return NextResponse.json(
-        { error: 'No request ID returned from API' },
-        { status: 500 }
-      );
-    }
-    
-    // Poll for the result (simplified implementation)
-    let result = null;
-    let attempts = 0;
-    const maxAttempts = 30; // 30 attempts with 2s delay = max 1 minute wait
-    
-    while (attempts < maxAttempts) {
-      attempts++;
-      
-      // Wait 2 seconds between polls
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const resultResponse = await fetch(`https://queue.fal.run/fal-ai/flux-pro/kontext/requests/${requestId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Key ${falApiKey}`,
-        },
-      });
-      
-      if (resultResponse.ok) {
-        result = await resultResponse.json();
-        break;
-      }
-      
-      // If we get a 404, the result is not ready yet
-      if (resultResponse.status !== 404) {
-        const errorText = await resultResponse.text();
-        console.error('FAL API Error:', errorText);
+
+    // Nếu sync_mode là true, đợi kết quả từ FAL API
+    if (responseData.status === 'COMPLETED') {
+      // Lấy kết quả từ response_url
+      const resultResponse = await fetch(responseData.response_url);
+      if (!resultResponse.ok) {
         return NextResponse.json(
-          { error: 'Failed to retrieve image generation result' },
+          { error: 'Error fetching result from FAL API' },
           { status: resultResponse.status }
         );
       }
+      const resultData = await resultResponse.json();
+      return NextResponse.json(resultData);
+    } else {
+      // Trả về trạng thái hiện tại nếu chưa hoàn thành
+      return NextResponse.json(responseData);
     }
-    
-    if (!result) {
-      return NextResponse.json(
-        { error: 'Timed out waiting for image generation result' },
-        { status: 504 }
-      );
-    }
-    
-    return NextResponse.json(result);
-    
   } catch (error) {
-    console.error('Flux Kontext API Error:', error);
+    console.error('Error processing request:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
 }
 
-// Handle OPTIONS request for CORS
 export async function OPTIONS() {
   return new NextResponse(null, {
-    status: 200,
+    status: 204,
     headers: {
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400',
     },
   });
+}
+
+export async function GET() {
+  return NextResponse.json(
+    { error: 'Method not allowed. Use POST instead.' },
+    { status: 405 }
+  );
 }
