@@ -15,6 +15,11 @@ import Preview from './components/Preview';
 import type { AIImageStudioProps, AIImageStudioState, SeedreamRequest, SeedreamResponse, FluxKontextRequest, FluxKontextResponse } from './types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+// Custom Components
+import { ModelSelector } from './components/ModelSelector';
+import { GenerateButton } from './components/GenerateButton';
+import { ErrorDisplay } from './components/ErrorDisplay';
+
 // Constants and utility functions moved to Settings.tsx component
 
 export default function AIImageStudio({}: AIImageStudioProps) {
@@ -479,25 +484,14 @@ export default function AIImageStudio({}: AIImageStudioProps) {
           />
 
           {/* Model Selection */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Model</Label>
-            <Select 
-              value={state.selectedModel} 
-              onValueChange={(value: 'seedream' | 'flux-kontext') => {
-                console.log('Model changed to:', value, 'Images:', state.uploadedImages.length, state.imageUrls.length);
-                setState(prev => ({ ...prev, selectedModel: value }));
-              }}
-              disabled={state.isProcessing}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select model" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="seedream">Seedream</SelectItem>
-                <SelectItem value="flux-kontext">Flux Kontext</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <ModelSelector
+            selectedModel={state.selectedModel}
+            onModelChange={(value) => {
+              console.log('Model changed to:', value, 'Images:', state.uploadedImages.length, state.imageUrls.length);
+              setState(prev => ({ ...prev, selectedModel: value }));
+            }}
+            disabled={state.isProcessing}
+          />
 
           {/* Edit Instructions Section */}
           <EditInstructions 
@@ -511,39 +505,21 @@ export default function AIImageStudio({}: AIImageStudioProps) {
           />
           
           {/* Generate Image Button */}
-          <div className="mt-3 mb-3">
-            <Button
-              onClick={() => {
-                console.log('Generate button clicked:', {
-                  isProcessing: state.isProcessing,
-                  uploadedImagesCount: state.uploadedImages.length,
-                  promptEmpty: !state.prompt.trim(),
-                  prompt: state.prompt
-                });
-                handleProcess();
-              }}
-              disabled={state.isProcessing || state.uploadedImages.length === 0 || !state.prompt.trim()}
-              className="w-full"
-              size="lg"
-            >
-              {state.isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating Images...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="mr-2 h-4 w-4" />
-                  Generate Edited Images
-                </>
-              )}
-            </Button>
-            {(!state.prompt.trim() || state.uploadedImages.length === 0) && (
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                {!state.prompt.trim() ? 'Enter an edit prompt to continue' : 'Upload images to get started'}
-              </p>
-            )}
-          </div>
+          <GenerateButton
+            onClick={() => {
+              console.log('Generate button clicked:', {
+                isProcessing: state.isProcessing,
+                uploadedImagesCount: state.uploadedImages.length,
+                promptEmpty: !state.prompt.trim(),
+                prompt: state.prompt
+              });
+              handleProcess();
+            }}
+            isProcessing={state.isProcessing}
+            disabled={state.isProcessing || state.uploadedImages.length === 0 || !state.prompt.trim()}
+            hasPrompt={!!state.prompt.trim()}
+            hasImages={state.uploadedImages.length > 0}
+          />
 
           {/* Settings with Reset Button */}
           <div className="space-y-2">
@@ -598,11 +574,7 @@ export default function AIImageStudio({}: AIImageStudioProps) {
           </div>
 
           {/* Error Display */}
-          {state.error && (
-            <Alert variant="destructive">
-              <AlertDescription>{state.error}</AlertDescription>
-            </Alert>
-          )}
+          <ErrorDisplay error={state.error} />
         </div>
 
         {/* Right Column - Preview */}
