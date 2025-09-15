@@ -143,14 +143,14 @@ export const toolsRegistry: Tool[] = [
 
 
   {
-    id: "seedream-editor",
-    name: "Seedream Editor",
-    description: "AI-powered image editing tool using ByteDance Seedream 4.0 for advanced image composition and editing",
+    id: "ai-image-studio",
+    name: "AI Image Studio",
+    description: "Edit images with advanced AI models like Seedream and Flux Kontext",
     category: "AI",
     icon: Palette,
-    path: "/tools/seedream-editor",
+    path: "/tools/ai-image-studio",
     featured: true,
-    componentPath: "@/tools/seedream-editor/SeedreamEditor",
+    componentPath: "@/tools/ai-image-studio/AIImageStudio",
     requiresInvite: true,
     inviteDescription: "This AI tool requires special access due to API costs and usage limits.",
   },]

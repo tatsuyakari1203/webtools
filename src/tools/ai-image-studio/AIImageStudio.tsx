@@ -10,12 +10,12 @@ import EditInstructions from './components/EditInstructions';
 import SettingsComponent from './components/Settings';
 import { calculateOptimalSize } from './components/Settings';
 import Preview from './components/Preview';
-import type { SeedreamEditorProps, SeedreamEditorState, SeedreamRequest, SeedreamResponse } from './types';
+import type { AIImageStudioProps, AIImageStudioState, SeedreamRequest, SeedreamResponse } from './types';
 
 // Constants and utility functions moved to Settings.tsx component
 
-export default function SeedreamEditor({}: SeedreamEditorProps) {
-  const [state, setState] = useState<SeedreamEditorState>({
+export default function AIImageStudio({}: AIImageStudioProps) {
+  const [state, setState] = useState<AIImageStudioState>({
     prompt: '',
     uploadedImages: [],
     imageUrls: [],
@@ -46,7 +46,7 @@ export default function SeedreamEditor({}: SeedreamEditorProps) {
 
     setIsEnhancing(true);
     try {
-      const response = await fetch('/api/seedream/enhance-prompt', {
+      const response = await fetch('/api/ai-image-generation/enhance-prompt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,6 +54,7 @@ export default function SeedreamEditor({}: SeedreamEditorProps) {
         body: JSON.stringify({
           prompt: state.prompt,
           category: 'image-editing',
+          model: 'seedream',
           ...(includeImageContext && state.base64Images.length > 0 && {
             image: state.base64Images[0]
           })
@@ -251,7 +252,7 @@ export default function SeedreamEditor({}: SeedreamEditorProps) {
         enable_safety_checker: state.enableSafetyChecker
       };
 
-      const response = await fetch('/api/seedream/edit', {
+      const response = await fetch('/api/ai-image-generation/models/seedream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

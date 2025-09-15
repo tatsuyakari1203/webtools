@@ -1,8 +1,8 @@
-export interface SeedreamEditorProps {
+export interface AIImageStudioProps {
   tool: unknown;
 }
 
-export interface SeedreamEditorState {
+export interface AIImageStudioState {
   prompt: string;
   uploadedImages: File[];
   imageUrls: string[];
