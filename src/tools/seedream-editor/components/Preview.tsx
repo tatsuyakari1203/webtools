@@ -3,8 +3,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, Upload, Maximize2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Upload, Maximize2, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import Lightbox from './Lightbox';
+import { toast } from 'sonner';
 
 interface PreviewProps {
   resultImages: string[];
@@ -78,15 +79,40 @@ export default function Preview({
                 </div>
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-xs text-muted-foreground">Result {activeIndex + 1} of {resultImages.length}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDownload(resultImages[activeIndex], activeIndex)}
-                    className="h-8 px-2"
-                  >
-                    <Download className="h-4 w-4 mr-1" />
-                    <span className="text-xs">Download</span>
-                  </Button>
+                  <div className="flex space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch(resultImages[activeIndex]);
+                          const blob = await response.blob();
+                          await navigator.clipboard.write([
+                            new ClipboardItem({
+                              [blob.type]: blob
+                            })
+                          ]);
+                          toast("Image copied to clipboard");
+                        } catch (error) {
+                          console.error('Failed to copy image:', error);
+                          toast.error("Failed to copy image to clipboard");
+                        }
+                      }}
+                      className="h-8 px-2"
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      <span className="text-xs">Copy</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDownload(resultImages[activeIndex], activeIndex)}
+                      className="h-8 px-2"
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      <span className="text-xs">Download</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
               

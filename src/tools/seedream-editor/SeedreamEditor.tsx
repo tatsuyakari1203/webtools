@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
@@ -33,6 +33,7 @@ export default function SeedreamEditor({}: SeedreamEditorProps) {
   const [originalImageSize, setOriginalImageSize] = useState<{ width: number; height: number } | null>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [includeImageContext, setIncludeImageContext] = useState(false);
+  const [enableAutoResize, setEnableAutoResize] = useState(true); // State for auto-resize toggle
 
   // handleSizeModeChange moved to Settings.tsx component
 
@@ -171,6 +172,56 @@ export default function SeedreamEditor({}: SeedreamEditorProps) {
 
 
 
+  // Function to resize an image to match the original dimensions exactly
+  const resizeImageToOriginal = async (imageUrl: string, originalWidth: number, originalHeight: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous'; // Enable CORS for the image
+      
+      // Set a timeout to handle cases where the image might take too long to load
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Image loading timeout'));
+      }, 10000); // 10 seconds timeout
+      
+      img.onload = () => {
+        clearTimeout(timeoutId);
+        
+        try {
+          // Create a canvas with the original dimensions
+          const canvas = document.createElement('canvas');
+          canvas.width = originalWidth;
+          canvas.height = originalHeight;
+          const ctx = canvas.getContext('2d');
+          
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+          
+          // Set image smoothing properties for better quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          
+          // Draw the image onto the canvas, scaling it to match original dimensions
+          ctx.drawImage(img, 0, 0, originalWidth, originalHeight);
+          
+          // Convert canvas to data URL
+          const resizedImageUrl = canvas.toDataURL('image/png');
+          resolve(resizedImageUrl);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      
+      img.onerror = () => {
+        clearTimeout(timeoutId);
+        reject(new Error('Failed to load image for resizing'));
+      };
+      
+      img.src = imageUrl;
+    });
+  };
+  
   const handleProcess = async () => {
     if (!state.prompt.trim()) {
       setState(prev => ({ ...prev, error: 'Please enter a prompt' }));
@@ -215,9 +266,48 @@ export default function SeedreamEditor({}: SeedreamEditorProps) {
 
       const result: SeedreamResponse = await response.json();
       
+      // Get the result images URLs
+      let resultImageUrls = result.images.map(img => img.url);
+      
+      // If auto-resize is enabled and we have original image dimensions, resize the result images
+      if (enableAutoResize && originalImageSize && sizeMode === 'auto') {
+        try {
+          toast.info('Resizing images to match original dimensions...');
+          
+          // Process each image to match original dimensions
+          const resizedPromises = resultImageUrls.map((url, index) => 
+            resizeImageToOriginal(url, originalImageSize.width, originalImageSize.height)
+              .catch(error => {
+                console.error(`Error resizing image ${index + 1}:`, error);
+                // Return the original URL if resizing fails
+                return url;
+              })
+          );
+          
+          // Wait for all images to be resized
+          const resizedUrls = await Promise.all(resizedPromises);
+          
+          // Count how many images were successfully resized
+          const successCount = resizedUrls.filter((url, index) => url !== resultImageUrls[index]).length;
+          
+          if (successCount === resultImageUrls.length) {
+            toast.success(`All ${successCount} images resized to match original dimensions (${originalImageSize.width}×${originalImageSize.height})`);
+          } else if (successCount > 0) {
+            toast.success(`${successCount} of ${resultImageUrls.length} images resized to match original dimensions`);
+          } else {
+            toast.error('Could not resize any images');
+          }
+          
+          resultImageUrls = resizedUrls;
+        } catch (error) {
+          console.error('Error in image resizing process:', error);
+          toast.error('Failed to resize images');
+        }
+      }
+      
       setState(prev => ({ 
         ...prev, 
-        resultImages: result.images.map(img => img.url),
+        resultImages: resultImageUrls,
         isProcessing: false
         // We don't update seed from response anymore as we generate a new one for each request
       }));
@@ -355,6 +445,8 @@ export default function SeedreamEditor({}: SeedreamEditorProps) {
               onMaxImagesChange={(maxImages: number) => setState(prev => ({ ...prev, maxImages }))}
               enableSafetyChecker={state.enableSafetyChecker}
               onEnableSafetyCheckerChange={(enableSafetyChecker: boolean) => setState(prev => ({ ...prev, enableSafetyChecker }))}
+              enableAutoResize={enableAutoResize}
+              onEnableAutoResizeChange={(value: boolean) => setEnableAutoResize(value)}
               seed={state.seed}
               originalImageSize={originalImageSize}
               disabled={state.isProcessing}
