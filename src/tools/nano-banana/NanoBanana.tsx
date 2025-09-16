@@ -5,8 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Wand2, Edit, Combine, Palette, BookOpen } from 'lucide-react'
 import { GenerateTab } from './components/GenerateTab'
 import { EditTab } from './components/EditTab'
-import { ComposeTab } from './components/ComposeTab'
-import { StyleTransferTab } from './components/StyleTransferTab'
 import PromptGuideTab from './components/PromptGuideTab'
 import { ResultDisplay } from './components/ResultDisplay'
 import { NanoBananaProvider, useNanoBanana } from './context/NanoBananaContext'
@@ -21,11 +19,7 @@ const NanoBananaContent: React.FC = () => {
   const getOriginalImage = () => {
     switch (activeTab) {
       case 'edit':
-        return state.editImagePreview
-      case 'compose':
-        return state.composeImagePreviews[0] || null
-      case 'style':
-        return state.styleContentImagePreview
+        return state.editImagePreview || state.composeImagePreviews[0] || state.styleContentImagePreview
       default:
         return null
     }
@@ -48,7 +42,7 @@ const NanoBananaContent: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Left Panel - Controls */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="generate" className="flex items-center gap-1">
               <Wand2 className="h-4 w-4" />
               Generate
@@ -56,14 +50,6 @@ const NanoBananaContent: React.FC = () => {
             <TabsTrigger value="edit" className="flex items-center gap-1">
               <Edit className="h-4 w-4" />
               Edit
-            </TabsTrigger>
-            <TabsTrigger value="compose" className="flex items-center gap-1">
-              <Combine className="h-4 w-4" />
-              Compose
-            </TabsTrigger>
-            <TabsTrigger value="style" className="flex items-center gap-1">
-              <Palette className="h-4 w-4" />
-              Style
             </TabsTrigger>
             <TabsTrigger value="guide" className="flex items-center gap-1">
               <BookOpen className="h-4 w-4" />
@@ -81,22 +67,6 @@ const NanoBananaContent: React.FC = () => {
 
           <TabsContent value="edit">
             <EditTab 
-              loading={loading}
-              setLoading={setLoading}
-              setGeneratedImage={setGeneratedImage}
-            />
-          </TabsContent>
-
-          <TabsContent value="compose">
-            <ComposeTab 
-              loading={loading}
-              setLoading={setLoading}
-              setGeneratedImage={setGeneratedImage}
-            />
-          </TabsContent>
-
-          <TabsContent value="style">
-            <StyleTransferTab 
               loading={loading}
               setLoading={setLoading}
               setGeneratedImage={setGeneratedImage}

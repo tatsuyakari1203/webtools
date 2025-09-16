@@ -95,31 +95,33 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
     }
 
     setImprovingPrompt(true)
+    
+    // Import streaming utility dynamically
+    const { handleStreamingImprovePrompt } = await import('../utils/streamingApi')
+    
     try {
-      const response = await fetch('/api/nano-banana/improve-prompt', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: generatePrompt,
-          category
-        })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
+      let accumulatedText = ''
       
-      if (data.success && data.improved_prompt) {
-        updateGenerateState({ generatePrompt: data.improved_prompt })
-        toast.success(`Prompt improved for ${category} style!`)
-      } else {
-        throw new Error(data.error || 'Failed to improve prompt')
-      }
+      const improvedPrompt = await handleStreamingImprovePrompt(
+        generatePrompt,
+        category,
+        // onChunk callback - update prompt in real-time
+        (chunk: string, accumulated: string) => {
+          accumulatedText = accumulated
+          updateGenerateState({ generatePrompt: accumulatedText })
+        },
+        // onComplete callback
+        (finalPrompt: string) => {
+          updateGenerateState({ generatePrompt: finalPrompt })
+          toast.success(`Prompt improved for ${category} style!`)
+        },
+        // onError callback
+        (error: string) => {
+          console.error('Streaming error:', error)
+          toast.error('Unable to improve prompt')
+        }
+      )
+      
     } catch (error) {
       console.error('Error improving prompt:', error)
       toast.error(error instanceof Error ? error.message : 'Unable to improve prompt')
