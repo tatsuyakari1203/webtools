@@ -39,6 +39,7 @@ interface NanoBananaContextType {
   updateEditState: (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction'>>) => void
   updateComposeState: (updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType'>>) => void
   updateStyleState: (updates: Partial<Pick<NanoBananaState, 'styleContentImage' | 'styleStyleImage' | 'styleContentImagePreview' | 'styleStyleImagePreview' | 'stylePrompt' | 'styleStrength'>>) => void
+
   startNewSession: () => void
   setConversationId: (id: string | null) => void
   setLastGeneratedImages: (images: string[]) => void
@@ -96,6 +97,8 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, ...updates }))
   }
   
+
+  
   const startNewSession = () => {
     setState(prev => ({ ...prev, conversationId: null }))
   }
@@ -115,6 +118,7 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
       updateEditState,
       updateComposeState,
       updateStyleState,
+
       startNewSession,
       setConversationId,
       setLastGeneratedImages

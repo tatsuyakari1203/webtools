@@ -6,8 +6,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 
 import { Slider } from '@/components/ui/slider'
-import { Loader2, Wand2, Sparkles } from 'lucide-react'
+import { Loader2, Wand2, Sparkles, Upload, Camera, Palette, Package, Minus, ImageIcon, Type } from 'lucide-react'
 import { toast } from 'sonner'
+import { handleStreamingImprovePrompt } from '../utils/streamingApi'
 import { useNanoBanana } from '../context/NanoBananaContext'
 
 
@@ -119,7 +120,9 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
         (error: string) => {
           console.error('Streaming error:', error)
           toast.error('Unable to improve prompt')
-        }
+        },
+        // No image for generate tab improve prompt
+        undefined
       )
       
     } catch (error) {
@@ -129,6 +132,8 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
       setImprovingPrompt(false)
     }
   }
+
+
 
   return (
     <div className="space-y-4">
@@ -143,68 +148,95 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
           className="mt-1"
         />
         
-        {/* Improve Prompt Buttons */}
-        <div className="mt-3">
-          <Label className="text-sm text-muted-foreground mb-2 block">Improve prompt for specific styles:</Label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {/* Enhance Prompt Buttons */}
+        <div className="space-y-4">
+          <Label>Enhance prompt</Label>
+          
+
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('photorealistic')}
-              disabled={improvingPrompt || !generatePrompt.trim()}
+              disabled={loading || improvingPrompt || !generatePrompt.trim()}
               className="text-xs"
             >
-              {improvingPrompt ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {improvingPrompt ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Camera className="h-3 w-3 mr-1" />
+              )}
               Photo
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('artistic')}
-              disabled={improvingPrompt || !generatePrompt.trim()}
+              disabled={loading || improvingPrompt || !generatePrompt.trim()}
               className="text-xs"
             >
-              {improvingPrompt ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {improvingPrompt ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Palette className="h-3 w-3 mr-1" />
+              )}
               Artistic
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('product')}
-              disabled={improvingPrompt || !generatePrompt.trim()}
+              disabled={loading || improvingPrompt || !generatePrompt.trim()}
               className="text-xs"
             >
-              {improvingPrompt ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {improvingPrompt ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Package className="h-3 w-3 mr-1" />
+              )}
               Product
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('minimalist')}
-              disabled={improvingPrompt || !generatePrompt.trim()}
+              disabled={loading || improvingPrompt || !generatePrompt.trim()}
               className="text-xs"
             >
-              {improvingPrompt ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {improvingPrompt ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Minus className="h-3 w-3 mr-1" />
+              )}
               Minimal
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('illustration')}
-              disabled={improvingPrompt || !generatePrompt.trim()}
+              disabled={loading || improvingPrompt || !generatePrompt.trim()}
               className="text-xs"
             >
-              {improvingPrompt ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {improvingPrompt ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <ImageIcon className="h-3 w-3 mr-1" />
+              )}
               Illustration
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('logo')}
-              disabled={improvingPrompt || !generatePrompt.trim()}
+              disabled={loading || improvingPrompt || !generatePrompt.trim()}
               className="text-xs"
             >
-              {improvingPrompt ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {improvingPrompt ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Type className="h-3 w-3 mr-1" />
+              )}
               Logo
             </Button>
           </div>

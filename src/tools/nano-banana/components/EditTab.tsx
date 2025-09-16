@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Wand2, Sparkles, Camera, Palette, Package, Minus, Image as ImageIcon, Type } from 'lucide-react'
 import { MultiImageInput } from './MultiImageInput'
 import { useNanoBanana } from '../context/NanoBananaContext'
@@ -45,6 +46,7 @@ export const EditTab: React.FC<EditTabProps> = ({
   const [operationType, setOperationType] = useState<OperationType>('edit')
   const [improvingPrompt, setImprovingPrompt] = useState<string | null>(null)
   const [describingImage, setDescribingImage] = useState(false)
+  const [includeImageForImprove, setIncludeImageForImprove] = useState(true)
   
   const { setLastGeneratedImages } = useNanoBanana()
 
@@ -106,31 +108,61 @@ export const EditTab: React.FC<EditTabProps> = ({
 
     setImprovingPrompt(category)
     
-    // Import streaming utility dynamically
-    const { handleStreamingImprovePrompt } = await import('../utils/streamingApi')
-    
     try {
+      // Use FormData to send both prompt and image
+      const formData = new FormData()
+      formData.append('prompt', prompt)
+      formData.append('category', category)
+      
+      // Include the first uploaded image if available and checkbox is checked
+      if (images.length > 0 && includeImageForImprove) {
+        formData.append('image', images[0])
+      }
+      
+      const response = await fetch('/api/nano-banana/improve-prompt', {
+        method: 'POST',
+        body: formData
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+      
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('No response body')
+      }
+      
       let accumulatedText = ''
       
-      const improvedPrompt = await handleStreamingImprovePrompt(
-        prompt,
-        category,
-        // onChunk callback - update prompt in real-time
-        (chunk: string, accumulated: string) => {
-          accumulatedText = accumulated
-          setPrompt(accumulatedText)
-        },
-        // onComplete callback
-        (finalPrompt: string) => {
-          setPrompt(finalPrompt)
-          toast.success('Đã cải thiện prompt thành công!')
-        },
-        // onError callback
-        (error: string) => {
-          console.error('Streaming error:', error)
-          toast.error('Có lỗi xảy ra khi cải thiện prompt')
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        
+        const chunk = new TextDecoder().decode(value)
+        const lines = chunk.split('\n')
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            if (data === '[DONE]') {
+              setPrompt(accumulatedText)
+              toast.success('Đã cải thiện prompt thành công!')
+              return
+            }
+            
+            try {
+              const parsed = JSON.parse(data)
+              if (parsed.content) {
+                accumulatedText += parsed.content
+                setPrompt(accumulatedText)
+              }
+            } catch (e) {
+              // Ignore parsing errors for partial chunks
+            }
+          }
         }
-      )
+      }
       
     } catch (error) {
       console.error('Improve prompt error:', error)
@@ -270,6 +302,20 @@ export const EditTab: React.FC<EditTabProps> = ({
               className="resize-none"
             />
           </div>
+
+          {/* Include Image for Improve Checkbox */}
+          {images.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="include-image-improve"
+                checked={includeImageForImprove}
+                onCheckedChange={(checked) => setIncludeImageForImprove(checked as boolean)}
+              />
+              <Label htmlFor="include-image-improve" className="text-sm font-normal">
+                Bao gồm ảnh để cải thiện prompt
+              </Label>
+            </div>
+          )}
 
           {/* Enhance Prompt Buttons */}
           <div className="space-y-2">

@@ -19,21 +19,38 @@ export interface StreamingResponse {
 export async function handleStreamingImprovePrompt(
   prompt: string,
   category: string,
-  onChunk?: (chunk: string, accumulated: string) => void,
-  onComplete?: (improvedPrompt: string) => void,
-  onError?: (error: string) => void
+  onChunk: (chunk: string, accumulated: string) => void,
+  onComplete: (finalPrompt: string) => void,
+  onError: (error: string) => void,
+  image?: File
 ): Promise<string> {
   try {
-    const response = await fetch('/api/nano-banana/improve-prompt', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt: prompt.trim(),
-        category
+    let response: Response
+    
+    if (image) {
+      // Use FormData when image is provided
+      const formData = new FormData()
+      formData.append('prompt', prompt)
+      formData.append('category', category)
+      formData.append('image', image)
+      
+      response = await fetch('/api/nano-banana/improve-prompt', {
+        method: 'POST',
+        body: formData
       })
-    })
+    } else {
+      // Use JSON when no image
+      response = await fetch('/api/nano-banana/improve-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+          category
+        })
+      })
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
@@ -100,27 +117,49 @@ export async function handleStreamingImprovePrompt(
  */
 export async function handleNonStreamingImprovePrompt(
   prompt: string,
-  category: string
+  category: string,
+  image?: File
 ): Promise<string> {
-  const response = await fetch('/api/nano-banana/improve-prompt', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      prompt: prompt.trim(),
-      category
-    })
-  })
+  try {
+    let response: Response
+    
+    if (image) {
+      // Use FormData when image is provided
+      const formData = new FormData()
+      formData.append('prompt', prompt)
+      formData.append('category', category)
+      formData.append('image', image)
+      
+      response = await fetch('/api/nano-banana/improve-prompt', {
+        method: 'POST',
+        body: formData
+      })
+    } else {
+      // Use JSON when no image
+      response = await fetch('/api/nano-banana/improve-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+          category
+        })
+      })
+    }
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`)
-  }
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
 
-  const data = await response.json()
-  if (data.success && data.improved_prompt) {
-    return data.improved_prompt
-  } else {
-    throw new Error(data.error || 'Failed to improve prompt')
+    const data = await response.json()
+    if (data.success && data.improved_prompt) {
+      return data.improved_prompt
+    } else {
+      throw new Error(data.error || 'Failed to improve prompt')
+    }
+  } catch (error) {
+    console.error('Non-streaming improve prompt error:', error)
+    throw error
   }
 }

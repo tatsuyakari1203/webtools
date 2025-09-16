@@ -11,11 +11,21 @@ function createSystemInstruction(): string {
 
 Core Principle: Describe the scene, don't just list keywords. Use rich, narrative descriptions that leverage the model's deep language understanding.
 
+For EDIT prompts specifically: Stay extremely close to the original prompt content. Focus only on clarifying and detailing the specific changes requested, not on describing the entire image. Preserve the original intent and only enhance the editing instructions.
+
+IMPORTANT: Return ONLY the improved prompt without any introductory text, explanations, or meta-commentary. Do not include phrases like 'Here's an enhanced prompt' or similar introductions.
+
 Your enhanced prompts should read like detailed scene descriptions or visual narratives, creating cohesive stories of what should be seen rather than disconnected keyword lists.`;
 }
 
-function createImprovementPrompt(originalPrompt: string, category: string): string {
-  const basePrompt = `Enhance and improve the following prompt for ${category} image generation:
+function createImprovementPrompt(originalPrompt: string, category: string, hasImage: boolean = false): string {
+  const basePrompt = hasImage 
+    ? `Enhance and improve the following prompt for ${category} image generation based on the provided input image:
+
+Original prompt: "${originalPrompt}"
+
+Analyze the input image and improve this prompt by incorporating visual elements, composition, lighting, and style details you observe in the image. Please improve this prompt by:`
+    : `Enhance and improve the following prompt for ${category} image generation:
 
 Original prompt: "${originalPrompt}"
 
@@ -71,19 +81,30 @@ Please improve this prompt by:`;
 - Mentioning scalability and versatility in contextual scenarios`,
     
     edit: `
-- Being highly specific about the desired changes with rich descriptive language
-- Adding comprehensive quality details (lighting, colors, composition, mood)
-- Describing the desired visual outcome as a complete scene
-- Creating actionable instructions that tell a visual story
-- Specifying the transformation in narrative, descriptive terms
-- Ensuring the edit instruction reads like a scene description`
+- Staying extremely close to the original prompt content and intent
+- Focusing ONLY on clarifying and detailing the specific changes requested
+- Using precise editing language like "change only the X to Y", "add Z while keeping everything else unchanged", "remove A from the scene"
+- Avoiding redescribing the entire image - only enhance the editing instructions
+- Making the change instructions more specific and actionable
+- Preserving all original elements that are not being modified
+- Ensuring the edit focuses on the transformation, not the whole scene description`
   };
 
   const guidance = categorySpecificGuidance[category as keyof typeof categorySpecificGuidance] || categorySpecificGuidance.photorealistic;
 
-  return `${basePrompt}${guidance}
+  const finalInstructions = category === 'edit' 
+    ? `
 
-Provide an improved version that reads like a detailed scene description or visual narrative. Focus on creating a cohesive, descriptive paragraph that tells the story of what should be seen, rather than a list of disconnected elements. The enhanced prompt should leverage Gemini 2.5 Flash's strength in understanding rich, descriptive language.`;
+For EDIT prompts: Stay extremely close to the original prompt. Only clarify and detail the specific changes requested. Do not redescribe the entire scene - focus solely on making the editing instructions more precise and actionable. Preserve the original intent and content.
+
+Return ONLY the improved prompt text without any introductory phrases, explanations, or commentary. Start directly with the enhanced prompt content.`
+    : `
+
+Provide an improved version that reads like a detailed scene description or visual narrative. Focus on creating a cohesive, descriptive paragraph that tells the story of what should be seen, rather than a list of disconnected elements. The enhanced prompt should leverage Gemini 2.5 Flash's strength in understanding rich, descriptive language.
+
+Return ONLY the improved prompt text without any introductory phrases, explanations, or commentary. Start directly with the enhanced prompt content.`;
+
+  return `${basePrompt}${guidance}${finalInstructions}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -97,8 +118,25 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json()
-    const { prompt, category = 'photorealistic' } = body
+    let prompt: string
+    let category: string = 'photorealistic'
+    let imageFile: File | null = null
+
+    // Check if request is FormData (has image) or JSON
+    const contentType = request.headers.get('content-type')
+    
+    if (contentType?.includes('multipart/form-data')) {
+      // Handle FormData (with image)
+      const formData = await request.formData()
+      prompt = formData.get('prompt') as string
+      category = (formData.get('category') as string) || 'photorealistic'
+      imageFile = formData.get('image') as File
+    } else {
+      // Handle JSON (without image)
+      const body = await request.json()
+      prompt = body.prompt
+      category = body.category || 'photorealistic'
+    }
 
     if (!prompt || !prompt.trim()) {
       return NextResponse.json(
@@ -109,21 +147,30 @@ export async function POST(request: NextRequest) {
 
     const genAI = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
 
-    const improvementPrompt = createImprovementPrompt(prompt, category)
+    const improvementPrompt = createImprovementPrompt(prompt, category, !!imageFile)
+
+    // Prepare content parts
+    const parts: any[] = [{ text: improvementPrompt }]
+    
+    // Add image if provided
+    if (imageFile) {
+      const imageBytes = await imageFile.arrayBuffer()
+      const imageBase64 = Buffer.from(imageBytes).toString('base64')
+      
+      parts.push({
+        inlineData: {
+          data: imageBase64,
+          mimeType: imageFile.type
+        }
+      })
+    }
 
     const result = await genAI.models.generateContentStream({
       model: 'gemini-2.5-flash',
-      systemInstruction: createSystemInstruction(),
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.8,
-        topK: 40,
-        maxOutputTokens: 8192,
-      },
-      thinkingConfig: {
-        includeThinkingInResponse: true
-      },
-      contents: [{ role: 'user', parts: [{ text: improvementPrompt }] }]
+      contents: [
+        { role: 'user', parts: [{ text: createSystemInstruction() }] },
+        { role: 'user', parts }
+      ]
     })
 
     // Create a streaming response
