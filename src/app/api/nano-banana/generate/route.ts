@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   const ai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
   try {
     const body = await request.json()
-    const { prompt, width = 1024, height = 1024, style = 'photorealistic' } = body
+    const { prompt, width = 1024, height = 1024, style = 'photorealistic', num_images = 1 } = body
 
     if (!prompt || !prompt.trim()) {
       return NextResponse.json(
@@ -23,58 +23,61 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate num_images
+    const imageCount = Math.min(Math.max(1, parseInt(num_images) || 1), 4)
+
     // Use original prompt without style-based enhancement to avoid result distortion
     // Add size specification to prompt
     const finalPrompt = `${prompt}, ${width}x${height} resolution`
 
-    const response = await ai.models.generateContent({
-      model: 'models/gemini-2.5-flash-image-preview',
-      contents: [{
-        parts: [{ text: finalPrompt }]
-      }]
+    // Generate multiple images by making multiple API calls
+    const imagePromises = Array.from({ length: imageCount }, async () => {
+      const response = await ai.models.generateContent({
+        model: 'models/gemini-2.5-flash-image-preview',
+        contents: [{
+          parts: [{ text: finalPrompt }]
+        }]
+      })
+
+      // Extract image data from response
+      const candidates = response.candidates
+      if (!candidates || candidates.length === 0) {
+        throw new Error('No image generated')
+      }
+
+      const parts = candidates[0].content?.parts
+      if (!parts) {
+        throw new Error('No content parts found in response')
+      }
+
+      for (const part of parts) {
+        if (part.inlineData) {
+          return part.inlineData.data
+        }
+      }
+
+      throw new Error('No image data found in response')
     })
 
-    // Extract image data from response
-    const candidates = response.candidates
-    if (!candidates || candidates.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'No image generated' },
-        { status: 500 }
-      )
-    }
+    const imageDataArray = await Promise.all(imagePromises)
 
-    const parts = candidates[0].content?.parts
-    let imageData = null
+    console.log('API Debug - imageCount:', imageCount)
+    console.log('API Debug - imageDataArray.length:', imageDataArray.length)
+    console.log('API Debug - returning array:', imageCount !== 1)
 
-    if (!parts) {
-      return NextResponse.json(
-        { success: false, error: 'No content parts found in response' },
-        { status: 500 }
-      )
-    }
-
-    for (const part of parts) {
-      if (part.inlineData) {
-        imageData = part.inlineData.data
-        break
-      }
-    }
-
-    if (!imageData) {
-      return NextResponse.json(
-        { success: false, error: 'No image data found in response' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
+    const response = {
       success: true,
-      image_data: imageData,
+      image_data: imageCount === 1 ? imageDataArray[0] : imageDataArray,
       prompt: finalPrompt,
       width,
       height,
-      style
-    })
+      style,
+      num_images: imageCount
+    }
+
+    console.log('API Debug - response.image_data is array:', Array.isArray(response.image_data))
+
+    return NextResponse.json(response)
 
   } catch (error) {
     console.error('Image generation error:', error)

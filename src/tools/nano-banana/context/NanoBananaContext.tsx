@@ -6,6 +6,7 @@ interface NanoBananaState {
   // Generate tab state
   generatePrompt: string
   generateImageSize: number[]
+  generateImageCount: number[]
   
   // Edit tab state
   editImage: File | null
@@ -29,24 +30,25 @@ interface NanoBananaState {
   
   // Session management
   conversationId: string | null
-  lastGeneratedImage: string | null
+  lastGeneratedImages: string[]
 }
 
 interface NanoBananaContextType {
   state: NanoBananaState
-  updateGenerateState: (updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateImageSize'>>) => void
+  updateGenerateState: (updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateImageSize' | 'generateImageCount'>>) => void
   updateEditState: (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction'>>) => void
   updateComposeState: (updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType'>>) => void
   updateStyleState: (updates: Partial<Pick<NanoBananaState, 'styleContentImage' | 'styleStyleImage' | 'styleContentImagePreview' | 'styleStyleImagePreview' | 'stylePrompt' | 'styleStrength'>>) => void
   startNewSession: () => void
   setConversationId: (id: string | null) => void
-  setLastGeneratedImage: (image: string | null) => void
+  setLastGeneratedImages: (images: string[]) => void
 }
 
 const defaultState: NanoBananaState = {
   // Generate tab state
   generatePrompt: '',
   generateImageSize: [1024, 1024],
+  generateImageCount: [1],
   
   // Edit tab state
   editImage: null,
@@ -70,7 +72,7 @@ const defaultState: NanoBananaState = {
   
   // Session management
   conversationId: null,
-  lastGeneratedImage: null
+  lastGeneratedImages: []
 }
 
 const NanoBananaContext = createContext<NanoBananaContextType | undefined>(undefined)
@@ -78,7 +80,7 @@ const NanoBananaContext = createContext<NanoBananaContextType | undefined>(undef
 export function NanoBananaProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<NanoBananaState>(defaultState)
   
-  const updateGenerateState = (updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateImageSize'>>) => {
+  const updateGenerateState = (updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateImageSize' | 'generateImageCount'>>) => {
     setState(prev => ({ ...prev, ...updates }))
   }
   
@@ -102,10 +104,10 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, conversationId: id }))
   }
   
-  const setLastGeneratedImage = (image: string | null) => {
-    setState(prev => ({ ...prev, lastGeneratedImage: image }))
+  const setLastGeneratedImages = (images: string[]) => {
+    setState(prev => ({ ...prev, lastGeneratedImages: images }))
   }
-  
+
   return (
     <NanoBananaContext.Provider value={{
       state,
@@ -115,7 +117,7 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
       updateStyleState,
       startNewSession,
       setConversationId,
-      setLastGeneratedImage
+      setLastGeneratedImages
     }}>
       {children}
     </NanoBananaContext.Provider>

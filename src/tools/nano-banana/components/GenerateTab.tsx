@@ -22,8 +22,8 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const { state, updateGenerateState, startNewSession, setLastGeneratedImage } = useNanoBanana()
-  const { generatePrompt, generateImageSize } = state
+  const { state, updateGenerateState, startNewSession, setLastGeneratedImages } = useNanoBanana()
+  const { generatePrompt, generateImageSize, generateImageCount } = state
   const [improvingPrompt, setImprovingPrompt] = React.useState(false)
 
   const handleGenerate = async () => {
@@ -38,7 +38,8 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
         prompt: generatePrompt,
         width: generateImageSize[0],
         height: generateImageSize[0],
-        quality: 'ultra'
+        quality: 'ultra',
+        num_images: generateImageCount[0]
       }
 
       const response = await fetch('/api/nano-banana/generate', {
@@ -57,14 +58,25 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
       const data = await response.json()
       
       if (data.success && data.image_data) {
-        const imageUrl = `data:image/png;base64,${data.image_data}`
+        console.log('GenerateTab Debug - data.image_data:', data.image_data)
+        console.log('GenerateTab Debug - data.image_data is array:', Array.isArray(data.image_data))
+        console.log('GenerateTab Debug - data.num_images:', data.num_images)
+        
+        // Handle multiple images
+        const images = Array.isArray(data.image_data) ? data.image_data : [data.image_data]
+        const imageUrls = images.map((imageData: string) => `data:image/png;base64,${imageData}`)
+        
+        console.log('GenerateTab Debug - images.length:', images.length)
+        console.log('GenerateTab Debug - imageUrls.length:', imageUrls.length)
         
         // Start new session for each generation
         startNewSession()
-        setLastGeneratedImage(imageUrl)
-        setGeneratedImage(imageUrl)
+        setLastGeneratedImages(imageUrls)
+        setGeneratedImage(imageUrls[0]) // Set first image for backward compatibility
         
-        toast.success('Image generated successfully!')
+        console.log('GenerateTab Debug - setLastGeneratedImages called with:', imageUrls.length, 'images')
+        
+        toast.success(`${imageUrls.length} image${imageUrls.length > 1 ? 's' : ''} generated successfully!`)
       } else {
         throw new Error(data.error || 'Failed to generate image')
       }
@@ -208,6 +220,19 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
           step={256}
           value={generateImageSize}
           onValueChange={(value) => updateGenerateState({ generateImageSize: value })}
+          className="mt-2"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="count">Number of Images: {generateImageCount[0]}</Label>
+        <Slider
+          id="count"
+          min={1}
+          max={4}
+          step={1}
+          value={generateImageCount}
+          onValueChange={(value) => updateGenerateState({ generateImageCount: value })}
           className="mt-2"
         />
       </div>
