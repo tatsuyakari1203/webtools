@@ -41,13 +41,14 @@ export const EditTab: React.FC<EditTabProps> = ({
 }) => {
   // Use context state instead of local state for persistence
   const { state, setLastGeneratedImages, updateEditState, updateComposeState } = useNanoBanana()
-  const { editPrompt, editInstruction, composePrompt, composeImages, composeImagePreviews } = state
+  const { editPrompt, editImageDescription, composePrompt, composeImages, composeImagePreviews } = state
   
   // Local state for UI-only concerns
   const [imageCount, setImageCount] = useState(1)
   const [operationType, setOperationType] = useState<OperationType>('edit')
   const [improvingPrompt, setImprovingPrompt] = useState<string | null>(null)
   const [includeImageForImprove, setIncludeImageForImprove] = useState(true)
+  const [generatingDescription, setGeneratingDescription] = useState(false)
   
   // Derived values based on operation type
   const images = composeImages
@@ -161,6 +162,41 @@ export const EditTab: React.FC<EditTabProps> = ({
     }
   }
 
+  const handleGenerateDescription = async () => {
+    if (images.length === 0) {
+      toast.error('Please upload an image first')
+      return
+    }
+
+    setGeneratingDescription(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', images[0])
+
+      const response = await fetch('/api/nano-banana/describe-image', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`)
+      }
+
+      const data = await response.json()
+      if (data.success) {
+        updateEditState({ editImageDescription: data.description })
+        toast.success('Image description generated successfully!')
+      } else {
+        throw new Error(data.error || 'Failed to generate description')
+      }
+    } catch (error) {
+      console.error('Error generating description:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to generate description')
+    } finally {
+      setGeneratingDescription(false)
+    }
+  }
+
   const handleGenerate = async () => {
     if (images.length === 0) {
       toast.error('Please upload at least one image')
@@ -189,6 +225,11 @@ export const EditTab: React.FC<EditTabProps> = ({
       formData.append('instruction', prompt.trim())
       formData.append('operationType', operationType)
       formData.append('numImages', imageCount.toString())
+      
+      // Add image description if available (dual-prompt support)
+      if (editImageDescription && editImageDescription.trim()) {
+        formData.append('imageDescription', editImageDescription.trim())
+      }
       
       // Add all images to formData
       images.forEach((image, index) => {
@@ -277,6 +318,44 @@ export const EditTab: React.FC<EditTabProps> = ({
               maxFiles={4}
               accept="image/*"
             />
+          </div>
+
+          {/* Image Description Input (Optional) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="imageDescription">Image Description (Optional)</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateDescription}
+                disabled={generatingDescription || images.length === 0}
+                className="text-xs"
+              >
+                {generatingDescription ? (
+                  <>
+                    <Sparkles className="h-3 w-3 mr-1 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    Auto-Generate
+                  </>
+                )}
+              </Button>
+            </div>
+            <Textarea
+              id="imageDescription"
+              placeholder="Describe what's in the image (helps AI understand context better)..."
+              value={editImageDescription}
+              onChange={(e) => updateEditState({ editImageDescription: e.target.value })}
+              rows={3}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              Providing an image description helps the AI better understand the context and generate more accurate results.
+            </p>
           </div>
 
           {/* Prompt Input */}

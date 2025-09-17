@@ -33,31 +33,33 @@ function getMimeType(file: File): string {
   }
 }
 
-// Function to create detailed prompt for image description
+// Enhanced system instruction following prompt guide principles
+function createSystemInstruction(): string {
+  return `You are an expert visual analyst specializing in creating rich, narrative descriptions for AI image generation workflows. Your expertise includes:
+
+- Understanding visual composition, lighting, and storytelling elements
+- Crafting descriptive, narrative-driven descriptions that capture the essence of scenes
+- Optimizing descriptions for dual-prompt image editing workflows
+- Balancing technical accuracy with creative vision
+
+Core Principle: Describe the scene, don't just list keywords. Use rich, narrative descriptions that leverage advanced language understanding to create cohesive visual stories.
+
+Your descriptions should read like detailed scene narratives that paint a complete picture of what's happening, creating immersive stories of the visual content rather than disconnected element lists.
+
+IMPORTANT: Return ONLY the description without any introductory text, explanations, or meta-commentary. Do not include phrases like 'This image shows' or 'The description is' - start directly with the visual narrative.`;
+}
+
+// Optimized narrative-style prompt for image description
 function createDescriptionPrompt(): string {
-  return `Provide a comprehensive, detailed description of this image in English. Focus on the actual content and what you see. Include:
+  return `Create a rich, narrative description of this image that captures the complete visual story. Write as if you're painting a detailed scene with words, focusing on the atmosphere, relationships between elements, and the overall narrative flow.
 
-1. **Overall Context**: The space, environment, setting, time of day (day/night)
-2. **Main Characters/Objects**: 
-   - Number, gender, estimated age
-   - Clothing, colors, style
-   - Posture, expressions, actions
-   - Notable identifying features
-3. **Position and Space**:
-   - Position of objects within the frame
-   - Distance, proportions, perspective
-   - Foreground, background elements
-4. **Lighting and Colors**:
-   - Light source, direction of lighting
-   - Dominant color tones
-   - Shadows, contrast
-5. **Special Details**:
-   - Objects, accessories, items visible
-   - Textures, materials, surfaces
-   - Text, signs, or writing if present
-6. **Emotion and Atmosphere**: Mood, feelings, activity happening in the scene
+Begin by establishing the setting and environment, then weave together the characters, objects, lighting, and mood into a cohesive visual narrative. Describe how elements interact with each other and contribute to the overall scene's story.
 
-Provide only the description without any introductory phrases or analysis commentary. Focus on describing what is actually visible rather than artistic or technical qualities.`;
+Focus on creating a flowing description that captures the essence and atmosphere of the image, including spatial relationships, lighting conditions, color harmonies, textures, and the emotional tone of the scene. If there are people, describe their expressions, postures, and interactions naturally within the narrative flow.
+
+Include specific details about materials, surfaces, and environmental elements that contribute to the scene's authenticity. Mention any text, signs, or distinctive features that are clearly visible and relevant to the overall composition.
+
+Your description should be comprehensive enough to serve as a foundation for image editing workflows, providing rich context that can guide precise modifications while maintaining the original scene's integrity and atmosphere.`;
 }
 
 export async function POST(request: NextRequest) {
@@ -132,20 +134,22 @@ export async function POST(request: NextRequest) {
         base64Length: base64Data.length
       });
 
-      // Tạo prompt
-      console.log(`[DESCRIBE-${requestId}] Creating description prompt`);
+      // Tạo prompt và system instruction
+      console.log(`[DESCRIBE-${requestId}] Creating enhanced description prompt with system instruction`);
       const prompt = createDescriptionPrompt();
+      const systemInstruction = createSystemInstruction();
 
-      // Gọi API để xử lý mô tả ảnh với streaming và timeout
-      console.log(`[DESCRIBE-${requestId}] Sending streaming request to GenAI with model: models/gemini-2.5-flash-lite`);
+      // Gọi API với Gemini 2.5 Flash và thinking mode
+      console.log(`[DESCRIBE-${requestId}] Sending streaming request to GenAI with model: gemini-2.5-flash (thinking mode enabled)`);
       
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout')), 45000); // 45s timeout cho mô tả chi tiết
+        setTimeout(() => reject(new Error('Request timeout')), 60000); // 60s timeout cho thinking mode
       });
       
       const genAIPromise = genAI.models.generateContentStream({
-        model: 'models/gemini-2.5-flash-lite',
+        model: 'gemini-2.5-flash',
         contents: [
+          { role: 'user', parts: [{ text: systemInstruction }] },
           {
             role: 'user',
             parts: [
@@ -158,7 +162,11 @@ export async function POST(request: NextRequest) {
               }
             ]
           }
-        ]
+        ],
+        config: {
+          // Thinking mode enabled by default for 2.5 Flash
+          // thinkingConfig: { thinkingBudget: 1000 } // Optional: can adjust thinking budget
+        }
       });
       
       const stream = await Promise.race([genAIPromise, timeoutPromise]) as AsyncIterable<{ text?: string }>;
@@ -232,9 +240,17 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Image Description API is running',
+    message: 'Enhanced Image Description API is running',
     endpoint: '/api/nano-banana/describe-image',
     method: 'POST',
-    description: 'Generate detailed Vietnamese description for uploaded images'
+    description: 'Generate rich, narrative-style descriptions for uploaded images using Gemini 2.5 Flash with thinking mode',
+    features: [
+      'Narrative-style descriptions optimized for dual-prompt workflows',
+      'Enhanced visual analysis with thinking mode',
+      'Context-aware prompting for better image understanding',
+      'Optimized for image editing and generation workflows'
+    ],
+    model: 'gemini-2.5-flash',
+    capabilities: 'Advanced visual understanding with thinking mode enabled'
   });
 }

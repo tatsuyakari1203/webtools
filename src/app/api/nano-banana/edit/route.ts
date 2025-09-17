@@ -11,18 +11,23 @@ async function convertFileToBase64(file: File): Promise<string> {
   return buffer.toString('base64');
 }
 
-function createEnhancedPrompt(instruction: string, operationType: OperationType, numImages: number = 1): string {
+function createEnhancedPrompt(instruction: string, operationType: OperationType, numImages: number = 1, imageDescription?: string): string {
   let basePrompt = '';
+  
+  // Add image description context if provided
+  if (imageDescription && imageDescription.trim()) {
+    basePrompt += `Image context: ${imageDescription.trim()}\n\n`;
+  }
   
   switch (operationType) {
     case 'edit':
-      basePrompt = `You are an expert image editor. Please edit the provided image according to this instruction: "${instruction}". Maintain the original image quality and style while making the requested changes.`;
+      basePrompt += `You are an expert image editor. Please edit the provided image according to this instruction: "${instruction}". Maintain the original image quality and style while making the requested changes.`;
       break;
     case 'compose':
-      basePrompt = `You are an expert image compositor. Please create a new composition using the provided images according to this instruction: "${instruction}". Blend the images seamlessly.`;
+      basePrompt += `You are an expert image compositor. Please create a new composition using the provided images according to this instruction: "${instruction}". Blend the images seamlessly.`;
       break;
     case 'style_transfer':
-      basePrompt = `You are an expert in artistic style transfer. Please apply the style from one image to another according to this instruction: "${instruction}".`;
+      basePrompt += `You are an expert in artistic style transfer. Please apply the style from one image to another according to this instruction: "${instruction}".`;
       break;
   }
   
@@ -47,11 +52,13 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const instruction = formData.get('instruction') as string;
+    const imageDescription = formData.get('imageDescription') as string;
     const operationType = (formData.get('operationType') as OperationType) || 'edit';
     const numImages = parseInt(formData.get('numImages') as string) || 1;
     
     console.log('Request parameters:', {
       instruction: instruction?.substring(0, 100) + '...',
+      imageDescription: imageDescription ? imageDescription.substring(0, 100) + '...' : 'Not provided',
       operationType,
       numImages
     });
@@ -91,7 +98,7 @@ export async function POST(request: NextRequest) {
     const base64Images = await Promise.all(images.map(image => convertFileToBase64(image)));
     console.log('Base64 conversion completed');
     
-    const enhancedPrompt = createEnhancedPrompt(instruction, operationType, numImages);
+    const enhancedPrompt = createEnhancedPrompt(instruction, operationType, numImages, imageDescription);
     console.log('Enhanced prompt:', enhancedPrompt.substring(0, 200) + '...');
     
     const ai = new GoogleGenAI({ apiKey });

@@ -13,6 +13,7 @@ interface NanoBananaState {
   editImagePreview: string | null
   editPrompt: string
   editInstruction: string
+  editImageDescription: string
   
   // Compose tab state
   composeImages: File[]
@@ -36,7 +37,7 @@ interface NanoBananaState {
 interface NanoBananaContextType {
   state: NanoBananaState
   updateGenerateState: (updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateImageSize' | 'generateImageCount'>>) => void
-  updateEditState: (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction'>>) => void
+  updateEditState: (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction' | 'editImageDescription'>>) => void
   updateComposeState: (updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType'>>) => void
   updateStyleState: (updates: Partial<Pick<NanoBananaState, 'styleContentImage' | 'styleStyleImage' | 'styleContentImagePreview' | 'styleStyleImagePreview' | 'stylePrompt' | 'styleStrength'>>) => void
 
@@ -56,6 +57,7 @@ const defaultState: NanoBananaState = {
   editImagePreview: '',
   editPrompt: '',
   editInstruction: '',
+  editImageDescription: '',
   
   // Compose tab state
   composeImages: [],
@@ -85,7 +87,7 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, ...updates }))
   }, [])
   
-  const updateEditState = useCallback((updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction'>>) => {
+  const updateEditState = useCallback((updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction' | 'editImageDescription'>>) => {
     setState(prev => ({ ...prev, ...updates }))
   }, [])
   
