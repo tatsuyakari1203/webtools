@@ -1,6 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
+export async function GET() {
+  return NextResponse.json({
+    name: 'Nano Banana Edit API',
+    description: 'Edit and transform images using AI. Supports various operations like compose, style transfer, and general editing.',
+    version: '1.0.0',
+    endpoints: {
+      POST: {
+        description: 'Edit images with AI',
+        parameters: {
+          images: 'Array of image files (required)',
+          instruction: 'Edit instruction text (required)',
+          operationType: 'Type of operation: compose, style_transfer, or edit (optional)',
+          imageDescription: 'Description of the images (optional)',
+          numImages: 'Number of images to generate (default: 1, max: 4)'
+        },
+        response: {
+          success: 'Array of base64 encoded edited images',
+          error: 'Error message with status code'
+        }
+      }
+    },
+    features: [
+      'Image composition and blending',
+      'Style transfer between images', 
+      'General image editing with natural language',
+      'Multiple image generation',
+      'SynthID watermark on all generated images'
+    ]
+  });
+}
+
 export const dynamic = 'force-dynamic';
 
 type OperationType = 'edit' | 'compose' | 'style_transfer';
@@ -11,38 +42,20 @@ async function convertFileToBase64(file: File): Promise<string> {
   return buffer.toString('base64');
 }
 
-function createEnhancedPrompt(instruction: string, operationType: OperationType, numImages: number = 1, imageDescription?: string): string {
-  let basePrompt = '';
+function createSimplePrompt(instruction: string, imageDescription?: string): string {
+  let prompt = instruction;
   
   // Add image description context if provided
   if (imageDescription && imageDescription.trim()) {
-    basePrompt += `Image context: ${imageDescription.trim()}\n\n`;
+    prompt = `${imageDescription.trim()}\n\n${instruction}`;
   }
   
-  switch (operationType) {
-    case 'edit':
-      basePrompt += `You are an expert image editor. Please edit the provided image according to this instruction: "${instruction}". Maintain the original image quality and style while making the requested changes.`;
-      break;
-    case 'compose':
-      basePrompt += `You are an expert image compositor. Please create a new composition using the provided images according to this instruction: "${instruction}". Blend the images seamlessly.`;
-      break;
-    case 'style_transfer':
-      basePrompt += `You are an expert in artistic style transfer. Please apply the style from one image to another according to this instruction: "${instruction}".`;
-      break;
-  }
-  
-  if (numImages > 1) {
-    basePrompt += ` Generate ${numImages} different high-quality variations.`;
-  } else {
-    basePrompt += ' Generate a high-quality edited image.';
-  }
-  
-  return basePrompt;
+  return prompt;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== Edit API Request Started ===');
+    console.log('Edit API request started');
     
     const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
@@ -56,12 +69,7 @@ export async function POST(request: NextRequest) {
     const operationType = (formData.get('operationType') as OperationType) || 'edit';
     const numImages = parseInt(formData.get('numImages') as string) || 1;
     
-    console.log('Request parameters:', {
-      instruction: instruction?.substring(0, 100) + '...',
-      imageDescription: imageDescription ? imageDescription.substring(0, 100) + '...' : 'Not provided',
-      operationType,
-      numImages
-    });
+    console.log(`Processing ${operationType} operation with ${numImages} image(s)`);
     
     const images: File[] = [];
     let imageIndex = 0;
@@ -72,41 +80,35 @@ export async function POST(request: NextRequest) {
       imageIndex++;
     }
 
-    console.log(`Found ${images.length} images:`, images.map(img => ({ name: img.name, size: img.size, type: img.type })));
+    console.log(`Found ${images.length} images`);
 
     if (images.length === 0) {
-      console.error('No images provided');
       return NextResponse.json({ error: 'At least one image is required' }, { status: 400 });
     }
 
     if (!instruction) {
-      console.error('No instruction provided');
       return NextResponse.json({ error: 'Edit instruction is required' }, { status: 400 });
     }
 
     if (operationType === 'compose' && images.length < 2) {
-      console.error('Compose operation requires at least 2 images');
       return NextResponse.json({ error: 'Compose operation requires at least 2 images' }, { status: 400 });
     }
 
     if (operationType === 'style_transfer' && images.length < 2) {
-      console.error('Style transfer requires at least 2 images');
       return NextResponse.json({ error: 'Style transfer requires at least 2 images' }, { status: 400 });
     }
 
-    console.log('Converting images to base64...');
     const base64Images = await Promise.all(images.map(image => convertFileToBase64(image)));
-    console.log('Base64 conversion completed');
     
-    const enhancedPrompt = createEnhancedPrompt(instruction, operationType, numImages, imageDescription);
-    console.log('Enhanced prompt:', enhancedPrompt.substring(0, 200) + '...');
+    const simplePrompt = createSimplePrompt(instruction, imageDescription);
+    console.log('Prompt created');
     
     const ai = new GoogleGenAI({ apiKey });
     console.log('Using model: gemini-2.5-flash-image-preview');
 
     const contents = [{
       parts: [
-        { text: enhancedPrompt },
+        { text: simplePrompt },
         ...base64Images.map((base64Image, index) => ({
           inlineData: {
             mimeType: images[index].type,
@@ -120,26 +122,40 @@ export async function POST(request: NextRequest) {
     
     // Generate multiple images by making multiple API calls like in generate route
     const imagePromises = Array.from({ length: numImages }, async (_, index) => {
-      console.log(`Sending request ${index + 1}/${numImages} to Gemini...`);
-      const response = await ai.models.generateContent({
-        model: 'models/gemini-2.5-flash-image-preview',
-        contents
-      });
-      console.log(`Received response ${index + 1}/${numImages} from Gemini`);
+      // Retry logic for better reliability
+      let lastError: Error | null = null;
+      const maxRetries = 2;
+      
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          console.log(`Attempt ${attempt + 1}/${maxRetries} for image ${index + 1}`);
+          
+          const genAIPromise = ai.models.generateContent({
+            model: 'gemini-2.5-flash-image-preview',
+            contents
+          });
+          
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Request timeout')), 60000);
+          });
+          
+          const response = await Promise.race([genAIPromise, timeoutPromise]) as any;
       
       // Debug logging for response structure
       console.log('Response structure:', {
-        hasCandidates: !!response.candidates,
-        candidatesLength: response.candidates?.length || 0,
-        responseKeys: Object.keys(response)
+        hasResponse: !!response,
+        responseKeys: response ? Object.keys(response) : [],
+        hasCandidates: !!response?.candidates,
+        candidatesLength: response?.candidates?.length || 0
       });
       
       const candidates = response.candidates;
       if (!candidates || candidates.length === 0) {
-        console.error('No candidates in response:', response);
+        console.error('No candidates in response. Full response:', JSON.stringify(response, null, 2));
         throw new Error('No candidates in response');
       }
 
+      // Debug candidate structure
       console.log('Candidate structure:', {
         hasContent: !!candidates[0].content,
         contentKeys: candidates[0].content ? Object.keys(candidates[0].content) : [],
@@ -147,30 +163,34 @@ export async function POST(request: NextRequest) {
         partsLength: candidates[0].content?.parts?.length || 0
       });
 
-      const parts = candidates[0].content?.parts;
-      if (!parts || parts.length === 0) {
-        console.error('No parts in response:', candidates[0]);
-        throw new Error('No parts in response');
-      }
-      
-      console.log('Parts analysis:', parts.map((part, i) => ({
-        index: i,
-        hasText: !!part.text,
-        hasInlineData: !!part.inlineData,
-        inlineDataKeys: part.inlineData ? Object.keys(part.inlineData) : [],
-        mimeType: part.inlineData?.mimeType
-      })));
-      
-      const imageParts = parts.filter(part => part.inlineData);
-      if (imageParts.length === 0) {
-        console.error('No image data in response. Parts:', parts);
-        console.error('Full response for debugging:', JSON.stringify(response, null, 2));
-        throw new Error('No image data in response - Gemini may not support image editing for this request');
-      }
+          const parts = candidates[0].content?.parts;
+          if (!parts || parts.length === 0) {
+            console.error('No parts in response. Candidate content:', JSON.stringify(candidates[0], null, 2));
+            throw new Error('No parts in response');
+          }
+          
+          const imageParts = parts.filter((part: any) => part.inlineData);
+          if (imageParts.length === 0) {
+            throw new Error('No image data in response');
+          }
 
-      console.log(`Found ${imageParts.length} image parts in response ${index + 1}`);
-      // Return the first image from this request
-      return imageParts[0].inlineData!.data;
+          // Return the first image from this request
+          return imageParts[0].inlineData!.data;
+          
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error(String(error));
+          console.error(`Attempt ${attempt + 1} failed:`, lastError.message);
+          
+          if (attempt === maxRetries - 1) {
+            throw lastError;
+          }
+          
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      throw lastError || new Error('All retry attempts failed');
     });
 
     const imageDataArray = await Promise.all(imagePromises);
@@ -194,31 +214,47 @@ export async function POST(request: NextRequest) {
       });
     }
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('=== Edit API Error ===');
-    console.error('Error type:', error?.constructor?.name);
+    console.error('Error type:', typeof error);
     console.error('Error message:', error instanceof Error ? error.message : String(error));
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     
-    // More specific error messages
     let errorMessage = 'Failed to edit image';
+    let statusCode = 500;
+    
     if (error instanceof Error) {
       if (error.message.includes('API key')) {
-        errorMessage = 'Invalid API key';
+        errorMessage = 'Invalid or missing API key configuration';
+        statusCode = 500;
       } else if (error.message.includes('quota')) {
-        errorMessage = 'API quota exceeded';
+        errorMessage = 'API quota exceeded. Please try again later';
+        statusCode = 429;
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Request timed out. The image editing process took too long';
+        statusCode = 408;
       } else if (error.message.includes('model')) {
-        errorMessage = 'Model not available';
-      } else if (error.message.includes('candidates')) {
-        errorMessage = 'No response generated';
-      } else if (error.message.includes('image data')) {
-        errorMessage = 'No image generated';
+        errorMessage = 'Image editing model is currently unavailable';
+        statusCode = 503;
+      } else if (error.message.includes('No candidates')) {
+        errorMessage = 'AI model could not generate a response. Please try with different images or instructions';
+        statusCode = 422;
+      } else if (error.message.includes('No parts')) {
+        errorMessage = 'AI model response was incomplete. Please try again';
+        statusCode = 422;
+      } else if (error.message.includes('No image data')) {
+        errorMessage = 'AI model could not generate edited images. Please try with different instructions';
+        statusCode = 422;
+      } else if (error.message.includes('retry attempts failed')) {
+        errorMessage = 'Multiple attempts failed. Please check your images and try again';
+        statusCode = 422;
       }
     }
     
     return NextResponse.json({ 
       error: errorMessage,
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+      details: error instanceof Error ? error.message : String(error),
+      suggestion: 'Try with different images, simpler instructions, or wait a moment before retrying'
+    }, { status: statusCode });
   }
 }

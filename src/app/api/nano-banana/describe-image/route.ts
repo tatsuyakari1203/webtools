@@ -33,33 +33,52 @@ function getMimeType(file: File): string {
   }
 }
 
-// Enhanced system instruction following prompt guide principles
+// Creative prompt generator for AI image generation
 function createSystemInstruction(): string {
-  return `You are an expert visual analyst specializing in creating rich, narrative descriptions for AI image generation workflows. Your expertise includes:
+  return `You are a creative prompt engineer specializing in transforming images into inspiring AI generation prompts.
 
-- Understanding visual composition, lighting, and storytelling elements
-- Crafting descriptive, narrative-driven descriptions that capture the essence of scenes
-- Optimizing descriptions for dual-prompt image editing workflows
-- Balancing technical accuracy with creative vision
+Your role is to capture the ESSENCE and CREATIVE POTENTIAL of images, not just describe them analytically.
 
-Core Principle: Describe the scene, don't just list keywords. Use rich, narrative descriptions that leverage advanced language understanding to create cohesive visual stories.
+Your expertise includes:
+- Identifying artistic style, mood, and aesthetic direction
+- Capturing character essence and personality traits
+- Recognizing composition, lighting, and visual storytelling elements
+- Translating visual concepts into generative language
 
-Your descriptions should read like detailed scene narratives that paint a complete picture of what's happening, creating immersive stories of the visual content rather than disconnected element lists.
+Core principles:
+1. CREATIVE INTERPRETATION: Focus on the artistic vision and concept, not just physical details
+2. GENERATIVE LANGUAGE: Use language that inspires AI creativity and variation
+3. MOOD & ATMOSPHERE: Capture the emotional tone and artistic style
+4. ESSENTIAL DETAILS: Include key visual elements that define the concept
+5. INSPIRATIONAL FLOW: Write prompts that spark creative generation
 
-IMPORTANT: Return ONLY the description without any introductory text, explanations, or meta-commentary. Do not include phrases like 'This image shows' or 'The description is' - start directly with the visual narrative.`;
+IMPORTANT: Return ONLY the creative prompt itself. Do NOT include any introductory phrases like "Here's a creative AI generation prompt inspired by the image:" or explanatory text. Start directly with the prompt content.`;
 }
 
-// Optimized narrative-style prompt for image description
+// Creative prompt generator for inspiring AI image generation
 function createDescriptionPrompt(): string {
-  return `Create a rich, narrative description of this image that captures the complete visual story. Write as if you're painting a detailed scene with words, focusing on the atmosphere, relationships between elements, and the overall narrative flow.
+  return `Transform this image into a creative AI generation prompt that captures its essence and artistic potential.
 
-Begin by establishing the setting and environment, then weave together the characters, objects, lighting, and mood into a cohesive visual narrative. Describe how elements interact with each other and contribute to the overall scene's story.
+Start with the overall concept, artistic style, and mood. What story does this image tell? What aesthetic or genre does it represent?
 
-Focus on creating a flowing description that captures the essence and atmosphere of the image, including spatial relationships, lighting conditions, color harmonies, textures, and the emotional tone of the scene. If there are people, describe their expressions, postures, and interactions naturally within the narrative flow.
+Describe the subject's character and presence - their personality, energy, and role in the scene. Focus on the essence rather than just physical details.
 
-Include specific details about materials, surfaces, and environmental elements that contribute to the scene's authenticity. Mention any text, signs, or distinctive features that are clearly visible and relevant to the overall composition.
+Capture the visual style elements: lighting mood, color palette, composition style, and any artistic techniques or effects.
 
-Your description should be comprehensive enough to serve as a foundation for image editing workflows, providing rich context that can guide precise modifications while maintaining the original scene's integrity and atmosphere.`;
+Include key visual elements that define the concept: important clothing styles, distinctive accessories, environmental context, and any symbolic or thematic elements.
+
+End with the atmosphere and creative direction that would inspire varied but faithful recreations.
+
+Guidelines:
+- Focus on CREATIVE ESSENCE over analytical description
+- Use INSPIRATIONAL LANGUAGE that sparks AI creativity
+- Capture MOOD, STYLE, and ARTISTIC DIRECTION
+- Include key details that define the CONCEPT
+- Write as a GENERATIVE PROMPT, not a factual report
+- Allow room for ARTISTIC INTERPRETATION and variation
+- Think like a creative director giving vision to an artist
+
+Create a prompt that captures the spirit and allows AI to recreate with creative freedom while maintaining the core concept.`;
 }
 
 export async function POST(request: NextRequest) {
@@ -240,17 +259,26 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Enhanced Image Description API is running',
-    endpoint: '/api/nano-banana/describe-image',
-    method: 'POST',
-    description: 'Generate rich, narrative-style descriptions for uploaded images using Gemini 2.5 Flash with thinking mode',
+    message: "Creative AI Prompt Generator",
+    description: "Transform images into inspiring AI generation prompts that capture artistic essence",
     features: [
-      'Narrative-style descriptions optimized for dual-prompt workflows',
-      'Enhanced visual analysis with thinking mode',
-      'Context-aware prompting for better image understanding',
-      'Optimized for image editing and generation workflows'
+      "Creative prompt engineering from images",
+      "Artistic style and mood identification", 
+      "Character essence and personality capture",
+      "Inspirational language for AI creativity"
     ],
-    model: 'gemini-2.5-flash',
-    capabilities: 'Advanced visual understanding with thinking mode enabled'
+    capabilities: [
+      "Concept and vision extraction",
+      "Artistic direction interpretation", 
+      "Creative storytelling elements",
+      "Generative prompt optimization"
+    ],
+    improvements: [
+      "Shifted from analytical description to creative interpretation",
+      "Focus on artistic essence over physical details",
+      "Inspirational language that sparks AI creativity",
+      "Creative freedom while maintaining core concept"
+    ],
+    usage: "POST /api/nano-banana/describe-image with image file"
   });
 }
