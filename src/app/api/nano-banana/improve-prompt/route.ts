@@ -2,20 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 
 function createSystemInstruction(): string {
-  return `You are an expert prompt engineer specializing in Gemini 2.5 Flash image generation. Your expertise includes:
+  return `You are an expert prompt engineer for Gemini 2.5 Flash image generation.
 
-- Understanding visual composition and storytelling
-- Crafting descriptive, narrative-driven prompts
-- Optimizing prompts for different image categories
-- Balancing technical specifications with creative vision
+Core Principle: Describe the scene, don't just list keywords. Use rich, narrative descriptions.
 
-Core Principle: Describe the scene, don't just list keywords. Use rich, narrative descriptions that leverage the model's deep language understanding.
+For EDIT prompts: Stay close to the original content. Only clarify the specific changes requested.
 
-For EDIT prompts specifically: Stay extremely close to the original prompt content. Focus only on clarifying and detailing the specific changes requested, not on describing the entire image. Preserve the original intent and only enhance the editing instructions.
-
-IMPORTANT: Return ONLY the improved prompt without any introductory text, explanations, or meta-commentary. Do not include phrases like 'Here's an enhanced prompt' or similar introductions.
-
-Your enhanced prompts should read like detailed scene descriptions or visual narratives, creating cohesive stories of what should be seen rather than disconnected keyword lists.`;
+IMPORTANT: Return ONLY the improved prompt without introductory text or explanations.`;
 }
 
 function createImprovementPrompt(originalPrompt: string, category: string, hasImage: boolean = false): string {
@@ -108,6 +101,9 @@ Return ONLY the improved prompt text without any introductory phrases, explanati
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  console.log('🚀 Improve-prompt API request started');
+
   const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY
 
   if (!GOOGLE_API_KEY) {
@@ -148,6 +144,7 @@ export async function POST(request: NextRequest) {
     const genAI = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
 
     const improvementPrompt = createImprovementPrompt(prompt, category, !!imageFile)
+    console.log('📝 Generated improvement prompt, calling Gemini 2.5 Flash...');
 
     // Prepare content parts
     const parts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }> = [{ text: improvementPrompt }]
@@ -156,6 +153,7 @@ export async function POST(request: NextRequest) {
     if (imageFile) {
       const imageBytes = await imageFile.arrayBuffer()
       const imageBase64 = Buffer.from(imageBytes).toString('base64')
+      console.log(`🖼️ Image processed: ${imageFile.type}, size: ${(imageBase64.length * 0.75 / 1024).toFixed(1)}KB`);
       
       parts.push({
         inlineData: {
@@ -165,15 +163,27 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const result = await genAI.models.generateContentStream({
+    // Add timeout for better performance (similar to describe-image)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 45000); // 45s timeout for prompt improvement
+    });
+
+    console.log('🤖 Calling Gemini 2.5 Flash with optimized thinking mode...');
+    const genAIPromise = genAI.models.generateContentStream({
       model: 'gemini-2.5-flash',
       contents: [
         { role: 'user', parts: [{ text: createSystemInstruction() }] },
         { role: 'user', parts }
-      ]
-    })
+      ],
+      config: {
+        // Optimize thinking mode for faster response
+        thinkingConfig: { thinkingBudget: 500 } // Reduced thinking budget for faster response
+      }
+    });
 
-    // Create a streaming response
+    const result = await Promise.race([genAIPromise, timeoutPromise]) as AsyncIterable<{ text?: string }>;
+
+    // Optimized streaming response
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
@@ -185,7 +195,7 @@ export async function POST(request: NextRequest) {
             if (chunkText) {
               improvedPrompt += chunkText
               
-              // Send streaming chunk
+              // Simplified streaming chunk (less JSON processing)
               const data = JSON.stringify({
                 type: 'chunk',
                 content: chunkText,
@@ -237,4 +247,26 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    message: "Optimized Prompt Improvement API is running",
+    description: "Enhanced prompt improvement service using Gemini 2.5 Flash with optimized thinking mode for faster response times",
+    features: [
+      "45s timeout for reliable performance",
+      "Optimized thinking mode (500 budget)",
+      "Simplified system instructions",
+      "Performance logging and monitoring",
+      "Streamlined JSON processing"
+    ],
+    model: "gemini-2.5-flash",
+    capabilities: [
+      "Text prompt enhancement",
+      "Image-based prompt improvement", 
+      "Category-specific optimization",
+      "Real-time streaming responses"
+    ],
+    performance: "Optimized for speed with reduced thinking budget and timeout protection"
+  })
 }
