@@ -39,15 +39,37 @@ export const EditTab: React.FC<EditTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const [images, setImages] = useState<File[]>([])
-  const [imagePreviews, setImagePreviews] = useState<string[]>([])
-  const [prompt, setPrompt] = useState('')
+  // Use context state instead of local state for persistence
+  const { state, setLastGeneratedImages, updateEditState, updateComposeState } = useNanoBanana()
+  const { editPrompt, editInstruction, composePrompt, composeImages, composeImagePreviews } = state
+  
+  // Local state for UI-only concerns
   const [imageCount, setImageCount] = useState(1)
   const [operationType, setOperationType] = useState<OperationType>('edit')
   const [improvingPrompt, setImprovingPrompt] = useState<string | null>(null)
   const [includeImageForImprove, setIncludeImageForImprove] = useState(true)
   
-  const { setLastGeneratedImages, updateEditState } = useNanoBanana()
+  // Derived values based on operation type
+  const images = composeImages
+  const imagePreviews = composeImagePreviews
+  const prompt = operationType === 'edit' ? editPrompt : composePrompt
+  
+  // Helper functions to update state
+  const setPrompt = (value: string) => {
+    if (operationType === 'edit') {
+      updateEditState({ editPrompt: value })
+    } else {
+      updateComposeState({ composePrompt: value })
+    }
+  }
+  
+  const setImages = (files: File[]) => {
+    updateComposeState({ composeImages: files })
+  }
+  
+  const setImagePreviews = (previews: string[]) => {
+    updateComposeState({ composeImagePreviews: previews })
+  }
 
   // Smart operation detection based on number of images
   useEffect(() => {
