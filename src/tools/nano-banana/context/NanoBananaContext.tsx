@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 
 interface NanoBananaState {
   // Generate tab state
@@ -81,35 +81,33 @@ const NanoBananaContext = createContext<NanoBananaContextType | undefined>(undef
 export function NanoBananaProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<NanoBananaState>(defaultState)
   
-  const updateGenerateState = (updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateImageSize' | 'generateImageCount'>>) => {
+  const updateGenerateState = useCallback((updates: Partial<Pick<NanoBananaState, 'generatePrompt' | 'generateImageSize' | 'generateImageCount'>>) => {
     setState(prev => ({ ...prev, ...updates }))
-  }
+  }, [])
   
-  const updateEditState = (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction'>>) => {
+  const updateEditState = useCallback((updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction'>>) => {
     setState(prev => ({ ...prev, ...updates }))
-  }
+  }, [])
   
-  const updateComposeState = (updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType'>>) => {
+  const updateComposeState = useCallback((updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType'>>) => {
     setState(prev => ({ ...prev, ...updates }))
-  }
+  }, [])
   
-  const updateStyleState = (updates: Partial<Pick<NanoBananaState, 'styleContentImage' | 'styleStyleImage' | 'styleContentImagePreview' | 'styleStyleImagePreview' | 'stylePrompt' | 'styleStrength'>>) => {
+  const updateStyleState = useCallback((updates: Partial<Pick<NanoBananaState, 'styleContentImage' | 'styleStyleImage' | 'styleContentImagePreview' | 'styleStyleImagePreview' | 'stylePrompt' | 'styleStrength'>>) => {
     setState(prev => ({ ...prev, ...updates }))
-  }
+  }, [])
   
-
-  
-  const startNewSession = () => {
+  const startNewSession = useCallback(() => {
     setState(prev => ({ ...prev, conversationId: null }))
-  }
+  }, [])
   
-  const setConversationId = (id: string | null) => {
+  const setConversationId = useCallback((id: string | null) => {
     setState(prev => ({ ...prev, conversationId: id }))
-  }
+  }, [])
   
-  const setLastGeneratedImages = (images: string[]) => {
+  const setLastGeneratedImages = useCallback((images: string[]) => {
     setState(prev => ({ ...prev, lastGeneratedImages: images }))
-  }
+  }, [])
 
   return (
     <NanoBananaContext.Provider value={{

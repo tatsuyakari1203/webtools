@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Wand2, Edit, BookOpen } from 'lucide-react'
 import { GenerateTab } from './components/GenerateTab'
@@ -13,6 +13,11 @@ const NanoBananaContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('generate')
   const [loading, setLoading] = useState(false)
   const [generatedImage, setGeneratedImage] = useState<string | null>(null)
+
+  // Memoize setGeneratedImage to prevent infinite re-renders
+  const handleSetGeneratedImage = useCallback((image: string | null) => {
+    setGeneratedImage(image)
+  }, [])
 
 
 
@@ -53,7 +58,7 @@ const NanoBananaContent: React.FC = () => {
             <GenerateTab 
               loading={loading}
               setLoading={setLoading}
-              setGeneratedImage={setGeneratedImage}
+              setGeneratedImage={handleSetGeneratedImage}
             />
           </TabsContent>
 
@@ -61,7 +66,7 @@ const NanoBananaContent: React.FC = () => {
             <EditTab 
               loading={loading}
               setLoading={setLoading}
-              setGeneratedImage={setGeneratedImage}
+              setGeneratedImage={handleSetGeneratedImage}
             />
           </TabsContent>
 
@@ -74,7 +79,7 @@ const NanoBananaContent: React.FC = () => {
         <ResultDisplay 
           image={generatedImage}
           loading={loading}
-          setGeneratedImage={setGeneratedImage}
+          setGeneratedImage={handleSetGeneratedImage}
         />
       </div>
     </div>
