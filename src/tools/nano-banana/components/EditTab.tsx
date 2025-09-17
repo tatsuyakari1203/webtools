@@ -12,15 +12,15 @@ import { MultiImageInput } from './MultiImageInput'
 import { useNanoBanana } from '../context/NanoBananaContext'
 import { toast } from 'sonner'
 
-// Helper function to get operation labels in Vietnamese
+// Helper function to get operation labels in English
 function getOperationLabel(operationType: string): string {
   switch (operationType) {
     case 'edit':
-      return 'chỉnh sửa'
+      return 'edit'
     case 'compose':
-      return 'kết hợp'
+      return 'compose'
     case 'style_transfer':
-      return 'chuyển đổi phong cách'
+      return 'style transfer'
     default:
       return operationType
   }
@@ -47,23 +47,29 @@ export const EditTab: React.FC<EditTabProps> = ({
   const [improvingPrompt, setImprovingPrompt] = useState<string | null>(null)
   const [includeImageForImprove, setIncludeImageForImprove] = useState(true)
   
-  const { setLastGeneratedImages } = useNanoBanana()
+  const { setLastGeneratedImages, updateEditState } = useNanoBanana()
 
   // Smart operation detection based on number of images
   useEffect(() => {
     if (images.length >= 2 && operationType === 'edit') {
       setOperationType('compose')
-      toast.info('Tự động chuyển sang chế độ Compose vì có nhiều ảnh')
+      toast.info('Automatically switched to Compose mode due to multiple images')
     } else if (images.length === 1 && operationType === 'compose') {
       setOperationType('edit')
     }
   }, [images.length, operationType])
 
+  // Update editImagePreview in context when imagePreviews change
+  useEffect(() => {
+    const newPreview = imagePreviews.length > 0 ? imagePreviews[0] : ''
+    updateEditState({ editImagePreview: newPreview })
+  }, [imagePreviews, updateEditState])
+
 
 
   const handleImprovePrompt = async (category: string) => {
     if (!prompt.trim()) {
-      toast.error('Vui lòng nhập prompt trước khi cải thiện')
+      toast.error('Please enter a prompt before improving')
       return
     }
 
@@ -108,8 +114,8 @@ export const EditTab: React.FC<EditTabProps> = ({
             const data = line.slice(6)
             if (data === '[DONE]') {
               setPrompt(accumulatedText)
-              toast.success('Đã cải thiện prompt thành công!')
-              return
+                toast.success('Prompt improved successfully!')
+                return
             }
             
             try {
@@ -127,7 +133,7 @@ export const EditTab: React.FC<EditTabProps> = ({
       
     } catch (error) {
       console.error('Improve prompt error:', error)
-      toast.error('Có lỗi xảy ra khi cải thiện prompt')
+      toast.error('An error occurred while improving the prompt')
     } finally {
       setImprovingPrompt(null)
     }
@@ -135,23 +141,23 @@ export const EditTab: React.FC<EditTabProps> = ({
 
   const handleGenerate = async () => {
     if (images.length === 0) {
-      toast.error('Vui lòng upload ít nhất một ảnh')
+      toast.error('Please upload at least one image')
       return
     }
     
     if (!prompt.trim()) {
-      toast.error('Vui lòng nhập mô tả cho ảnh')
+      toast.error('Please enter a description for the image')
       return
     }
 
     // Validate operation requirements
     if (operationType === 'compose' && images.length < 2) {
-      toast.error('Chế độ Compose cần ít nhất 2 ảnh')
+      toast.error('Compose mode requires at least 2 images')
       return
     }
 
     if (operationType === 'style_transfer' && images.length < 2) {
-      toast.error('Chế độ Style Transfer cần ít nhất 2 ảnh')
+      toast.error('Style Transfer mode requires at least 2 images')
       return
     }
 
@@ -210,16 +216,16 @@ export const EditTab: React.FC<EditTabProps> = ({
           // Set the first image for backward compatibility
           setGeneratedImage(imageUrls[0])
           
-          toast.success(`Đã ${getOperationLabel(operationType)} thành công ${imageUrls.length} ảnh!`)
+          toast.success(`${getOperationLabel(operationType)} completed successfully for ${imageUrls.length} images!`)
         } else {
-          throw new Error('Không nhận được ảnh từ server')
+          throw new Error('No images received from server')
         }
       } else {
-        throw new Error(data.error || 'Không thể xử lý ảnh')
+        throw new Error(data.error || 'Unable to process image')
       }
     } catch (error) {
       console.error('Edit error:', error)
-      toast.error(error instanceof Error ? error.message : 'Có lỗi xảy ra khi xử lý ảnh')
+      toast.error(error instanceof Error ? error.message : 'An error occurred while processing the image')
     } finally {
       setLoading(false)
     }
@@ -231,17 +237,17 @@ export const EditTab: React.FC<EditTabProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Wand2 className="h-5 w-5" />
-            Chỉnh sửa ảnh với AI
+            Edit Images with AI
           </CardTitle>
           <CardDescription>
-            Upload ảnh và mô tả những thay đổi bạn muốn thực hiện
+            Upload images and describe the changes you want to make
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Upload Images */}
           <div className="space-y-2">
             <MultiImageInput
-              label="Ảnh đầu vào"
+              label="Input Images"
               values={images}
               onChange={setImages}
               previews={imagePreviews}
@@ -253,10 +259,10 @@ export const EditTab: React.FC<EditTabProps> = ({
 
           {/* Prompt Input */}
           <div className="space-y-2">
-            <Label htmlFor="prompt">Mô tả thay đổi</Label>
+            <Label htmlFor="prompt">Describe Changes</Label>
             <Textarea
               id="prompt"
-              placeholder="Mô tả những thay đổi bạn muốn thực hiện với ảnh..."
+              placeholder="Describe the changes you want to make to the image..."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={4}
@@ -273,14 +279,14 @@ export const EditTab: React.FC<EditTabProps> = ({
                 onCheckedChange={(checked) => setIncludeImageForImprove(checked as boolean)}
               />
               <Label htmlFor="include-image-improve" className="text-sm font-normal">
-                Bao gồm ảnh để cải thiện prompt
+                Include image to improve prompt
               </Label>
             </div>
           )}
 
           {/* Enhance Prompt Buttons */}
           <div className="space-y-2">
-            <Label>Cải thiện prompt</Label>
+            <Label>Improve Prompt</Label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <Button
                 variant="outline"
@@ -385,7 +391,7 @@ export const EditTab: React.FC<EditTabProps> = ({
 
           {/* Image Count Setting */}
           <div className="space-y-2">
-            <Label htmlFor="image-count">Số lượng ảnh tạo ra</Label>
+            <Label htmlFor="image-count">Number of Images to Generate</Label>
             <Input
               id="image-count"
               type="number"
@@ -396,7 +402,7 @@ export const EditTab: React.FC<EditTabProps> = ({
               className="w-24"
             />
             <p className="text-xs text-muted-foreground">
-              Tạo 1-4 ảnh cùng lúc. Nhiều ảnh hơn sẽ mất thời gian xử lý lâu hơn.
+              Generate 1-4 images at once. More images will take longer to process.
             </p>
           </div>
 
@@ -410,12 +416,12 @@ export const EditTab: React.FC<EditTabProps> = ({
             {loading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                Đang tạo ảnh...
+                Generating images...
               </>
             ) : (
               <>
                 <Wand2 className="h-4 w-4 mr-2" />
-                Tạo ảnh ({imageCount})
+                Generate Images ({imageCount})
               </>
             )}
           </Button>

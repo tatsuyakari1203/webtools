@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Download, Image as ImageIcon, Loader2, Maximize2, Grid3X3, Eye, LayoutGrid } from 'lucide-react'
+import { Download, Image as ImageIcon, Loader2, Maximize2, Eye, LayoutGrid, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Lightbox } from './Lightbox'
 import { useNanoBanana } from '../context/NanoBananaContext'
@@ -21,11 +21,15 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   setGeneratedImage
 }) => {
   const { state } = useNanoBanana()
-  const { lastGeneratedImages } = state
+  const { lastGeneratedImages, editImagePreview } = state
   
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [viewMode, setViewMode] = useState<'single' | 'grid'>('single')
+  const [showingInput, setShowingInput] = useState(false)
+  
+  // Check if we can show before/after toggle
+  const canShowToggle = editImagePreview && lastGeneratedImages && lastGeneratedImages.length > 0
 
   // Auto-switch to grid mode when multiple images are available
   useEffect(() => {
@@ -148,11 +152,24 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
               <Badge variant="secondary">
                 {lastGeneratedImages.length} image{lastGeneratedImages.length > 1 ? 's' : ''}
               </Badge>
+              
+              {/* Show Input/Output Toggle - moved to left side */}
+              {viewMode === 'single' && canShowToggle && (
+                <Button
+                  onClick={() => setShowingInput(!showingInput)}
+                  variant="outline"
+                  size="sm"
+                  className="transition-all duration-200 ml-2"
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  {showingInput ? 'Show Output' : 'Show Input'}
+                </Button>
+              )}
             </div>
             
-            {/* View Mode Toggle */}
-            {lastGeneratedImages.length > 1 && (
-              <div className="flex gap-1">
+            {/* View Mode Toggle - kept on right side */}
+            <div className="flex gap-1">
+              {lastGeneratedImages.length > 1 && (
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'outline'}
                   size="sm"
@@ -160,19 +177,20 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant={viewMode === 'single' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('single')}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+              )}
+              <Button
+                variant={viewMode === 'single' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('single')}
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         
         <CardContent className="space-y-4">
+
           {/* Grid View */}
           {viewMode === 'grid' && (
             <div className="space-y-4">
@@ -236,13 +254,24 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
           )}
 
           {/* Single View */}
-          {viewMode === 'single' && image && (
+          {viewMode === 'single' && (image || (showingInput && editImagePreview)) && (
             <div className="space-y-4">
+              
               {/* Main Image */}
               <div className="relative group">
+                {/* Image Label */}
+                <div className="absolute top-4 left-4 z-10">
+                  <Badge variant={showingInput ? "secondary" : "default"} className="shadow-lg">
+                    {showingInput ? 'Input' : 'Output'}
+                    {!showingInput && lastGeneratedImages.length > 1 && (
+                      <span className="ml-1">({selectedImageIndex + 1}/{lastGeneratedImages.length})</span>
+                    )}
+                  </Badge>
+                </div>
+                
                 <img
-                  src={image}
-                  alt="Generated result"
+                  src={showingInput ? (editImagePreview || '') : (image || '')}
+                  alt={showingInput ? "Input image" : "Generated result"}
                   className="w-full rounded-xl border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
                   style={{ maxHeight: '500px', objectFit: 'contain' }}
                   onClick={() => setIsLightboxOpen(true)}
@@ -260,15 +289,6 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                     View Full Size
                   </Button>
                 </div>
-                
-                {/* Image Info */}
-                {lastGeneratedImages.length > 1 && (
-                  <div className="absolute top-4 left-4">
-                    <Badge variant="secondary">
-                      {selectedImageIndex + 1} of {lastGeneratedImages.length}
-                    </Badge>
-                  </div>
-                )}
               </div>
 
               {/* Thumbnail Navigation */}
@@ -303,7 +323,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
               )}
 
               {/* Single View Actions */}
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap justify-center">
                 <Button
                   onClick={() => handleDownload()}
                   variant="outline"
@@ -312,17 +332,6 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                   <Download className="h-4 w-4 mr-2" />
                   Download
                 </Button>
-                
-                {lastGeneratedImages.length > 1 && (
-                  <Button
-                    onClick={() => setViewMode('grid')}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Grid3X3 className="h-4 w-4 mr-2" />
-                    View All
-                  </Button>
-                )}
               </div>
             </div>
           )}
