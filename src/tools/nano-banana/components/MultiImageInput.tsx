@@ -55,10 +55,7 @@ const compressImage = (file: File, quality: number = 0.8): Promise<File> => {
   })
 }
 
-// Legacy resize function (kept for reference but not used)
-const resizeImage = (file: File, maxWidth: number = 1024, maxHeight: number = 1024, quality: number = 0.8): Promise<File> => {
-  return compressImage(file, quality)
-}
+
 
 export const MultiImageInput: React.FC<MultiImageInputProps> = ({
   label,

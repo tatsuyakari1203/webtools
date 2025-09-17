@@ -112,29 +112,56 @@ export async function POST(request: NextRequest) {
     console.log('Generating', numImages, 'images...');
     
     // Generate multiple images by making multiple API calls like in generate route
-    const imagePromises = Array.from({ length: numImages }, async () => {
-      console.log('Sending request to Gemini...');
+    const imagePromises = Array.from({ length: numImages }, async (_, index) => {
+      console.log(`Sending request ${index + 1}/${numImages} to Gemini...`);
       const response = await ai.models.generateContent({
         model: 'models/gemini-2.5-flash-image-preview',
         contents
       });
-      console.log('Received response from Gemini');
+      console.log(`Received response ${index + 1}/${numImages} from Gemini`);
+      
+      // Debug logging for response structure
+      console.log('Response structure:', {
+        hasCandidates: !!response.candidates,
+        candidatesLength: response.candidates?.length || 0,
+        responseKeys: Object.keys(response)
+      });
       
       const candidates = response.candidates;
       if (!candidates || candidates.length === 0) {
+        console.error('No candidates in response:', response);
         throw new Error('No candidates in response');
       }
 
+      console.log('Candidate structure:', {
+        hasContent: !!candidates[0].content,
+        contentKeys: candidates[0].content ? Object.keys(candidates[0].content) : [],
+        hasParts: !!candidates[0].content?.parts,
+        partsLength: candidates[0].content?.parts?.length || 0
+      });
+
       const parts = candidates[0].content?.parts;
       if (!parts || parts.length === 0) {
+        console.error('No parts in response:', candidates[0]);
         throw new Error('No parts in response');
       }
       
+      console.log('Parts analysis:', parts.map((part, i) => ({
+        index: i,
+        hasText: !!part.text,
+        hasInlineData: !!part.inlineData,
+        inlineDataKeys: part.inlineData ? Object.keys(part.inlineData) : [],
+        mimeType: part.inlineData?.mimeType
+      })));
+      
       const imageParts = parts.filter(part => part.inlineData);
       if (imageParts.length === 0) {
-        throw new Error('No image data in response');
+        console.error('No image data in response. Parts:', parts);
+        console.error('Full response for debugging:', JSON.stringify(response, null, 2));
+        throw new Error('No image data in response - Gemini may not support image editing for this request');
       }
 
+      console.log(`Found ${imageParts.length} image parts in response ${index + 1}`);
       // Return the first image from this request
       return imageParts[0].inlineData!.data;
     });

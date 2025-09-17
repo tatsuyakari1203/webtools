@@ -13,14 +13,12 @@ interface ResultDisplayProps {
   image: string | null
   loading: boolean
   setGeneratedImage: (image: string | null) => void
-  originalImage?: string | null
 }
 
 export const ResultDisplay: React.FC<ResultDisplayProps> = ({ 
   image, 
   loading, 
-  setGeneratedImage,
-  originalImage
+  setGeneratedImage
 }) => {
   const { state } = useNanoBanana()
   const { lastGeneratedImages } = state

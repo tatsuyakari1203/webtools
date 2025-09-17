@@ -6,9 +6,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 
 import { Slider } from '@/components/ui/slider'
-import { Loader2, Wand2, Sparkles, Upload, Camera, Palette, Package, Minus, ImageIcon, Type } from 'lucide-react'
+import { Loader2, Wand2, Camera, Palette, Package, Minus, ImageIcon, Type } from 'lucide-react'
 import { toast } from 'sonner'
-import { handleStreamingImprovePrompt } from '../utils/streamingApi'
 import { useNanoBanana } from '../context/NanoBananaContext'
 
 
@@ -103,7 +102,7 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
     try {
       let accumulatedText = ''
       
-      const improvedPrompt = await handleStreamingImprovePrompt(
+      await handleStreamingImprovePrompt(
         generatePrompt,
         category,
         // onChunk callback - update prompt in real-time

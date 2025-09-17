@@ -45,7 +45,6 @@ export const EditTab: React.FC<EditTabProps> = ({
   const [imageCount, setImageCount] = useState(1)
   const [operationType, setOperationType] = useState<OperationType>('edit')
   const [improvingPrompt, setImprovingPrompt] = useState<string | null>(null)
-  const [describingImage, setDescribingImage] = useState(false)
   const [includeImageForImprove, setIncludeImageForImprove] = useState(true)
   
   const { setLastGeneratedImages } = useNanoBanana()
@@ -60,45 +59,7 @@ export const EditTab: React.FC<EditTabProps> = ({
     }
   }, [images.length, operationType])
 
-  const handleDescribeImage = async () => {
-    if (images.length === 0) {
-      toast.error('Vui lòng upload ảnh trước khi mô tả')
-      return
-    }
 
-    setDescribingImage(true)
-    try {
-      const formData = new FormData()
-      formData.append('image', images[0])
-
-      const response = await fetch('/api/nano-banana/describe-image', {
-        method: 'POST',
-        body: formData
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-
-      const data = await response.json()
-      if (data.success && data.description) {
-        // Auto-fill prompt with description
-        const description = data.description
-        setPrompt(prev => {
-          const newPrompt = prev ? `${prev}\n\nMô tả ảnh: ${description}` : `Chỉnh sửa ảnh này: ${description}`
-          return newPrompt
-        })
-        toast.success('Đã mô tả ảnh thành công!')
-      } else {
-        throw new Error(data.error || 'Không thể mô tả ảnh')
-      }
-    } catch (error) {
-      console.error('Describe image error:', error)
-      toast.error('Có lỗi xảy ra khi mô tả ảnh')
-    } finally {
-      setDescribingImage(false)
-    }
-  }
 
   const handleImprovePrompt = async (category: string) => {
     if (!prompt.trim()) {
@@ -157,7 +118,7 @@ export const EditTab: React.FC<EditTabProps> = ({
                 accumulatedText += parsed.content
                 setPrompt(accumulatedText)
               }
-            } catch (e) {
+            } catch {
               // Ignore parsing errors for partial chunks
             }
           }

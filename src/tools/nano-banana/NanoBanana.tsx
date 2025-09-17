@@ -2,28 +2,20 @@
 
 import React, { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Wand2, Edit, Combine, Palette, BookOpen } from 'lucide-react'
+import { Wand2, Edit, BookOpen } from 'lucide-react'
 import { GenerateTab } from './components/GenerateTab'
 import { EditTab } from './components/EditTab'
 import PromptGuideTab from './components/PromptGuideTab'
 import { ResultDisplay } from './components/ResultDisplay'
-import { NanoBananaProvider, useNanoBanana } from './context/NanoBananaContext'
+import { NanoBananaProvider } from './context/NanoBananaContext'
 
 const NanoBananaContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('generate')
   const [loading, setLoading] = useState(false)
   const [generatedImage, setGeneratedImage] = useState<string | null>(null)
-  const { state } = useNanoBanana()
 
-  // Get original image based on active tab
-  const getOriginalImage = () => {
-    switch (activeTab) {
-      case 'edit':
-        return state.editImagePreview || state.composeImagePreviews[0] || state.styleContentImagePreview
-      default:
-        return null
-    }
-  }
+
+
 
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-6">
@@ -83,7 +75,6 @@ const NanoBananaContent: React.FC = () => {
           image={generatedImage}
           loading={loading}
           setGeneratedImage={setGeneratedImage}
-          originalImage={getOriginalImage()}
         />
       </div>
     </div>

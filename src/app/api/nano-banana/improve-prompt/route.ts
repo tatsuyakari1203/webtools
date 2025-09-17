@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
     const improvementPrompt = createImprovementPrompt(prompt, category, !!imageFile)
 
     // Prepare content parts
-    const parts: any[] = [{ text: improvementPrompt }]
+    const parts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }> = [{ text: improvementPrompt }]
     
     // Add image if provided
     if (imageFile) {
