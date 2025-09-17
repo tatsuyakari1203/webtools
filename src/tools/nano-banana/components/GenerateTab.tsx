@@ -4,7 +4,7 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-
+import { Card } from '@/components/ui/card'
 import { Slider } from '@/components/ui/slider'
 import { Loader2, Wand2, Camera, Palette, Package, Minus, ImageIcon, Type } from 'lucide-react'
 import { toast } from 'sonner'
@@ -135,158 +135,178 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
 
 
   return (
-    <div className="space-y-4">
-      <div>
-        <Label htmlFor="prompt">Image Description</Label>
-        <Textarea
-          id="prompt"
-          placeholder="Describe the image you want to generate..."
-          value={generatePrompt}
-          onChange={(e) => updateGenerateState({ generatePrompt: e.target.value })}
-          rows={4}
-          className="mt-1"
-        />
-        
-        {/* Enhance Prompt Buttons */}
+    <div className="space-y-6">
+      {/* Prompt Input Section */}
+      <Card className="p-6">
         <div className="space-y-4">
-          <Label>Enhance prompt</Label>
-          
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Describe Your Image</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Enter a detailed description of the image you want to generate
+            </p>
+          </div>
+          <div>
+            <Label htmlFor="prompt" className="text-sm font-medium">Prompt</Label>
+            <Textarea
+              id="prompt"
+              placeholder="Describe the image you want to generate..."
+              value={generatePrompt}
+              onChange={(e) => updateGenerateState({ generatePrompt: e.target.value })}
+              className="min-h-[120px] mt-2 resize-none"
+            />
+          </div>
+        </div>
+      </Card>
 
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      {/* Enhance Prompt Section */}
+      <Card className="p-6">
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Enhance Your Prompt</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Choose a style to automatically improve your prompt
+            </p>
+          </div>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('photorealistic')}
               disabled={loading || improvingPrompt || !generatePrompt.trim()}
-              className="text-xs"
+              className="h-auto py-3 px-4 flex flex-col items-center gap-2 text-xs hover:bg-accent"
             >
-              {improvingPrompt ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Camera className="h-3 w-3 mr-1" />
-              )}
-              Photo
+              <Camera className="w-4 h-4" />
+              <span>Photo</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('artistic')}
               disabled={loading || improvingPrompt || !generatePrompt.trim()}
-              className="text-xs"
+              className="h-auto py-3 px-4 flex flex-col items-center gap-2 text-xs hover:bg-accent"
             >
-              {improvingPrompt ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Palette className="h-3 w-3 mr-1" />
-              )}
-              Artistic
+              <Palette className="w-4 h-4" />
+              <span>Artistic</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('product')}
               disabled={loading || improvingPrompt || !generatePrompt.trim()}
-              className="text-xs"
+              className="h-auto py-3 px-4 flex flex-col items-center gap-2 text-xs hover:bg-accent"
             >
-              {improvingPrompt ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Package className="h-3 w-3 mr-1" />
-              )}
-              Product
+              <Package className="w-4 h-4" />
+              <span>Product</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('minimalist')}
               disabled={loading || improvingPrompt || !generatePrompt.trim()}
-              className="text-xs"
+              className="h-auto py-3 px-4 flex flex-col items-center gap-2 text-xs hover:bg-accent"
             >
-              {improvingPrompt ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Minus className="h-3 w-3 mr-1" />
-              )}
-              Minimal
+              <Minus className="w-4 h-4" />
+              <span>Minimal</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('illustration')}
               disabled={loading || improvingPrompt || !generatePrompt.trim()}
-              className="text-xs"
+              className="h-auto py-3 px-4 flex flex-col items-center gap-2 text-xs hover:bg-accent"
             >
-              {improvingPrompt ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <ImageIcon className="h-3 w-3 mr-1" />
-              )}
-              Illustration
+              <ImageIcon className="w-4 h-4" />
+              <span>Illustration</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleImprovePrompt('logo')}
               disabled={loading || improvingPrompt || !generatePrompt.trim()}
-              className="text-xs"
+              className="h-auto py-3 px-4 flex flex-col items-center gap-2 text-xs hover:bg-accent"
             >
-              {improvingPrompt ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Type className="h-3 w-3 mr-1" />
-              )}
-              Logo
+              <Type className="w-4 h-4" />
+              <span>Logo</span>
             </Button>
           </div>
         </div>
+      </Card>
+
+      {/* Settings Section */}
+      <Card className="p-6">
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Generation Settings</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Customize the size and quantity of generated images
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Image Size</Label>
+                <span className="text-sm text-muted-foreground font-mono">
+                  {generateImageSize[0]}×{generateImageSize[0]}px
+                </span>
+              </div>
+              <Slider
+                value={generateImageSize}
+                onValueChange={(value) => updateGenerateState({ generateImageSize: value })}
+                min={512}
+                max={2048}
+                step={256}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>512px</span>
+                <span>2048px</span>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Number of Images</Label>
+                <span className="text-sm text-muted-foreground font-mono">
+                  {generateImageCount[0]} {generateImageCount[0] === 1 ? 'image' : 'images'}
+                </span>
+              </div>
+              <Slider
+                value={generateImageCount}
+                onValueChange={(value) => updateGenerateState({ generateImageCount: value })}
+                min={1}
+                max={4}
+                step={1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>1</span>
+                <span>4</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Generate Action */}
+      <div className="pt-2">
+        <Button
+          onClick={handleGenerate}
+          disabled={loading || !generatePrompt.trim()}
+          className="w-full h-12 text-base font-medium"
+          size="lg"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Generating {generateImageCount[0]} {generateImageCount[0] === 1 ? 'image' : 'images'}...
+            </>
+          ) : (
+            <>
+              <Wand2 className="w-5 h-5 mr-2" />
+              Generate {generateImageCount[0]} {generateImageCount[0] === 1 ? 'Image' : 'Images'}
+            </>
+          )}
+        </Button>
       </div>
-
-
-
-      <div>
-        <Label htmlFor="size">Image Size: {generateImageSize[0]}x{generateImageSize[0]}</Label>
-        <Slider
-          id="size"
-          min={512}
-          max={2048}
-          step={256}
-          value={generateImageSize}
-          onValueChange={(value) => updateGenerateState({ generateImageSize: value })}
-          className="mt-2"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="count">Number of Images: {generateImageCount[0]}</Label>
-        <Slider
-          id="count"
-          min={1}
-          max={4}
-          step={1}
-          value={generateImageCount}
-          onValueChange={(value) => updateGenerateState({ generateImageCount: value })}
-          className="mt-2"
-        />
-      </div>
-
-      <Button 
-        onClick={handleGenerate} 
-        disabled={loading || !generatePrompt.trim()}
-        className="w-full"
-      >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Generating...
-          </>
-        ) : (
-          <>
-            <Wand2 className="mr-2 h-4 w-4" />
-            Generate Image
-          </>
-        )}
-      </Button>
     </div>
   )
 }
