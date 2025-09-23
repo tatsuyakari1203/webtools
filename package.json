@@ -17,7 +17,8 @@
     "add-tool": "node scripts/add-tool.js",
     "tool:add": "node scripts/add-tool.js",
     "add-user": "node scripts/add-user.js",
-    "remove-user": "node scripts/remove-user.js"
+    "remove-user": "node scripts/remove-user.js",
+    "coolify-install": "bun install"
   },
   "dependencies": {
     "@google/genai": "^1.16.0",
