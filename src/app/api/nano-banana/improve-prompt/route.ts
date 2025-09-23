@@ -101,7 +101,6 @@ Return ONLY the improved prompt text without any introductory phrases, explanati
 }
 
 export async function POST(request: NextRequest) {
-  const startTime = Date.now();
   console.log('🚀 Improve-prompt API request started');
 
   const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY

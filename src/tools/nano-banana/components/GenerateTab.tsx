@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { Slider } from '@/components/ui/slider'
-import { Loader2, Wand2, Camera, Palette, Package, Minus, ImageIcon, Type } from 'lucide-react'
+import { Loader2, Wand2, Camera, Palette, Package, Minus, ImageIcon, Type, Undo2, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useNanoBanana } from '../context/NanoBananaContext'
 
@@ -22,8 +22,18 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const { state, updateGenerateState, startNewSession, setLastGeneratedImages } = useNanoBanana()
-  const { generatePrompt, generateImageSize, generateImageCount } = state
+  const { 
+    state, 
+    updateGenerateState, 
+    startNewSession, 
+    setLastGeneratedImages,
+    saveOriginalGeneratePrompt,
+    undoGeneratePrompt,
+    saveGenerateImproveSettings,
+    canUndoGenerate,
+    canRetryGenerate
+  } = useNanoBanana()
+  const { generatePrompt, generateImageSize, generateImageCount, originalGeneratePrompt, lastGenerateImproveSettings } = state
   const [improvingPrompt, setImprovingPrompt] = React.useState(false)
 
   const handleGenerate = async () => {
@@ -94,6 +104,14 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
       return
     }
 
+    // Save original prompt if not already saved
+    if (!originalGeneratePrompt) {
+      saveOriginalGeneratePrompt(generatePrompt)
+    }
+
+    // Save improve settings
+    saveGenerateImproveSettings(category)
+
     setImprovingPrompt(true)
     
     // Import streaming utility dynamically
@@ -132,6 +150,28 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
     }
   }
 
+  const handleRetryImprove = async () => {
+    if (!lastGenerateImproveSettings || !originalGeneratePrompt) {
+      toast.error('No previous improve settings found')
+      return
+    }
+
+    // Reset to original prompt first
+    updateGenerateState({ generatePrompt: originalGeneratePrompt })
+    
+    // Wait a bit for state to update, then improve
+    setTimeout(() => {
+      handleImprovePrompt(lastGenerateImproveSettings.category)
+    }, 100)
+  }
+
+  const handlePromptChange = (value: string) => {
+    updateGenerateState({ generatePrompt: value })
+    
+    // Clear original prompt if user starts typing fresh (no original prompt saved yet)
+    // The original prompt will be saved when user clicks improve
+  }
+
 
 
   return (
@@ -151,7 +191,7 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
               id="prompt"
               placeholder="Describe the image you want to generate..."
               value={generatePrompt}
-              onChange={(e) => updateGenerateState({ generatePrompt: e.target.value })}
+              onChange={(e) => handlePromptChange(e.target.value)}
               className="min-h-[120px] mt-2 resize-none"
             />
           </div>
@@ -167,6 +207,37 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
               Choose a style to automatically improve your prompt
             </p>
           </div>
+          
+          {/* Undo/Retry buttons */}
+          {(canUndoGenerate() || canRetryGenerate()) && (
+            <div className="flex gap-2 mb-4">
+              {canUndoGenerate() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={undoGeneratePrompt}
+                  disabled={loading || improvingPrompt}
+                  className="text-xs"
+                >
+                  <Undo2 className="h-3 w-3 mr-1" />
+                  Undo
+                </Button>
+              )}
+              {canRetryGenerate() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRetryImprove}
+                  disabled={loading || improvingPrompt}
+                  className="text-xs"
+                >
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  Retry ({lastGenerateImproveSettings?.category})
+                </Button>
+              )}
+            </div>
+          )}
+          
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             <Button
               variant="outline"

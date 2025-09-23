@@ -29,6 +29,19 @@ interface NanoBananaState {
   stylePrompt: string
   styleStrength: number[]
   
+  // Prompt history for undo/retry functionality
+  originalGeneratePrompt: string
+  originalEditPrompt: string
+  lastGenerateImproveSettings: {
+    category: string
+    timestamp: number
+  } | null
+  lastEditImproveSettings: {
+    category: string
+    includeImage: boolean
+    timestamp: number
+  } | null
+  
   // Session management
   conversationId: string | null
   lastGeneratedImages: string[]
@@ -40,6 +53,20 @@ interface NanoBananaContextType {
   updateEditState: (updates: Partial<Pick<NanoBananaState, 'editImage' | 'editImagePreview' | 'editPrompt' | 'editInstruction' | 'editImageDescription'>>) => void
   updateComposeState: (updates: Partial<Pick<NanoBananaState, 'composeImages' | 'composeImagePreviews' | 'composePrompt' | 'composeCompositionType'>>) => void
   updateStyleState: (updates: Partial<Pick<NanoBananaState, 'styleContentImage' | 'styleStyleImage' | 'styleContentImagePreview' | 'styleStyleImagePreview' | 'stylePrompt' | 'styleStrength'>>) => void
+
+  // Prompt history management
+  saveOriginalGeneratePrompt: (prompt: string) => void
+  saveOriginalEditPrompt: (prompt: string) => void
+  undoGeneratePrompt: () => void
+  undoEditPrompt: () => void
+  saveGenerateImproveSettings: (category: string) => void
+  saveEditImproveSettings: (category: string, includeImage: boolean) => void
+  retryGenerateImprove: () => Promise<void>
+  retryEditImprove: () => Promise<void>
+  canUndoGenerate: () => boolean
+  canUndoEdit: () => boolean
+  canRetryGenerate: () => boolean
+  canRetryEdit: () => boolean
 
   startNewSession: () => void
   setConversationId: (id: string | null) => void
@@ -72,6 +99,12 @@ const defaultState: NanoBananaState = {
   styleStyleImagePreview: '',
   stylePrompt: '',
   styleStrength: [0.5],
+  
+  // Prompt history for undo/retry functionality
+  originalGeneratePrompt: '',
+  originalEditPrompt: '',
+  lastGenerateImproveSettings: null,
+  lastEditImproveSettings: null,
   
   // Session management
   conversationId: null,
@@ -111,6 +144,71 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, lastGeneratedImages: images }))
   }, [])
 
+  // Prompt history management methods
+  const saveOriginalGeneratePrompt = useCallback((prompt: string) => {
+    setState(prev => ({ ...prev, originalGeneratePrompt: prompt }))
+  }, [])
+
+  const saveOriginalEditPrompt = useCallback((prompt: string) => {
+    setState(prev => ({ ...prev, originalEditPrompt: prompt }))
+  }, [])
+
+  const undoGeneratePrompt = useCallback(() => {
+    setState(prev => ({ 
+      ...prev, 
+      generatePrompt: prev.originalGeneratePrompt,
+      lastGenerateImproveSettings: null
+    }))
+  }, [])
+
+  const undoEditPrompt = useCallback(() => {
+    setState(prev => ({ 
+      ...prev, 
+      editPrompt: prev.originalEditPrompt,
+      lastEditImproveSettings: null
+    }))
+  }, [])
+
+  const saveGenerateImproveSettings = useCallback((category: string) => {
+    setState(prev => ({ 
+      ...prev, 
+      lastGenerateImproveSettings: { category, timestamp: Date.now() }
+    }))
+  }, [])
+
+  const saveEditImproveSettings = useCallback((category: string, includeImage: boolean) => {
+    setState(prev => ({ 
+      ...prev, 
+      lastEditImproveSettings: { category, includeImage, timestamp: Date.now() }
+    }))
+  }, [])
+
+  const retryGenerateImprove = useCallback(async () => {
+    // This will be implemented by the components that use it
+    // as it needs access to the improve prompt logic
+  }, [])
+
+  const retryEditImprove = useCallback(async () => {
+    // This will be implemented by the components that use it
+    // as it needs access to the improve prompt logic
+  }, [])
+
+  const canUndoGenerate = useCallback(() => {
+    return state.originalGeneratePrompt !== '' && state.generatePrompt !== state.originalGeneratePrompt
+  }, [state.originalGeneratePrompt, state.generatePrompt])
+
+  const canUndoEdit = useCallback(() => {
+    return state.originalEditPrompt !== '' && state.editPrompt !== state.originalEditPrompt
+  }, [state.originalEditPrompt, state.editPrompt])
+
+  const canRetryGenerate = useCallback(() => {
+    return state.lastGenerateImproveSettings !== null && state.originalGeneratePrompt !== ''
+  }, [state.lastGenerateImproveSettings, state.originalGeneratePrompt])
+
+  const canRetryEdit = useCallback(() => {
+    return state.lastEditImproveSettings !== null && state.originalEditPrompt !== ''
+  }, [state.lastEditImproveSettings, state.originalEditPrompt])
+
   return (
     <NanoBananaContext.Provider value={{
       state,
@@ -118,6 +216,20 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
       updateEditState,
       updateComposeState,
       updateStyleState,
+
+      // Prompt history management
+      saveOriginalGeneratePrompt,
+      saveOriginalEditPrompt,
+      undoGeneratePrompt,
+      undoEditPrompt,
+      saveGenerateImproveSettings,
+      saveEditImproveSettings,
+      retryGenerateImprove,
+      retryEditImprove,
+      canUndoGenerate,
+      canUndoEdit,
+      canRetryGenerate,
+      canRetryEdit,
 
       startNewSession,
       setConversationId,

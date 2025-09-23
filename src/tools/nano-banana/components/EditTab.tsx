@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Wand2, Sparkles, Camera, Palette, Package, Minus, Image as ImageIcon, Type } from 'lucide-react'
+import { Wand2, Sparkles, Camera, Palette, Package, Minus, Image as ImageIcon, Type, Undo2, RotateCcw } from 'lucide-react'
 import { MultiImageInput } from './MultiImageInput'
 import { useNanoBanana } from '../context/NanoBananaContext'
 import { toast } from 'sonner'
@@ -40,8 +40,18 @@ export const EditTab: React.FC<EditTabProps> = ({
   setGeneratedImage
 }) => {
   // Use context state instead of local state for persistence
-  const { state, setLastGeneratedImages, updateEditState, updateComposeState } = useNanoBanana()
-  const { editPrompt, editImageDescription, composePrompt, composeImages, composeImagePreviews } = state
+  const { 
+    state, 
+    setLastGeneratedImages, 
+    updateEditState, 
+    updateComposeState,
+    saveOriginalEditPrompt,
+    undoEditPrompt,
+    saveEditImproveSettings,
+    canUndoEdit,
+    canRetryEdit
+  } = useNanoBanana()
+  const { editPrompt, editImageDescription, composePrompt, composeImages, composeImagePreviews, originalEditPrompt, lastEditImproveSettings } = state
   
   // Local state for UI-only concerns
   const [imageCount, setImageCount] = useState(1)
@@ -59,6 +69,7 @@ export const EditTab: React.FC<EditTabProps> = ({
   const setPrompt = (value: string) => {
     if (operationType === 'edit') {
       updateEditState({ editPrompt: value })
+      // Original prompt will be saved when user clicks improve
     } else {
       updateComposeState({ composePrompt: value })
     }
@@ -94,6 +105,16 @@ export const EditTab: React.FC<EditTabProps> = ({
     if (!prompt.trim()) {
       toast.error('Please enter a prompt before improving')
       return
+    }
+
+    // Save original prompt if not already saved (only for edit mode)
+    if (operationType === 'edit' && !originalEditPrompt) {
+      saveOriginalEditPrompt(prompt)
+    }
+
+    // Save improve settings (only for edit mode)
+    if (operationType === 'edit') {
+      saveEditImproveSettings(category, includeImageForImprove)
     }
 
     setImprovingPrompt(category)
@@ -160,6 +181,24 @@ export const EditTab: React.FC<EditTabProps> = ({
     } finally {
       setImprovingPrompt(null)
     }
+  }
+
+  const handleRetryImprove = async () => {
+    if (!lastEditImproveSettings || !originalEditPrompt || operationType !== 'edit') {
+      toast.error('No previous improve settings found')
+      return
+    }
+
+    // Reset to original prompt first
+    updateEditState({ editPrompt: originalEditPrompt })
+    
+    // Restore the include image setting
+    setIncludeImageForImprove(lastEditImproveSettings.includeImage)
+    
+    // Wait a bit for state to update, then improve
+    setTimeout(() => {
+      handleImprovePrompt(lastEditImproveSettings.category)
+    }, 100)
   }
 
   const handleGenerateDescription = async () => {
@@ -488,6 +527,36 @@ export const EditTab: React.FC<EditTabProps> = ({
                 Edit
               </Button>
             </div>
+            
+            {/* Undo/Retry Buttons - Only show for edit mode */}
+            {operationType === 'edit' && (canUndoEdit() || canRetryEdit()) && (
+              <div className="flex gap-2 mt-2">
+                {canUndoEdit() && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => undoEditPrompt()}
+                    disabled={loading || improvingPrompt !== null}
+                    className="text-xs"
+                  >
+                    <Undo2 className="h-3 w-3 mr-1" />
+                    Undo
+                  </Button>
+                )}
+                {canRetryEdit() && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRetryImprove}
+                    disabled={loading || improvingPrompt !== null}
+                    className="text-xs"
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1" />
+                    Retry
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Image Count Setting */}

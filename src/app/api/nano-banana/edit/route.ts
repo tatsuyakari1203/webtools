@@ -36,6 +36,24 @@ export const dynamic = 'force-dynamic';
 
 type OperationType = 'edit' | 'compose' | 'style_transfer';
 
+interface GenAIPart {
+  inlineData?: {
+    data: string;
+    mimeType: string;
+  };
+  text?: string;
+}
+
+interface GenAICandidate {
+  content?: {
+    parts: GenAIPart[];
+  };
+}
+
+interface GenAIResponse {
+  candidates: GenAICandidate[];
+}
+
 async function convertFileToBase64(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
@@ -139,7 +157,7 @@ export async function POST(request: NextRequest) {
             setTimeout(() => reject(new Error('Request timeout')), 60000);
           });
           
-          const response = await Promise.race([genAIPromise, timeoutPromise]) as any;
+          const response = await Promise.race([genAIPromise, timeoutPromise]) as GenAIResponse;
       
       // Debug logging for response structure
       console.log('Response structure:', {
@@ -169,7 +187,7 @@ export async function POST(request: NextRequest) {
             throw new Error('No parts in response');
           }
           
-          const imageParts = parts.filter((part: any) => part.inlineData);
+          const imageParts = parts.filter((part: GenAIPart) => part.inlineData);
           if (imageParts.length === 0) {
             throw new Error('No image data in response');
           }
