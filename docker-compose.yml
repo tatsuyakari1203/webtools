@@ -22,7 +22,7 @@ services:
       - INVITE_STRICT_MODE=${INVITE_STRICT_MODE}
       - DISABLE_LIGHT_MODE=${DISABLE_LIGHT_MODE}
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://127.0.0.1:3000"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
