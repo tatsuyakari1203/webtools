@@ -80,6 +80,12 @@ export default function GoogleDocsToMarkdown() {
   const [options, setOptions] = useState<ConversionOptions>(DEFAULT_OPTIONS);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [metadata, setMetadata] = useState<{
+    hasImages: boolean;
+    hasComments: boolean;
+    hasTables: boolean;
+  } | null>(null);
 
   // Load settings on mount
   useEffect(() => {
@@ -109,8 +115,10 @@ export default function GoogleDocsToMarkdown() {
         const plainText = event.clipboardData.getData('text/plain');
         if (plainText) {
           setInput(plainText);
-          const result = await convertDocsHtmlToMarkdown(plainText);
+          const result = await convertDocsHtmlToMarkdown(plainText, options);
           setOutput(result.markdown);
+          setWarnings(result.warnings || []);
+          setMetadata(result.metadata || null);
           if (result.error) {
             setError(result.error);
           }
@@ -130,14 +138,19 @@ export default function GoogleDocsToMarkdown() {
       }
       
       // Process the clipboard data
-      const result = await processClipboardData(clipboardData.html || '', clipboardData.sliceClip?.data);
+      const result = await processClipboardData(clipboardData.html || '', clipboardData.sliceClip?.data, options);
       setOutput(result.markdown);
+      setWarnings(result.warnings || []);
+      setMetadata(result.metadata || null);
       
       if (result.error) {
         setError(result.error);
         toast.error('Conversion failed: ' + result.error);
       } else {
         toast.success('Successfully converted Google Docs content!');
+        if (result.warnings && result.warnings.length > 0) {
+          toast.warning(`Conversion completed with ${result.warnings.length} warning(s)`);
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -159,14 +172,19 @@ export default function GoogleDocsToMarkdown() {
       setIsConverting(true);
       setError(null);
       
-      const result = await convertDocsHtmlToMarkdown(input);
+      const result = await convertDocsHtmlToMarkdown(input, options);
       setOutput(result.markdown);
+      setWarnings(result.warnings || []);
+      setMetadata(result.metadata || null);
       
       if (result.error) {
         setError(result.error);
         toast.error('Conversion failed: ' + result.error);
       } else {
         toast.success('Content converted successfully!');
+        if (result.warnings && result.warnings.length > 0) {
+          toast.warning(`Conversion completed with ${result.warnings.length} warning(s)`);
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -368,6 +386,41 @@ export default function GoogleDocsToMarkdown() {
                   </Label>
                 </div>
               </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="preserveComments"
+                    checked={options.preserveComments}
+                    onCheckedChange={(checked) => updateOption('preserveComments', checked)}
+                  />
+                  <Label htmlFor="preserveComments">
+                    Preserve Comments
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="tableFormatting"
+                    checked={options.tableFormatting}
+                    onCheckedChange={(checked) => updateOption('tableFormatting', checked)}
+                  />
+                  <Label htmlFor="tableFormatting">
+                    Table Formatting
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="imageHandling"
+                    checked={options.imageHandling}
+                    onCheckedChange={(checked) => updateOption('imageHandling', checked)}
+                  />
+                  <Label htmlFor="imageHandling">
+                    Image Handling
+                  </Label>
+                </div>
+              </div>
             </CardContent>
           </CollapsibleContent>
         </Collapsible>
@@ -471,6 +524,46 @@ export default function GoogleDocsToMarkdown() {
             {error && (
               <div className="mt-2 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
                 <p className="text-sm text-destructive">{error}</p>
+              </div>
+            )}
+            
+            {warnings.length > 0 && (
+              <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <h4 className="text-sm font-medium text-yellow-800 mb-2">Warnings:</h4>
+                <ul className="text-sm text-yellow-700 space-y-1">
+                  {warnings.map((warning, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-yellow-500 mt-0.5">•</span>
+                      {warning}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {metadata && (
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <h4 className="text-sm font-medium text-blue-800 mb-2">Content Analysis:</h4>
+                <div className="flex flex-wrap gap-4 text-sm text-blue-700">
+                  <div className="flex items-center gap-1">
+                    <span className={metadata.hasImages ? "text-green-600" : "text-gray-400"}>
+                      {metadata.hasImages ? "✓" : "✗"}
+                    </span>
+                    Images detected
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className={metadata.hasComments ? "text-green-600" : "text-gray-400"}>
+                      {metadata.hasComments ? "✓" : "✗"}
+                    </span>
+                    Comments found
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className={metadata.hasTables ? "text-green-600" : "text-gray-400"}>
+                      {metadata.hasTables ? "✓" : "✗"}
+                    </span>
+                    Tables present
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
