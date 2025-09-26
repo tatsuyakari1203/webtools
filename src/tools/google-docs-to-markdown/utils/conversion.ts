@@ -4,14 +4,12 @@ import remarkGfm from 'remark-gfm';
 import remarkStringify from 'remark-stringify';
 import { toMdast } from 'hast-util-to-mdast';
 import { visit } from 'unist-util-visit';
-import type { Root as HastRoot } from 'hast';
-import type { Root as MdastRoot } from 'mdast';
+import type { Root as HastRoot, Element as HastElement, Comment as HastComment } from 'hast';
+import type { Root as MdastRoot, Heading as MdastHeading, Text as MdastText } from 'mdast';
 import type { 
   ConversionResult, 
   ConversionOptions, 
-  SliceClipData, 
-  FormattingInfo
-} from '../types';
+  SliceClipData} from '../types';
 import { DEFAULT_OPTIONS } from '../types';
 
 // Google Docs specific patterns for cleaning
@@ -37,11 +35,7 @@ const GOOGLE_DOCS_PATTERNS = {
   // Remove multiple line breaks
   multipleBreaks: /\n{3,}/g,
   // Remove trailing whitespace in lines
-  trailingWhitespace: /[ \t]+$/gm,
-  // Code block detection patterns
-  codeBlockMarkers: /^(HTML|JavaScript|CSS|Python|Java|C\+\+|TypeScript|JSON|XML|SQL|PHP|Ruby|Go|Rust|Swift|Kotlin|Dart|Shell|Bash|PowerShell|YAML|Dockerfile|Markdown)$/i,
-  preformattedText: /<div[^>]*style="[^"]*(?:white-space:\s*pre|font-family:\s*[^"]*monospace)[^"]*"[^>]*>([\s\S]*?)<\/div>/gi,
-  monospaceSpans: /<span[^>]*style="[^"]*font-family:\s*[^"]*monospace[^"]*"[^>]*>(.*?)<\/span>/gi
+  trailingWhitespace: /[ \t]+$/gm
 };
 
 // Parse Google Docs slice clip data
@@ -65,39 +59,8 @@ function parseGdocsSliceClip(sliceData: unknown): SliceClipData | null {
   }
 }
 
-// Extract formatting information from slice clip data
-function extractFormattingFromSliceClip(sliceData: SliceClipData): Map<number, FormattingInfo> {
-  const formattingMap = new Map<number, FormattingInfo>();
-  
-  if (!sliceData.dsl_styleslices) {
-    return formattingMap;
-  }
-  
-  sliceData.dsl_styleslices.forEach((slice, index) => {
-    if (slice.stsl_styles) {
-      const formatting: FormattingInfo = {};
-      
-      // Extract common formatting
-      if (slice.stsl_styles.bold) formatting.bold = true;
-      if (slice.stsl_styles.italic) formatting.italic = true;
-      if (slice.stsl_styles.underline) formatting.underline = true;
-      if (slice.stsl_styles.strikethrough) formatting.strikethrough = true;
-      
-      // Extract font properties
-      if (slice.stsl_styles.fontSize) formatting.fontSize = slice.stsl_styles.fontSize;
-      if (slice.stsl_styles.fontFamily) formatting.fontFamily = slice.stsl_styles.fontFamily;
-      if (slice.stsl_styles.color) formatting.color = slice.stsl_styles.color;
-      if (slice.stsl_styles.backgroundColor) formatting.backgroundColor = slice.stsl_styles.backgroundColor;
-      
-      // Extract links
-      if (slice.stsl_styles.link) formatting.link = slice.stsl_styles.link;
-      
-      formattingMap.set(slice.stsl_opindex || index, formatting);
-    }
-  });
-  
-  return formattingMap;
-}
+// Note: extractFormattingFromSliceClip function removed as it's not currently used
+// TODO: Implement formatting application in future versions
 
 // Extract comments and suggestions
 function extractCommentsAndSuggestions(sliceData: SliceClipData): {
@@ -119,7 +82,7 @@ function extractCommentsAndSuggestions(sliceData: SliceClipData): {
   // Extract entity-based comments
   if (sliceData.dsl_entitymap) {
     Object.values(sliceData.dsl_entitymap).forEach(entity => {
-      if (entity.entity_type === 'COMMENT' && entity.entity_properties?.text) {
+      if (entity.entity_type === 'COMMENT' && entity.entity_properties?.text && typeof entity.entity_properties.text === 'string') {
         comments.push(entity.entity_properties.text);
       }
     });
@@ -143,8 +106,8 @@ export function combineGoogleDocFormats(htmlData: string, sliceData: unknown): s
 }
 
 function updateHtmlWithSliceClip(html: string, sliceData: SliceClipData): string {
-  // Extract formatting information
-  const formattingMap = extractFormattingFromSliceClip(sliceData);
+  // Extract formatting information (TODO: implement formatting application)
+  // const formattingMap = extractFormattingFromSliceClip(sliceData);
   const { comments, suggestions } = extractCommentsAndSuggestions(sliceData);
   
   // Apply formatting enhancements to HTML
@@ -245,11 +208,8 @@ export async function convertDocsHtmlToMarkdown(
     metadata.hasComments = /<!-- GDOC_COMMENT:/.test(html);
     metadata.hasTables = /<table[^>]*>/i.test(html);
     
-    // Preprocess code blocks before cleaning
-    const preprocessedHtml = preprocessCodeBlocks(html);
-    
     // Clean HTML with options
-    const cleanedHtml = cleanGoogleHtml(preprocessedHtml, options);
+    const cleanedHtml = cleanGoogleHtml(html, options);
     
     // Configure processor based on options
     const processor = unified()
@@ -258,7 +218,7 @@ export async function convertDocsHtmlToMarkdown(
         // Custom processing based on options
         if (options.preserveComments) {
           // Process comments before conversion
-          processCommentsInTree(tree, warnings);
+          processCommentsInTree(tree);
         }
         
         if (options.codeBlocks) {
@@ -313,9 +273,9 @@ export async function convertDocsHtmlToMarkdown(
 }
 
 // Helper functions for processing
-function processCommentsInTree(tree: HastRoot, warnings: string[]): void {
+function processCommentsInTree(tree: HastRoot): void {
   // Process HTML comments and convert them to markdown comments
-  visit(tree, 'comment', (node: any) => {
+  visit(tree, 'comment', (node: HastComment) => {
     if (node.value && node.value.includes('GDOC_COMMENT:')) {
       const commentText = node.value.replace(/GDOC_COMMENT:\s*/, '');
       // Convert comment to a visible element that will be processed later
@@ -332,7 +292,7 @@ function processCommentsInTree(tree: HastRoot, warnings: string[]): void {
 
 function enhanceCodeBlocks(tree: HastRoot): void {
   // Enhance detection and formatting of code blocks
-  visit(tree, 'element', (node: any) => {
+  visit(tree, 'element', (node: HastElement) => {
     if (node.tagName === 'span' && node.properties?.style) {
       const style = node.properties.style;
       // Detect monospace fonts that indicate code
@@ -358,39 +318,16 @@ function enhanceCodeBlocks(tree: HastRoot): void {
       }
     }
   });
-  
-  // Post-process to detect code blocks with language markers
-  visit(tree, 'text', (node: any, index: number | undefined, parent: any) => {
-    if (!parent || !parent.children || index === undefined) return;
-    
-    const text = node.value;
-    if (GOOGLE_DOCS_PATTERNS.codeBlockMarkers.test(text.trim())) {
-      // This is a language marker, check if next sibling is code content
-      const nextSibling = parent.children[index + 1];
-      if (nextSibling && (nextSibling.tagName === 'pre' || 
-          (nextSibling.type === 'text' && nextSibling.value.includes('\n')))) {
-        
-        // Mark this as a code block with language
-        const language = text.trim().toLowerCase();
-        node.value = `\`\`\`${language}\n`;
-        
-        // If next sibling is text, wrap it in a code block
-        if (nextSibling.type === 'text') {
-          nextSibling.value = nextSibling.value + '\n```';
-        }
-      }
-    }
-  });
 }
 
 function addHeadingIds(tree: MdastRoot): void {
   // Add IDs to headings for better navigation
-  visit(tree, 'heading', (node: any) => {
+  visit(tree, 'heading', (node: MdastHeading) => {
     if (node.children && node.children.length > 0) {
       // Extract text content from heading
       const textContent = node.children
-        .filter((child: any) => child.type === 'text')
-        .map((child: any) => child.value)
+        .filter((child): child is MdastText => child.type === 'text')
+        .map((child: MdastText) => child.value)
         .join(' ');
       
       if (textContent) {
@@ -404,8 +341,9 @@ function addHeadingIds(tree: MdastRoot): void {
         
         // Add ID as data attribute (will be converted to markdown)
         node.data = node.data || {};
-        node.data.hProperties = node.data.hProperties || {};
-        node.data.hProperties.id = id;
+        const nodeData = node.data as { hProperties?: { id?: string } };
+        nodeData.hProperties = nodeData.hProperties || {};
+        nodeData.hProperties.id = id;
       }
     }
   });
@@ -416,35 +354,8 @@ function processMarkdownComments(markdown: string): string {
   return markdown.replace(/<!-- GDOC_COMMENT: (.*?) -->/g, '\n> **Comment:** $1\n');
 }
 
-function preprocessCodeBlocks(html: string): string {
-  let processed = html;
-  
-  // Pattern to detect language markers followed by code content
-  const codeBlockPattern = /(<p[^>]*>)?\s*(HTML|JavaScript|CSS|Python|Java|C\+\+|TypeScript|JSON|XML|SQL|PHP|Ruby|Go|Rust|Swift|Kotlin|Dart|Shell|Bash|PowerShell|YAML|Dockerfile|Markdown)\s*(<\/p>)?\s*\n\s*(<p[^>]*>)?([\s\S]*?)(<\/p>)?(?=\n\s*(?:<p|<h\d|$))/gi;
-  
-  processed = processed.replace(codeBlockPattern, (match, openP1, language, closeP1, openP2, content, closeP2) => {
-    const cleanContent = content
-      .replace(/<[^>]+>/g, '') // Remove HTML tags
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .trim();
-    
-    return `<pre><code class="language-${language.toLowerCase()}">${cleanContent}</code></pre>`;
-  });
-  
-  return processed;
-}
-
 function postProcessMarkdown(markdown: string): string {
   let processed = markdown;
-  
-  // Fix code blocks that weren't properly detected
-  processed = processed.replace(/^(HTML|JavaScript|CSS|Python|Java|C\+\+|TypeScript|JSON|XML|SQL|PHP|Ruby|Go|Rust|Swift|Kotlin|Dart|Shell|Bash|PowerShell|YAML|Dockerfile|Markdown)\s*\n\n([\s\S]*?)(?=\n\n|\n#|\n\*|$)/gmi, (match, language, content) => {
-    const cleanContent = content.trim();
-    return `\`\`\`${language.toLowerCase()}\n${cleanContent}\n\`\`\`\n`;
-  });
   
   // Remove excessive empty lines
   processed = processed.replace(/\n{4,}/g, '\n\n\n');
@@ -470,10 +381,6 @@ function postProcessMarkdown(markdown: string): string {
   // Ensure proper spacing around headings
   processed = processed.replace(/\n(#{1,6}\s)/g, '\n\n$1');
   processed = processed.replace(/(#{1,6}.*)\n([^\n#])/g, '$1\n\n$2');
-  
-  // Ensure proper spacing around code blocks
-  processed = processed.replace(/\n(```)/g, '\n\n$1');
-  processed = processed.replace(/(```\n)\n+/g, '$1\n');
   
   return processed;
 }

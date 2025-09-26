@@ -39,13 +39,13 @@ export interface SliceClipData {
 
 export interface StyleSlice {
   stsl_type?: string;
-  stsl_styles?: Record<string, any>;
+  stsl_styles?: Record<string, string | number | boolean>;
   stsl_opindex?: number;
 }
 
 export interface EntityData {
   entity_type?: string;
-  entity_properties?: Record<string, any>;
+  entity_properties?: Record<string, string | number | boolean>;
   mutability?: string;
 }
 

@@ -95,10 +95,12 @@ export default function GoogleDocsToMarkdown() {
 
   // Update settings when options change
   const updateOption = useCallback((key: keyof ConversionOptions, value: boolean) => {
-    const newOptions = { ...options, [key]: value };
-    setOptions(newOptions);
-    settings.set(key, value);
-  }, [options]);
+    setOptions(prevOptions => {
+      const newOptions = { ...prevOptions, [key]: value };
+      settings.set(key, value);
+      return newOptions;
+    });
+  }, []);
 
   // Handle paste event
   const handlePaste = useCallback(async (event: React.ClipboardEvent) => {
@@ -159,7 +161,7 @@ export default function GoogleDocsToMarkdown() {
     } finally {
       setIsConverting(false);
     }
-  }, []);
+  }, [options]);
 
   // Manual conversion
   const handleConvert = useCallback(async () => {
@@ -193,7 +195,7 @@ export default function GoogleDocsToMarkdown() {
     } finally {
       setIsConverting(false);
     }
-  }, [input]);
+  }, [input, options]);
 
   // Copy output to clipboard
   const handleCopy = useCallback(async () => {
