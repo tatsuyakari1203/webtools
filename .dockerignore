@@ -4,15 +4,22 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 bun.lockb
+package-lock.json.bak
 
 # Testing
 .nyc_output
 coverage
 *.lcov
+test/
+tests/
+__tests__/
+*.test.*
+*.spec.*
 
 # Next.js
 .next/
 out/
+.swc/
 
 # Production
 build
@@ -21,15 +28,19 @@ dist
 # Misc
 .DS_Store
 *.pem
+*.key
+*.crt
 
 # Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
 # Local env files
 .env*.local
 .env
+.env.example
 
 # Vercel
 .vercel
@@ -43,16 +54,23 @@ next-env.d.ts
 .idea
 *.swp
 *.swo
+.sublime-*
+*.sublime-*
 
 # OS
 Thumbs.db
+.DS_Store
+desktop.ini
 
 # Git
 .git
 .gitignore
+.gitattributes
 
 # Reference files (not needed for production)
 ref/
+docs/
+examples/
 
 # Docker
 Dockerfile*
@@ -62,6 +80,8 @@ docker-compose*
 # Documentation
 README.md
 *.md
+CHANGELOG*
+LICENSE*
 
 # Logs
 logs
@@ -78,3 +98,17 @@ pids
 *.service
 install-service.sh
 uninstall-service.sh
+
+# Cache and temp
+.cache
+.tmp
+.temp
+*.tmp
+*.temp
+
+# Development tools
+.eslintrc*
+.prettierrc*
+.editorconfig
+.nvmrc
+.node-version

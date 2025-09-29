@@ -1,22 +1,18 @@
 # Dockerfile for Next.js Full-Stack Application with API Routes
-# Optimized multi-stage build for minimal image size
+# Ultra-optimized multi-stage build for minimal image size
 
-# Stage 1: Dependencies (Base)
-FROM oven/bun:1-alpine AS deps
+# Stage 1: Builder
+FROM node:current-alpine AS builder
 WORKDIR /app
 
-# Copy package files for dependency installation
-COPY package.json bun.lock* ./
+# Install dependencies needed for native modules
+RUN apk add --no-cache libc6-compat
 
-# Install dependencies with bun for faster builds
-RUN bun install --frozen-lockfile
+# Copy package files
+COPY package.json package-lock.json* ./
 
-# Stage 2: Builder
-FROM oven/bun:1-alpine AS builder
-WORKDIR /app
-
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+# Install all dependencies for build
+RUN npm ci --no-audit --no-fund
 
 # Copy source code
 COPY . .
@@ -25,63 +21,43 @@ COPY . .
 ARG NEXT_PUBLIC_BACKEND_URL=http://localhost:7777
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 
-# Build the application with turbopack for faster builds
-RUN bun run build
+# Build the application with optimizations (standalone includes minimal node_modules)
+RUN npm run build && \
+    rm -rf .next/cache && \
+    rm -rf node_modules && \
+    npm ci --only=production --no-audit --no-fund && \
+    npm cache clean --force
 
-# Stage 3: Runner (Ultra-lightweight)
-FROM oven/bun:1-alpine AS runner
+# Stage 2: Ultra-minimal Runtime
+FROM node:current-alpine AS runner
 WORKDIR /app
 
-# Create non-root user
+# Install only essential runtime dependencies
+RUN apk add --no-cache libc6-compat dumb-init && \
+    rm -rf /var/cache/apk/* && \
+    rm -rf /usr/share/man && \
+    rm -rf /tmp/*
+
+# Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy only the standalone build (includes all dependencies)
+# Copy built application from builder stage (standalone includes everything needed)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-
-# Copy static files
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Copy public folder if it exists
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 
 # Switch to non-root user
 USER nextjs
 
+# Set environment variables
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0"
+
 # Expose port
 EXPOSE 3000
 
-# Start the application directly with node (standalone includes everything)
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "server.js"]
-
-# Alternative lightweight runner using Alpine
-# Uncomment this section and comment the distroless section above if you need shell access
-# FROM node:22-alpine AS runner-alpine
-# WORKDIR /app
-# 
-# # Create non-root user
-# RUN addgroup --system --gid 1001 nodejs && \
-#     adduser --system --uid 1001 nextjs
-# 
-# # Copy built application
-# COPY --from=builder /app/public ./public
-# COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-# COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-# 
-# # Copy production dependencies
-# COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
-# 
-# # Set environment variables
-# ENV NODE_ENV=production
-# ENV PORT=3000
-# ENV HOSTNAME="0.0.0.0"
-# 
-# USER nextjs
-# EXPOSE 3000
-# 
-# CMD ["node", "server.js"]
