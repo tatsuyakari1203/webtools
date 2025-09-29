@@ -2,10 +2,10 @@
 
 import React, { useState, useCallback } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Wand2, Edit, BookOpen } from 'lucide-react'
+import { Wand2, Edit, ArrowUp } from 'lucide-react'
 import { GenerateTab } from './components/GenerateTab'
 import { EditTab } from './components/EditTab'
-import PromptGuideTab from './components/PromptGuideTab'
+import { UpscaleTab } from './components/UpscaleTab'
 import { ResultDisplay } from './components/ResultDisplay'
 import { NanoBananaProvider } from './context/NanoBananaContext'
 
@@ -48,9 +48,9 @@ const NanoBananaContent: React.FC = () => {
               <Edit className="h-4 w-4" />
               Edit
             </TabsTrigger>
-            <TabsTrigger value="guide" className="flex items-center gap-1">
-              <BookOpen className="h-4 w-4" />
-              Guide
+            <TabsTrigger value="upscale" className="flex items-center gap-1">
+              <ArrowUp className="h-4 w-4" />
+              Upscale
             </TabsTrigger>
           </TabsList>
 
@@ -70,8 +70,12 @@ const NanoBananaContent: React.FC = () => {
             />
           </TabsContent>
 
-          <TabsContent value="guide">
-            <PromptGuideTab />
+          <TabsContent value="upscale">
+            <UpscaleTab 
+              loading={loading}
+              setLoading={setLoading}
+              setGeneratedImage={handleSetGeneratedImage}
+            />
           </TabsContent>
         </Tabs>
 

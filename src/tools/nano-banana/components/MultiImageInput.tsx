@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useRef, useState, useCallback } from 'react'
+import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { X, Image as ImageIcon, Plus } from 'lucide-react'
+import { X, Image as ImageIcon, Plus, Clipboard } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface MultiImageInputProps {
@@ -158,11 +158,90 @@ export const MultiImageInput: React.FC<MultiImageInputProps> = ({
     fileInputRef.current?.click()
   }, [values.length, maxFiles])
 
+  const handlePasteFromClipboard = useCallback(async () => {
+    if (values.length >= maxFiles) {
+      toast.error(`Maximum ${maxFiles} images allowed`)
+      return
+    }
+
+    try {
+      const clipboardItems = await navigator.clipboard.read()
+      const imageItems = clipboardItems.filter(item => 
+        item.types.some(type => type.startsWith('image/'))
+      )
+
+      if (imageItems.length === 0) {
+        toast.error('No images found in clipboard')
+        return
+      }
+
+      setIsProcessing(true)
+      const processedFiles: File[] = []
+      const newPreviews: string[] = []
+
+      for (const item of imageItems) {
+        const imageType = item.types.find(type => type.startsWith('image/'))
+        if (imageType) {
+          const blob = await item.getType(imageType)
+          const file = new File([blob], `clipboard-image-${Date.now()}.png`, {
+            type: imageType,
+            lastModified: Date.now()
+          })
+
+          const compressedFile = await compressImage(file)
+          const previewUrl = URL.createObjectURL(compressedFile)
+          
+          processedFiles.push(compressedFile)
+          newPreviews.push(previewUrl)
+        }
+      }
+
+      if (processedFiles.length > 0) {
+        onChange([...values, ...processedFiles])
+        onPreviewsChange([...previews, ...newPreviews])
+        toast.success(`Pasted ${processedFiles.length} image(s) from clipboard`)
+      }
+    } catch (error) {
+      console.error('Error pasting from clipboard:', error)
+      toast.error('Failed to paste from clipboard. Make sure you have copied an image.')
+    } finally {
+      setIsProcessing(false)
+    }
+  }, [values, previews, onChange, onPreviewsChange, maxFiles])
+
+  // Handle keyboard paste
+  useEffect(() => {
+    const handleKeyboardPaste = async (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        e.preventDefault()
+        await handlePasteFromClipboard()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyboardPaste)
+    return () => document.removeEventListener('keydown', handleKeyboardPaste)
+  }, [handlePasteFromClipboard])
+
   const canAddMore = values.length < maxFiles
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <Label>{label} ({values.length}/{maxFiles})</Label>
+      <div className="flex items-center justify-between">
+        <Label>{label} ({values.length}/{maxFiles})</Label>
+        {canAddMore && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handlePasteFromClipboard}
+            disabled={isProcessing}
+            className="flex items-center gap-2"
+          >
+            <Clipboard className="h-4 w-4" />
+            Paste from Clipboard
+          </Button>
+        )}
+      </div>
       
       {/* Image previews */}
       {previews.length > 0 && (
@@ -232,13 +311,13 @@ export const MultiImageInput: React.FC<MultiImageInputProps> = ({
                   ? 'Processing images...' 
                   : previews.length > 0 
                     ? 'Add more images' 
-                    : 'Drop images here or click to browse'
+                    : 'Drop images here, click to browse, or paste from clipboard'
                 }
               </p>
               <p className="text-xs text-muted-foreground">
                 {previews.length > 0 
-                  ? `You can add ${maxFiles - values.length} more image(s)` 
-                  : `Select up to ${maxFiles} images. Supports JPG, PNG, GIF, WebP. Images will be compressed while maintaining original dimensions.`
+                  ? `You can add ${maxFiles - values.length} more image(s). Use Ctrl+V to paste from clipboard.` 
+                  : `Select up to ${maxFiles} images. Supports JPG, PNG, GIF, WebP. Use Ctrl+V to paste from clipboard. Images will be compressed while maintaining original dimensions.`
                 }
               </p>
             </div>
