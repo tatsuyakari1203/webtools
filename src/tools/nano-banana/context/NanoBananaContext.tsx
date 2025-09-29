@@ -50,6 +50,9 @@ interface NanoBananaState {
   mainImageIndex: number
   mainImageSize: { width: number; height: number } | null
   autoScaleEnabled: boolean
+  
+  // Upscale settings
+  upscaleEnabled: boolean
 }
 
 interface NanoBananaContextType {
@@ -82,6 +85,9 @@ interface NanoBananaContextType {
   setMainImageSize: (size: { width: number; height: number } | null) => void
   setAutoScaleEnabled: (enabled: boolean) => void
   updatePostfixState: (updates: Partial<Pick<NanoBananaState, 'mainImageIndex' | 'mainImageSize' | 'autoScaleEnabled'>>) => void
+  
+  // Upscale functions
+  setUpscaleEnabled: (enabled: boolean) => void
 }
 
 const defaultState: NanoBananaState = {
@@ -124,7 +130,10 @@ const defaultState: NanoBananaState = {
   // Postfix system state
   mainImageIndex: 0,
   mainImageSize: null,
-  autoScaleEnabled: true
+  autoScaleEnabled: true,
+  
+  // Upscale settings
+  upscaleEnabled: false
 }
 
 const NanoBananaContext = createContext<NanoBananaContextType | undefined>(undefined)
@@ -242,6 +251,11 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, ...updates }))
   }, [])
 
+  // Upscale system functions
+  const setUpscaleEnabled = useCallback((enabled: boolean) => {
+    setState(prev => ({ ...prev, upscaleEnabled: enabled }))
+  }, [])
+
   return (
     <NanoBananaContext.Provider value={{
       state,
@@ -272,7 +286,10 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
       setMainImageIndex,
       setMainImageSize,
       setAutoScaleEnabled,
-      updatePostfixState
+      updatePostfixState,
+
+      // Upscale system management
+      setUpscaleEnabled
     }}>
       {children}
     </NanoBananaContext.Provider>

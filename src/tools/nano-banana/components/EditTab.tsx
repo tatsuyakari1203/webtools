@@ -54,7 +54,8 @@ export const EditTab: React.FC<EditTabProps> = ({
     canRetryEdit,
     setMainImageIndex,
     setMainImageSize,
-    updatePostfixState
+    updatePostfixState,
+    setUpscaleEnabled
   } = useNanoBanana()
   const { editPrompt, editImageDescription, composePrompt, composeImages, composeImagePreviews, originalEditPrompt, lastEditImproveSettings } = state
   
@@ -103,9 +104,44 @@ export const EditTab: React.FC<EditTabProps> = ({
 
   // Update AutoScalePostfix configuration when autoScaleEnabled changes
   useEffect(() => {
-    postfixProcessor.setOperationEnabled('AutoScalePostfix', state.autoScaleEnabled)
+    postfixProcessor.setOperationEnabled('auto-scale', state.autoScaleEnabled)
     console.log(`AutoScalePostfix ${state.autoScaleEnabled ? 'enabled' : 'disabled'}`)
   }, [state.autoScaleEnabled, postfixProcessor])
+
+  // Update UpscalePostfix configuration when upscale settings change
+  useEffect(() => {
+    postfixProcessor.setOperationEnabled('upscale', state.upscaleEnabled)
+    
+    if (state.upscaleEnabled) {
+      // Auto-calculate optimal scale factor based on current image size
+      let optimalFactor = 2.0 // Default factor
+      const randomSeed = Math.floor(Math.random() * 1000000) // Random seed
+      
+      if (state.mainImageSize) {
+        const { width, height } = state.mainImageSize
+        const maxWidth = 3840
+        const maxHeight = 2160
+        
+        // Calculate maximum possible scale factor that stays within limits
+        const maxFactorByWidth = maxWidth / width
+        const maxFactorByHeight = maxHeight / height
+        const maxFactor = Math.min(maxFactorByWidth, maxFactorByHeight)
+        
+        // Use a reasonable scale factor (aim for 2x but respect limits)
+        optimalFactor = Math.min(2.0, Math.floor(maxFactor * 10) / 10) // Round down to 1 decimal
+        optimalFactor = Math.max(1.1, optimalFactor) // Minimum 1.1x scale
+      }
+      
+      postfixProcessor.updateOperationConfig('upscale', {
+        upscaleFactor: optimalFactor,
+        seed: randomSeed
+      })
+      
+      console.log(`UpscalePostfix enabled with auto-calculated factor ${optimalFactor} and seed ${randomSeed}`)
+    } else {
+      console.log('UpscalePostfix disabled')
+    }
+  }, [state.upscaleEnabled, state.mainImageSize, postfixProcessor])
 
   // Update main image size when images change
   useEffect(() => {
@@ -336,7 +372,7 @@ export const EditTab: React.FC<EditTabProps> = ({
         
         if (outputImages && outputImages.length > 0) {
           // Apply postfix processing if any feature is enabled
-          if (state.autoScaleEnabled && state.mainImageSize) {
+          if ((state.autoScaleEnabled && state.mainImageSize) || state.upscaleEnabled) {
             try {
               console.log('Applying postfix processing...')
               
@@ -345,7 +381,7 @@ export const EditTab: React.FC<EditTabProps> = ({
                 inputImages: images,
                 inputImagePreviews: imagePreviews,
                 mainImageIndex: state.mainImageIndex,
-                mainImageSize: state.mainImageSize,
+                mainImageSize: state.mainImageSize || undefined,
                 operationType,
                 prompt,
                 outputImages
@@ -372,16 +408,57 @@ export const EditTab: React.FC<EditTabProps> = ({
           }
           
           // Convert base64 to blob URLs for display
-          const imageUrls = outputImages.map((base64: string) => {
-            const byteCharacters = atob(base64)
-            const byteNumbers = new Array(byteCharacters.length)
-            for (let i = 0; i < byteCharacters.length; i++) {
-              byteNumbers[i] = byteCharacters.charCodeAt(i)
+          const imageUrls = outputImages.map((base64: string | { url?: string; data?: string } | unknown) => {
+            try {
+              // Handle different data types
+              let base64String: string
+              
+              if (typeof base64 === 'string') {
+                base64String = base64
+              } else if (base64 && typeof base64 === 'object') {
+                // Handle case where base64 might be an object (e.g., from API response)
+                const base64Obj = base64 as { url?: string; data?: string }
+                if (base64Obj.url) {
+                  // If it's a URL object, we can't process it here
+                  console.error('Received URL object instead of base64 string:', base64)
+                  throw new Error('Invalid image format: URL object received')
+                } else if (base64Obj.data) {
+                  base64String = base64Obj.data
+                } else {
+                  base64String = String(base64)
+                }
+              } else {
+                base64String = String(base64)
+              }
+              
+              // Validate base64 string
+              if (!base64String || base64String.trim() === '') {
+                throw new Error('Empty base64 string')
+              }
+              
+              // Strip data URL prefix if present (e.g., "data:image/jpeg;base64,")
+              const base64Data = base64String.includes(',') ? base64String.split(',')[1] : base64String
+              
+              // Validate base64 format
+              if (!base64Data || base64Data.trim() === '') {
+                throw new Error('Invalid base64 format')
+              }
+              
+              const byteCharacters = atob(base64Data)
+              const byteNumbers = new Array(byteCharacters.length)
+              for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i)
+              }
+              const byteArray = new Uint8Array(byteNumbers)
+              const blob = new Blob([byteArray], { type: 'image/png' })
+              return URL.createObjectURL(blob)
+            } catch (error) {
+              console.error('Failed to process image data:', error, 'Data:', base64)
+              toast.error(`Failed to process image: ${error instanceof Error ? error.message : 'Unknown error'}`)
+              // Return a placeholder or skip this image
+              return null
             }
-            const byteArray = new Uint8Array(byteNumbers)
-            const blob = new Blob([byteArray], { type: 'image/png' })
-            return URL.createObjectURL(blob)
-          })
+          }).filter(Boolean) as string[]
           
           // Set multiple images for the gallery
           setLastGeneratedImages(imageUrls)
@@ -389,8 +466,12 @@ export const EditTab: React.FC<EditTabProps> = ({
           // Set the first image for backward compatibility
           setGeneratedImage(imageUrls[0])
           
-          const successMessage = state.autoScaleEnabled 
-            ? `${getOperationLabel(operationType)} completed with postfix processing for ${imageUrls.length} images!`
+          const enabledFeatures = []
+          if (state.autoScaleEnabled) enabledFeatures.push('auto-scale')
+          if (state.upscaleEnabled) enabledFeatures.push('AI upscale')
+          
+          const successMessage = enabledFeatures.length > 0
+            ? `${getOperationLabel(operationType)} completed with ${enabledFeatures.join(' + ')} for ${imageUrls.length} images!`
             : `${getOperationLabel(operationType)} completed successfully for ${imageUrls.length} images!`
           
           toast.success(successMessage)
@@ -652,6 +733,11 @@ export const EditTab: React.FC<EditTabProps> = ({
               </div>
               <p className="text-xs text-muted-foreground ml-6">
                 Automatically resize generated images to match the dimensions of the main input image.
+                {state.upscaleEnabled && (
+                  <span className="block mt-1 text-amber-600 dark:text-amber-400">
+                    ⚠️ When used with AI Upscale: Auto-scale will run after upscaling to resize back to original dimensions.
+                  </span>
+                )}
               </p>
 
               {/* Main Image Selection - Only show when multiple images and auto-scale is enabled */}
@@ -676,6 +762,29 @@ export const EditTab: React.FC<EditTabProps> = ({
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Upscale Feature */}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="upscale-enabled"
+                checked={state.upscaleEnabled}
+                onCheckedChange={(checked) => setUpscaleEnabled(checked as boolean)}
+              />
+              <div className="grid gap-1.5 leading-none">
+                <Label
+                  htmlFor="upscale-enabled"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  <Sparkles className="h-4 w-4 inline mr-1" />
+                  AI Upscale (SeedVR2)
+                </Label>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground ml-6">
+              Automatically enhance image quality and resolution using AI. Scale factor and settings are optimized automatically.
+            </p>
           </div>
 
           {/* Image Count Setting */}

@@ -34,12 +34,25 @@ export class PostfixProcessor {
   }
 
   /**
-   * Get enabled operations only
+   * Get the priority order for operations
+   * Lower numbers = higher priority (run first)
+   */
+  private getOperationPriority(operationId: string): number {
+    const priorities: Record<string, number> = {
+      'upscale': 1,      // AI upscale runs first
+      'auto-scale': 2,   // Auto-scale runs after upscale
+    }
+    return priorities[operationId] || 999 // Unknown operations run last
+  }
+
+  /**
+   * Get enabled operations only, sorted by priority
    */
   getEnabledOperations(): PostfixOperation[] {
     return this.settings.enabledOperations
       .map(id => this.operations.get(id))
       .filter((op): op is PostfixOperation => op !== undefined && op.enabled)
+      .sort((a, b) => this.getOperationPriority(a.id) - this.getOperationPriority(b.id))
   }
 
   /**
