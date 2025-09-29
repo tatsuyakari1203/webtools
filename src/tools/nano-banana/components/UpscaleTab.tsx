@@ -22,7 +22,7 @@ export const UpscaleTab: React.FC<UpscaleTabProps> = ({
   setLoading,
   setGeneratedImage
 }) => {
-  const { state, setLastGeneratedImages } = useNanoBanana()
+  const { setLastGeneratedImages } = useNanoBanana()
   
   // Local state for upscale functionality
   const [upscaleImages, setUpscaleImages] = useState<File[]>([])
