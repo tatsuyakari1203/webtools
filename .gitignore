@@ -76,3 +76,6 @@ wheels/
 *.egg
 backend/logs/nanobanana.log
 backend/logs/nanobanana.log
+bundle-analysis-report.json
+dependency-optimization-report.json
+.gitignore

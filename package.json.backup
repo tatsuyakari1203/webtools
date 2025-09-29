@@ -18,14 +18,7 @@
     "tool:add": "node scripts/add-tool.js",
     "add-user": "node scripts/add-user.js",
     "remove-user": "node scripts/remove-user.js",
-    "coolify-install": "bun install",
-    "analyze:bundle": "node scripts/analyze-bundle.js",
-    "optimize:deps": "node scripts/optimize-dependencies.js",
-    "build:analyze": "ANALYZE=true bun run build",
-    "size:check": "bun run build && du -sh .next/static",
-    "deps:check": "bun run analyze:bundle",
-    "clean:cache": "rm -rf .next && rm -rf node_modules/.cache",
-    "prebuild": "bun run clean:cache"
+    "coolify-install": "bun install"
   },
   "dependencies": {
     "@google/genai": "^1.16.0",
@@ -45,53 +38,59 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@types/cropperjs": "^1.3.3",
+    "@types/dompurify": "^3.0.5",
+    "@types/howler": "^2.2.12",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@types/turndown": "^5.0.5",
     "browser-image-compression": "^2.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cropperjs": "1",
+    "dompurify": "^3.2.6",
+    "exif-js": "^2.3.0",
     "file-saver": "^2.0.5",
+    "github-slugger": "^2.0.0",
     "hast-util-to-mdast": "^10.1.2",
+    "hastscript": "^9.0.1",
+    "he": "^1.2.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
     "next-themes": "^0.4.6",
     "react": "19.1.0",
+    "react-cropper": "^2.3.3",
     "react-dom": "19.1.0",
     "react-image-crop": "^11.0.10",
     "react-syntax-highlighter": "^15.6.6",
     "rehype-dom-parse": "^5.0.2",
+    "rehype-parse": "^9.0.1",
+    "rehype-remark": "^10.0.1",
+    "rehype-stringify": "^10.0.1",
     "remark-gfm": "^4.0.1",
     "remark-stringify": "^11.0.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
+    "turndown": "^7.2.1",
     "unified": "^11.0.5",
-    "unist-util-visit": "^5.0.0"
+    "unist-util-visit": "^5.0.0",
+    "unist-util-visit-parents": "^6.0.1",
+    "use-sound": "^5.0.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/postcss": "^4",
+    "@types/file-saver": "^2.0.7",
+    "@types/he": "^1.2.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "tailwindcss": "^4",
+    "tw-animate-css": "^1.3.7",
     "typescript": "^5"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "bun": ">=1.0.0"
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead",
-    "not ie 11"
-  ],
-  "sideEffects": [
-    "*.css",
-    "*.scss",
-    "*.sass",
-    "*.less"
-  ]
+  }
 }
