@@ -33,7 +33,7 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
     canUndoGenerate,
     canRetryGenerate
   } = useNanoBanana()
-  const { generatePrompt, generateImageSize, generateImageCount, originalGeneratePrompt, lastGenerateImproveSettings } = state
+  const { generatePrompt, generateImageCount, originalGeneratePrompt, lastGenerateImproveSettings } = state
   const [improvingPrompt, setImprovingPrompt] = React.useState(false)
 
   const handleGenerate = async () => {
@@ -46,8 +46,8 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
     try {
       const requestData = {
         prompt: generatePrompt,
-        width: generateImageSize[0],
-        height: generateImageSize[0],
+        width: 1024,
+        height: 1024,
         quality: 'ultra',
         num_images: generateImageCount[0]
       }
@@ -309,49 +309,27 @@ export const GenerateTab: React.FC<GenerateTabProps> = ({
           <div>
             <h3 className="text-lg font-semibold mb-2">Generation Settings</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Customize the size and quantity of generated images
+              Customize the quantity of generated images
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Image Size</Label>
-                <span className="text-sm text-muted-foreground font-mono">
-                  {generateImageSize[0]}×{generateImageSize[0]}px
-                </span>
-              </div>
-              <Slider
-                value={generateImageSize}
-                onValueChange={(value) => updateGenerateState({ generateImageSize: value })}
-                min={512}
-                max={2048}
-                step={256}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>512px</span>
-                <span>2048px</span>
-              </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Number of Images</Label>
+              <span className="text-sm text-muted-foreground font-mono">
+                {generateImageCount[0]} {generateImageCount[0] === 1 ? 'image' : 'images'}
+              </span>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Number of Images</Label>
-                <span className="text-sm text-muted-foreground font-mono">
-                  {generateImageCount[0]} {generateImageCount[0] === 1 ? 'image' : 'images'}
-                </span>
-              </div>
-              <Slider
-                value={generateImageCount}
-                onValueChange={(value) => updateGenerateState({ generateImageCount: value })}
-                min={1}
-                max={4}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>1</span>
-                <span>4</span>
-              </div>
+            <Slider
+              value={generateImageCount}
+              onValueChange={(value) => updateGenerateState({ generateImageCount: value })}
+              min={1}
+              max={4}
+              step={1}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>1</span>
+              <span>4</span>
             </div>
           </div>
         </div>
