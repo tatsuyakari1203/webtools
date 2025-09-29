@@ -25,6 +25,8 @@
     "size:check": "bun run build && du -sh .next/static",
     "deps:check": "bun run analyze:bundle",
     "clean:cache": "rm -rf .next && rm -rf node_modules/.cache",
+    "cleanup:folders": "node scripts/cleanup-empty-folders.js",
+    "cleanup:folders:dry": "node scripts/cleanup-empty-folders.js --dry-run",
     "prebuild": "bun run clean:cache"
   },
   "dependencies": {
