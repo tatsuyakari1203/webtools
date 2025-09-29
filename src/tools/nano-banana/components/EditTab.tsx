@@ -11,6 +11,8 @@ import { Wand2, Sparkles, Camera, Palette, Package, Minus, Image as ImageIcon, T
 import { MultiImageInput } from './MultiImageInput'
 import { useNanoBanana } from '../context/NanoBananaContext'
 import { toast } from 'sonner'
+import { createDefaultPostfixProcessor, getImageDimensions } from '../postfix'
+import type { PostfixContext } from '../postfix'
 
 // Helper function to get operation labels in English
 function getOperationLabel(operationType: string): string {
@@ -49,7 +51,10 @@ export const EditTab: React.FC<EditTabProps> = ({
     undoEditPrompt,
     saveEditImproveSettings,
     canUndoEdit,
-    canRetryEdit
+    canRetryEdit,
+    setMainImageIndex,
+    setMainImageSize,
+    updatePostfixState
   } = useNanoBanana()
   const { editPrompt, editImageDescription, composePrompt, composeImages, composeImagePreviews, originalEditPrompt, lastEditImproveSettings } = state
   
@@ -59,6 +64,9 @@ export const EditTab: React.FC<EditTabProps> = ({
   const [improvingPrompt, setImprovingPrompt] = useState<string | null>(null)
   const [includeImageForImprove, setIncludeImageForImprove] = useState(true)
   const [generatingDescription, setGeneratingDescription] = useState(false)
+  
+  // Postfix processor instance
+  const [postfixProcessor] = useState(() => createDefaultPostfixProcessor())
   
   // Derived values based on operation type
   const images = composeImages
@@ -92,6 +100,33 @@ export const EditTab: React.FC<EditTabProps> = ({
       setOperationType('edit')
     }
   }, [images.length, operationType])
+
+  // Update AutoScalePostfix configuration when autoScaleEnabled changes
+  useEffect(() => {
+    postfixProcessor.setOperationEnabled('AutoScalePostfix', state.autoScaleEnabled)
+    console.log(`AutoScalePostfix ${state.autoScaleEnabled ? 'enabled' : 'disabled'}`)
+  }, [state.autoScaleEnabled, postfixProcessor])
+
+  // Update main image size when images change
+  useEffect(() => {
+    const updateMainImageSize = async () => {
+      if (images.length > 0 && state.mainImageIndex < images.length) {
+        try {
+          const mainImage = images[state.mainImageIndex]
+          const dimensions = await getImageDimensions(mainImage)
+          setMainImageSize(dimensions)
+          console.log(`Main image size updated: ${dimensions.width}x${dimensions.height}`)
+        } catch (error) {
+          console.error('Failed to get main image dimensions:', error)
+          setMainImageSize(null)
+        }
+      } else {
+        setMainImageSize(null)
+      }
+    }
+
+    updateMainImageSize()
+  }, [images, state.mainImageIndex, setMainImageSize])
 
   // Update editImagePreview in context when imagePreviews change
   useEffect(() => {
@@ -297,11 +332,47 @@ export const EditTab: React.FC<EditTabProps> = ({
       
       if (data.success) {
         // Handle both single image and multiple images response
-        const images = Array.isArray(data.imageData) ? data.imageData : [data.imageData]
+        let outputImages = Array.isArray(data.imageData) ? data.imageData : [data.imageData]
         
-        if (images && images.length > 0) {
+        if (outputImages && outputImages.length > 0) {
+          // Apply postfix processing if any feature is enabled
+          if (state.autoScaleEnabled && state.mainImageSize) {
+            try {
+              console.log('Applying postfix processing...')
+              
+              // Create postfix context
+              const postfixContext: PostfixContext = {
+                inputImages: images,
+                inputImagePreviews: imagePreviews,
+                mainImageIndex: state.mainImageIndex,
+                mainImageSize: state.mainImageSize,
+                operationType,
+                prompt,
+                outputImages
+              }
+              
+              // Process images through postfix system
+              const postfixResult = await postfixProcessor.processImages(postfixContext)
+              
+              if (postfixResult.errors && postfixResult.errors.length > 0) {
+                console.warn('Postfix processing had errors:', postfixResult.errors)
+                toast.warning(`Postfix processing completed with warnings: ${postfixResult.errors[0]}`)
+              } else {
+                console.log('Postfix processing completed successfully')
+              }
+              
+              // Use processed images
+              outputImages = postfixResult.processedImages
+              
+            } catch (error) {
+              console.error('Postfix processing failed:', error)
+              toast.error(`Postfix processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+              // Continue with original images if postfix fails
+            }
+          }
+          
           // Convert base64 to blob URLs for display
-          const imageUrls = images.map((base64: string) => {
+          const imageUrls = outputImages.map((base64: string) => {
             const byteCharacters = atob(base64)
             const byteNumbers = new Array(byteCharacters.length)
             for (let i = 0; i < byteCharacters.length; i++) {
@@ -318,7 +389,11 @@ export const EditTab: React.FC<EditTabProps> = ({
           // Set the first image for backward compatibility
           setGeneratedImage(imageUrls[0])
           
-          toast.success(`${getOperationLabel(operationType)} completed successfully for ${imageUrls.length} images!`)
+          const successMessage = state.autoScaleEnabled 
+            ? `${getOperationLabel(operationType)} completed with postfix processing for ${imageUrls.length} images!`
+            : `${getOperationLabel(operationType)} completed successfully for ${imageUrls.length} images!`
+          
+          toast.success(successMessage)
         } else {
           throw new Error('No images received from server')
         }
@@ -557,6 +632,50 @@ export const EditTab: React.FC<EditTabProps> = ({
                 )}
               </div>
             )}
+          </div>
+
+          {/* Post-Processing Features */}
+          <div className="space-y-3 border-t pt-4">
+            <Label className="text-sm font-medium">Post-Processing</Label>
+            
+            {/* Auto Scale Feature */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="auto-scale"
+                  checked={state.autoScaleEnabled}
+                  onCheckedChange={(checked) => updatePostfixState({ autoScaleEnabled: checked as boolean })}
+                />
+                <Label htmlFor="auto-scale" className="text-sm font-normal">
+                  Auto-scale output to match input size
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground ml-6">
+                Automatically resize generated images to match the dimensions of the main input image.
+              </p>
+
+              {/* Main Image Selection - Only show when multiple images and auto-scale is enabled */}
+              {images.length > 1 && state.autoScaleEnabled && (
+                <div className="ml-6 space-y-2">
+                  <Label htmlFor="main-image" className="text-sm">Main Image for Scaling</Label>
+                  <select
+                    id="main-image"
+                    value={state.mainImageIndex}
+                    onChange={(e) => setMainImageIndex(parseInt(e.target.value))}
+                    className="w-full px-3 py-2 text-sm border border-input bg-background rounded-md"
+                  >
+                    {images.map((_, index) => (
+                      <option key={index} value={index}>
+                        Image {index + 1}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    Generated images will be scaled to match this image&apos;s dimensions.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Image Count Setting */}

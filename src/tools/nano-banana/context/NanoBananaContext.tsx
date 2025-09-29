@@ -45,6 +45,11 @@ interface NanoBananaState {
   // Session management
   conversationId: string | null
   lastGeneratedImages: string[]
+  
+  // Postfix system state
+  mainImageIndex: number
+  mainImageSize: { width: number; height: number } | null
+  autoScaleEnabled: boolean
 }
 
 interface NanoBananaContextType {
@@ -71,6 +76,12 @@ interface NanoBananaContextType {
   startNewSession: () => void
   setConversationId: (id: string | null) => void
   setLastGeneratedImages: (images: string[]) => void
+  
+  // Postfix functions
+  setMainImageIndex: (index: number) => void
+  setMainImageSize: (size: { width: number; height: number } | null) => void
+  setAutoScaleEnabled: (enabled: boolean) => void
+  updatePostfixState: (updates: Partial<Pick<NanoBananaState, 'mainImageIndex' | 'mainImageSize' | 'autoScaleEnabled'>>) => void
 }
 
 const defaultState: NanoBananaState = {
@@ -108,7 +119,12 @@ const defaultState: NanoBananaState = {
   
   // Session management
   conversationId: null,
-  lastGeneratedImages: []
+  lastGeneratedImages: [],
+  
+  // Postfix system state
+  mainImageIndex: 0,
+  mainImageSize: null,
+  autoScaleEnabled: true
 }
 
 const NanoBananaContext = createContext<NanoBananaContextType | undefined>(undefined)
@@ -209,6 +225,23 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
     return state.lastEditImproveSettings !== null && state.originalEditPrompt !== ''
   }, [state.lastEditImproveSettings, state.originalEditPrompt])
 
+  // Postfix system functions
+  const setMainImageIndex = useCallback((index: number) => {
+    setState(prev => ({ ...prev, mainImageIndex: index }))
+  }, [])
+
+  const setMainImageSize = useCallback((size: { width: number; height: number } | null) => {
+    setState(prev => ({ ...prev, mainImageSize: size }))
+  }, [])
+
+  const setAutoScaleEnabled = useCallback((enabled: boolean) => {
+    setState(prev => ({ ...prev, autoScaleEnabled: enabled }))
+  }, [])
+
+  const updatePostfixState = useCallback((updates: Partial<Pick<NanoBananaState, 'mainImageIndex' | 'mainImageSize' | 'autoScaleEnabled'>>) => {
+    setState(prev => ({ ...prev, ...updates }))
+  }, [])
+
   return (
     <NanoBananaContext.Provider value={{
       state,
@@ -233,7 +266,13 @@ export function NanoBananaProvider({ children }: { children: ReactNode }) {
 
       startNewSession,
       setConversationId,
-      setLastGeneratedImages
+      setLastGeneratedImages,
+
+      // Postfix system management
+      setMainImageIndex,
+      setMainImageSize,
+      setAutoScaleEnabled,
+      updatePostfixState
     }}>
       {children}
     </NanoBananaContext.Provider>
