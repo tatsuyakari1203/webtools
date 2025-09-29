@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
+    "dev": "bun run next dev --turbopack",
+    "build": "bun run next build",
+    "start": "bun run next start",
     "install:prod": "bun install --production",
     "start:prod": "PORT=5005 HOST=0.0.0.0 nohup bun run next start > app.log 2>&1 & echo $! > app.pid",
     "stop:prod": "if [ -f app.pid ]; then kill $(cat app.pid) && rm app.pid; else echo 'No process found'; fi",
@@ -14,10 +14,10 @@
     "deploy:update": "if [ -f app.pid ] && kill -0 $(cat app.pid) 2>/dev/null; then echo 'Server is running, stopping...'; bun run stop:prod; fi; echo 'Updating code...'; git pull && bun install && bun run build && echo 'Starting server...'; bun run start:prod",
     "logs": "tail -f app.log",
     "lint": "bun run eslint",
-    "add-tool": "node scripts/add-tool.js",
-    "tool:add": "node scripts/add-tool.js",
-    "add-user": "node scripts/add-user.js",
-    "remove-user": "node scripts/remove-user.js",
+    "add-tool": "bun scripts/add-tool.js",
+    "tool:add": "bun scripts/add-tool.js",
+    "add-user": "bun scripts/add-user.js",
+    "remove-user": "bun scripts/remove-user.js",
     "coolify-install": "bun install"
   },
   "dependencies": {

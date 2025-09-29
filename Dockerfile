@@ -1,63 +1,57 @@
-# Dockerfile for Next.js Full-Stack Application with API Routes
-# Ultra-optimized multi-stage build for minimal image size
+# Use Bun Alpine image as the base image
+FROM oven/bun:1-alpine AS base
 
-# Stage 1: Builder
-FROM node:current-alpine AS builder
+# Stage 1: Install dependencies
+FROM base AS deps
 WORKDIR /app
 
-# Install dependencies needed for native modules
-RUN apk add --no-cache libc6-compat
-
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY package.json bun.lockb* ./
 
-# Install all dependencies for build
-RUN npm ci --no-audit --no-fund
+# Install all dependencies (including dev dependencies for build)
+RUN bun install --frozen-lockfile
+
+# Stage 2: Build the application
+FROM base AS builder
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
 
 # Copy source code
 COPY . .
 
-# Set build-time environment variables
-ARG NEXT_PUBLIC_BACKEND_URL=http://localhost:7777
-ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
+# Build the application
+RUN bun run build
 
-# Build the application with optimizations (standalone includes minimal node_modules)
-RUN npm run build && \
-    rm -rf .next/cache && \
-    rm -rf node_modules && \
-    npm ci --only=production --no-audit --no-fund && \
-    npm cache clean --force
-
-# Stage 2: Ultra-minimal Runtime
-FROM node:current-alpine AS runner
+# Stage 3: Ultra-minimal Production runtime
+FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
-# Install only essential runtime dependencies
-RUN apk add --no-cache libc6-compat dumb-init && \
-    rm -rf /var/cache/apk/* && \
-    rm -rf /usr/share/man && \
-    rm -rf /tmp/*
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+# Create a non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Copy built application from builder stage (standalone includes everything needed)
+# Copy the built application from the builder stage
+COPY --from=builder /app/public ./public
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+# Standalone mode đã bao gồm tất cả dependencies cần thiết
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Switch to non-root user
+# Change to the non-root user
 USER nextjs
 
-# Set environment variables
-ENV NODE_ENV=production \
-    PORT=3000 \
-    HOSTNAME="0.0.0.0"
-
-# Expose port
+# Expose the port the app runs on
 EXPOSE 3000
 
-# Use dumb-init for proper signal handling
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "server.js"]
+# Define the command to run the application using Bun
+# Sử dụng bun để chạy server.js từ standalone build
+CMD ["bun", "server.js"]
