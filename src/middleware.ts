@@ -134,15 +134,12 @@ export function middleware(request: NextRequest) {
   );
 }
 
-// Cấu hình matcher để chỉ áp dụng middleware cho các routes cần thiết
+// Cấu hình matcher để chỉ áp dụng middleware cho các API routes cần thiết
 export const config = {
   matcher: [
-    // Áp dụng cho các API routes cụ thể
-    '/api/askgemini',
-    '/api/ocr/process',
+    // Chỉ áp dụng cho các API routes được bảo vệ
     '/api/askgemini/:path*',
     '/api/ocr/process/:path*',
-    // Loại trừ các static files và Next.js internals
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
+    '/api/auth/verify-invite/:path*',
   ],
 };

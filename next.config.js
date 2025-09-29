@@ -24,41 +24,23 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     qualities: [25, 50, 75, 85, 90, 95],
   },
+  // External packages for server components
+  serverExternalPackages: [],
   // Tối ưu performance
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-    serverComponentsExternalPackages: [],
+    // optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'], // Disabled for testing
   },
-  // Webpack optimization
+  // Minimal webpack optimization
   webpack: (config, { dev, isServer }) => {
-    if (!dev) {
-      // Tree shaking optimization
-      config.optimization.usedExports = true;
-      config.optimization.sideEffects = false;
-      
-      // Bundle splitting
-      if (!isServer) {
-        config.optimization.splitChunks = {
-          chunks: 'all',
-          minSize: 20000,
-          maxSize: 244000,
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              priority: 10,
-            },
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 5,
-              reuseExistingChunk: true,
-            },
-          },
-        };
-      }
+    if (!dev && !isServer) {
+      // Disable chunk splitting for single bundle
+      config.optimization.splitChunks = {
+        chunks: 'initial',
+        cacheGroups: {
+          default: false,
+          vendors: false,
+        },
+      };
     }
     return config;
   },
