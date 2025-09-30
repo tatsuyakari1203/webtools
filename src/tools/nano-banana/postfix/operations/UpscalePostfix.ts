@@ -53,16 +53,21 @@ export class UpscalePostfix implements PostfixOperation {
 
     try {
       const processedImages: string[] = []
+      const usedSeeds: number[] = []
       
-      for (const image of context.outputImages) {
+      for (let i = 0; i < context.outputImages.length; i++) {
+        const image = context.outputImages[i]
+        // Generate a unique random seed for each image to ensure variety
+        const uniqueSeed = Math.floor(Date.now() * Math.random()) % 1000000
+        usedSeeds.push(uniqueSeed)
+        
+        console.log(`UpscalePostfix: Processing image ${i + 1}/${context.outputImages.length} with unique seed: ${uniqueSeed}`)
+        
         // Prepare request payload
         const requestPayload: UpscaleRequest = {
           image: image,
-          upscale_factor: config.upscaleFactor
-        }
-
-        if (config.seed !== undefined) {
-          requestPayload.seed = config.seed
+          upscale_factor: config.upscaleFactor,
+          seed: uniqueSeed
         }
 
         // Call the SeedVR2 upscale API
@@ -92,9 +97,8 @@ export class UpscalePostfix implements PostfixOperation {
           const reader = new FileReader()
           reader.onload = () => {
             const result = reader.result as string
-            // Remove data URL prefix to get just the base64 part
-            const base64Data = result.split(',')[1]
-            resolve(base64Data)
+            // Return full data URL for proper image display
+            resolve(result)
           }
           reader.onerror = reject
           reader.readAsDataURL(imageBlob)
@@ -108,7 +112,7 @@ export class UpscalePostfix implements PostfixOperation {
         metadata: {
           operation: this.id,
           upscaleFactor: config.upscaleFactor,
-          seed: config.seed,
+          seeds: usedSeeds,
           processedCount: processedImages.length,
           originalCount: context.outputImages.length
         }

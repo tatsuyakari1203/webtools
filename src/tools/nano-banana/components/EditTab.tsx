@@ -13,6 +13,7 @@ import { useNanoBanana } from '../context/NanoBananaContext'
 import { toast } from 'sonner'
 import { createDefaultPostfixProcessor, getImageDimensions } from '../postfix'
 import type { PostfixContext } from '../postfix'
+import { batchBase64ToBlobUrls } from '../utils/imageUtils'
 
 // Helper function to get operation labels in English
 function getOperationLabel(operationType: string): string {
@@ -115,7 +116,6 @@ export const EditTab: React.FC<EditTabProps> = ({
     if (state.upscaleEnabled) {
       // Auto-calculate optimal scale factor based on current image size
       let optimalFactor = 2.0 // Default factor
-      const randomSeed = Math.floor(Math.random() * 1000000) // Random seed
       
       if (state.mainImageSize) {
         const { width, height } = state.mainImageSize
@@ -133,11 +133,10 @@ export const EditTab: React.FC<EditTabProps> = ({
       }
       
       postfixProcessor.updateOperationConfig('upscale', {
-        upscaleFactor: optimalFactor,
-        seed: randomSeed
+        upscaleFactor: optimalFactor
       })
       
-      console.log(`UpscalePostfix enabled with auto-calculated factor ${optimalFactor} and seed ${randomSeed}`)
+      console.log(`UpscalePostfix enabled with auto-calculated factor ${optimalFactor} (unique seeds will be generated for each image)`)
     } else {
       console.log('UpscalePostfix disabled')
     }
@@ -407,58 +406,14 @@ export const EditTab: React.FC<EditTabProps> = ({
             }
           }
           
-          // Convert base64 to blob URLs for display
-          const imageUrls = outputImages.map((base64: string | { url?: string; data?: string } | unknown) => {
-            try {
-              // Handle different data types
-              let base64String: string
-              
-              if (typeof base64 === 'string') {
-                base64String = base64
-              } else if (base64 && typeof base64 === 'object') {
-                // Handle case where base64 might be an object (e.g., from API response)
-                const base64Obj = base64 as { url?: string; data?: string }
-                if (base64Obj.url) {
-                  // If it's a URL object, we can't process it here
-                  console.error('Received URL object instead of base64 string:', base64)
-                  throw new Error('Invalid image format: URL object received')
-                } else if (base64Obj.data) {
-                  base64String = base64Obj.data
-                } else {
-                  base64String = String(base64)
-                }
-              } else {
-                base64String = String(base64)
-              }
-              
-              // Validate base64 string
-              if (!base64String || base64String.trim() === '') {
-                throw new Error('Empty base64 string')
-              }
-              
-              // Strip data URL prefix if present (e.g., "data:image/jpeg;base64,")
-              const base64Data = base64String.includes(',') ? base64String.split(',')[1] : base64String
-              
-              // Validate base64 format
-              if (!base64Data || base64Data.trim() === '') {
-                throw new Error('Invalid base64 format')
-              }
-              
-              const byteCharacters = atob(base64Data)
-              const byteNumbers = new Array(byteCharacters.length)
-              for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i)
-              }
-              const byteArray = new Uint8Array(byteNumbers)
-              const blob = new Blob([byteArray], { type: 'image/png' })
-              return URL.createObjectURL(blob)
-            } catch (error) {
-              console.error('Failed to process image data:', error, 'Data:', base64)
-              toast.error(`Failed to process image: ${error instanceof Error ? error.message : 'Unknown error'}`)
-              // Return a placeholder or skip this image
-              return null
-            }
-          }).filter(Boolean) as string[]
+          // Convert base64 to blob URLs for display with correct MIME type detection
+          const imageUrls = batchBase64ToBlobUrls(outputImages)
+          
+          // Show error toast if some images failed to process
+          if (imageUrls.length < outputImages.length) {
+            const failedCount = outputImages.length - imageUrls.length
+            toast.error(`Failed to process ${failedCount} image(s). Successfully processed ${imageUrls.length} image(s).`)
+          }
           
           // Set multiple images for the gallery
           setLastGeneratedImages(imageUrls)

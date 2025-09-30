@@ -57,7 +57,7 @@ export const UpscaleTab: React.FC<UpscaleTabProps> = ({
         })
 
         // Generate random seed for each upscale
-        const randomSeed = Math.floor(Math.random() * 1000000)
+        const randomSeed = Math.floor(Date.now() * Math.random()) % 1000000
 
         // Call SeedVR2 upscale API
         const requestData = {
