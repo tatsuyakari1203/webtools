@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 
-function createPromptEnhancement(originalPrompt: string, category: string, model: string, imageContext?: string): string {
+function createPromptEnhancement(originalPrompt: string, category: string, model: string, hasImage?: string): string {
   // Base prompt for different models
   let basePrompt = '';
   
   if (model === 'seedream') {
     basePrompt = `You are an expert image editing assistant. Your task is to enhance and refine user editing instructions following Seedream 4.0 guidelines for clear, concise, and natural language commands.`;
     
-    if (imageContext) {
-      basePrompt += `\n\nImage analysis: ${imageContext}`;
+    if (hasImage) {
+      basePrompt += `\n\nAnalyze the provided image and enhance the editing instruction based on the visual context you observe.`;
     }
     
     basePrompt += `\n\nUser's editing instruction: "${originalPrompt}"`;
@@ -21,6 +21,10 @@ function createPromptEnhancement(originalPrompt: string, category: string, model
 4. Describing transformations in simple, actionable terms
 5. Avoiding overly detailed technical specifications that may confuse the AI model`;
     
+    if (hasImage) {
+      basePrompt += `\n6. Incorporating visual elements, composition, lighting, and style details you observe in the provided image`;
+    }
+    
     basePrompt += `\n\nExamples of good enhanced commands:
 - "Make the image warmer and more golden, like sunset lighting"
 - "Add a vintage film look with slightly faded colors"
@@ -31,8 +35,8 @@ function createPromptEnhancement(originalPrompt: string, category: string, model
   } else if (model === 'flux-kontext') {
     basePrompt = `You are an expert image context assistant. Your task is to enhance and refine user instructions for the Flux Kontext model, which specializes in adding objects or elements to images based on textual prompts.`;
     
-    if (imageContext) {
-      basePrompt += `\n\nImage analysis: ${imageContext}`;
+    if (hasImage) {
+      basePrompt += `\n\nAnalyze the provided image and enhance the instruction based on the visual context, composition, and existing elements you observe.`;
     }
     
     basePrompt += `\n\nUser's instruction: "${originalPrompt}"`;
@@ -44,6 +48,10 @@ function createPromptEnhancement(originalPrompt: string, category: string, model
 4. Describing the new elements in simple, actionable terms
 5. Avoiding overly detailed technical specifications that may confuse the AI model`;
     
+    if (hasImage) {
+      basePrompt += `\n6. Considering the existing composition, lighting, and style in the provided image for seamless integration`;
+    }
+    
     basePrompt += `\n\nExamples of good enhanced commands:
 - "Add a small brown dog sitting next to the chair"
 - "Place a bouquet of colorful flowers on the table"
@@ -54,8 +62,8 @@ function createPromptEnhancement(originalPrompt: string, category: string, model
     // Default generic enhancement prompt
     basePrompt = `You are an expert image assistant. Your task is to enhance and refine user instructions for AI image generation or editing.`;
     
-    if (imageContext) {
-      basePrompt += `\n\nImage analysis: ${imageContext}`;
+    if (hasImage) {
+      basePrompt += `\n\nAnalyze the provided image and enhance the instruction based on the visual context you observe.`;
     }
     
     basePrompt += `\n\nUser's instruction: "${originalPrompt}"`;
@@ -68,12 +76,14 @@ function createPromptEnhancement(originalPrompt: string, category: string, model
 5. Avoiding overly detailed technical specifications that may confuse the AI model`;
   }
   
-  basePrompt += `\n\nProvide the enhanced instruction as a natural paragraph (not markdown format):`;
+  basePrompt += `\n\nIMPORTANT: Always respond in English only, regardless of the input language. Provide the enhanced instruction as a natural paragraph (not markdown format):`;
 
   return basePrompt;
 }
 
 export async function POST(request: NextRequest) {
+  console.log('🚀 Enhance-prompt API request started');
+
   const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY
 
   if (!GOOGLE_API_KEY) {
@@ -96,105 +106,129 @@ export async function POST(request: NextRequest) {
 
     const genAI = new GoogleGenAI({ apiKey: GOOGLE_API_KEY })
     
-    let imageContext = undefined
+    // Create enhancement prompt without pre-analyzing image
+    const enhancementPrompt = createPromptEnhancement(prompt, category, model, image ? 'Based on the provided image context' : undefined)
+    console.log('📝 Generated enhancement prompt, calling Gemini 2.5 Flash...');
+
+    // Prepare content parts - include image directly if provided
+    const parts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }> = [{ text: enhancementPrompt }]
     
-    // Analyze image if provided
+    // Add image directly to the request if provided
     if (image) {
-      try {
-        const visionResult = await genAI.models.generateContent({
-          model: 'models/gemini-1.5-flash',
-          contents: [{
-            parts: [
-              {
-                text: 'Analyze this image and describe its content, including: objects, people, colors, lighting, composition, style, and any notable visual elements. Be specific and detailed for image editing context.'
-              },
-              {
-                inlineData: {
-                  mimeType: 'image/jpeg',
-                  data: image
-                }
-              }
-            ]
-          }]
-        })
-        
-        const visionCandidates = visionResult.candidates
-        if (visionCandidates && visionCandidates.length > 0) {
-          const visionParts = visionCandidates[0].content?.parts
-          if (visionParts) {
-            imageContext = ''
-            for (const part of visionParts) {
-              if (part.text) {
-                imageContext += part.text
-              }
+      // Handle base64 image data
+      let imageData = image
+      let mimeType = 'image/jpeg'
+      
+      // Remove data URL prefix if present
+      if (image.startsWith('data:')) {
+        const [header, data] = image.split(',')
+        imageData = data
+        const mimeMatch = header.match(/data:([^;]+)/)
+        if (mimeMatch) {
+          mimeType = mimeMatch[1]
+        }
+      }
+      
+      console.log(`🖼️ Image processed: ${mimeType}, size: ${(imageData.length * 0.75 / 1024).toFixed(1)}KB`);
+      
+      parts.push({
+        inlineData: {
+          data: imageData,
+          mimeType: mimeType
+        }
+      })
+    }
+
+    // Add timeout for better performance (similar to improve-prompt)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 45000); // 45s timeout
+    });
+
+    console.log('🤖 Calling Gemini 2.5 Flash with optimized thinking mode...');
+    const genAIPromise = genAI.models.generateContentStream({
+      model: 'models/gemini-2.5-flash',
+      contents: [
+        { role: 'user', parts }
+      ],
+      config: {
+        // Optimize thinking mode for faster response
+        thinkingConfig: { thinkingBudget: 500 } // Reduced thinking budget for faster response
+      }
+    });
+
+    const result = await Promise.race([genAIPromise, timeoutPromise]) as AsyncIterable<{ text?: string }>;
+
+    // Optimized streaming response
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          let enhancedPrompt = ''
+          
+          for await (const chunk of result) {
+            const chunkText = chunk.text
+            if (chunkText) {
+              enhancedPrompt += chunkText
+              
+              // Simplified streaming chunk (less JSON processing)
+              const data = JSON.stringify({
+                type: 'chunk',
+                content: chunkText,
+                accumulated: enhancedPrompt
+              })
+              controller.enqueue(encoder.encode(`data: ${data}\n\n`))
             }
           }
+          
+          // Ensure enhanced prompt doesn't exceed 2000 characters
+          let finalPrompt = enhancedPrompt.trim()
+          if (finalPrompt.length > 2000) {
+            finalPrompt = finalPrompt.substring(0, 2000).trim()
+            // Try to cut at the last complete sentence
+            const lastPeriod = finalPrompt.lastIndexOf('.')
+            const lastExclamation = finalPrompt.lastIndexOf('!')
+            const lastQuestion = finalPrompt.lastIndexOf('?')
+            const lastSentenceEnd = Math.max(lastPeriod, lastExclamation, lastQuestion)
+            
+            if (lastSentenceEnd > 1800) { // Only cut at sentence if it's not too short
+              finalPrompt = finalPrompt.substring(0, lastSentenceEnd + 1)
+            }
+          }
+          
+          // Send final result
+          const finalData = JSON.stringify({
+            type: 'complete',
+            success: true,
+            original_prompt: prompt,
+            enhanced_prompt: finalPrompt,
+            category,
+            model
+          })
+          controller.enqueue(encoder.encode(`data: ${finalData}\n\n`))
+          
+        } catch (streamError) {
+          console.error('Streaming error:', streamError)
+          const errorData = JSON.stringify({
+            type: 'error',
+            success: false,
+            error: 'Failed to enhance prompt during streaming'
+          })
+          controller.enqueue(encoder.encode(`data: ${errorData}\n\n`))
+        } finally {
+          controller.close()
         }
-      } catch (visionError) {
-        console.error('Vision API error:', visionError)
-        // Continue without image context if vision fails
       }
-    }
-
-    const enhancementPrompt = createPromptEnhancement(prompt, category, model, imageContext)
-
-    const result = await genAI.models.generateContent({
-      model: 'models/gemini-1.5-flash',
-      contents: enhancementPrompt
     })
 
-    const candidates = result.candidates
-    if (!candidates || candidates.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'No enhanced prompt generated' },
-        { status: 500 }
-      )
-    }
-
-    const parts = candidates[0].content?.parts
-    let enhancedPrompt = ''
-
-    if (!parts) {
-      return NextResponse.json(
-        { success: false, error: 'No content parts found in response' },
-        { status: 500 }
-      )
-    }
-
-    for (const part of parts) {
-      if (part.text) {
-        enhancedPrompt += part.text
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Headers': 'Content-Type'
       }
-    }
-
-    if (!enhancedPrompt) {
-      return NextResponse.json(
-        { success: false, error: 'Failed to enhance prompt' },
-        { status: 500 }
-      )
-    }
-
-    // Ensure enhanced prompt doesn't exceed 2000 characters
-    let finalPrompt = enhancedPrompt.trim()
-    if (finalPrompt.length > 2000) {
-      finalPrompt = finalPrompt.substring(0, 2000).trim()
-      // Try to cut at the last complete sentence
-      const lastPeriod = finalPrompt.lastIndexOf('.')
-      const lastExclamation = finalPrompt.lastIndexOf('!')
-      const lastQuestion = finalPrompt.lastIndexOf('?')
-      const lastSentenceEnd = Math.max(lastPeriod, lastExclamation, lastQuestion)
-      
-      if (lastSentenceEnd > 1800) { // Only cut at sentence if it's not too short
-        finalPrompt = finalPrompt.substring(0, lastSentenceEnd + 1)
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      original_prompt: prompt,
-      enhanced_prompt: finalPrompt,
-      category,
-      model
     })
 
   } catch (error) {
@@ -204,4 +238,27 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    message: "Optimized Prompt Enhancement API is running",
+    description: "Enhanced prompt enhancement service using Gemini 2.5 Flash with optimized thinking mode for faster response times",
+    features: [
+      "45s timeout for reliable performance",
+      "Optimized thinking mode (500 budget)",
+      "Real-time streaming responses",
+      "Performance logging and monitoring",
+      "Streamlined JSON processing",
+      "Image analysis support"
+    ],
+    model: "gemini-2.5-flash",
+    capabilities: [
+      "Text prompt enhancement",
+      "Image-based prompt improvement", 
+      "Model-specific optimization (seedream, flux-kontext)",
+      "Real-time streaming responses"
+    ],
+    performance: "Optimized for speed with reduced thinking budget and timeout protection"
+  })
 }

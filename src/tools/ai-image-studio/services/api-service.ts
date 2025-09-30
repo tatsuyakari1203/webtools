@@ -162,12 +162,53 @@ export class ApiService {
       })
     });
 
-    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-    if (data.success) {
-      return data.enhanced_prompt;
-    } else {
-      throw new Error(data.error || 'Failed to enhance prompt');
+    // Handle streaming response
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No response body reader available');
+    }
+
+    const decoder = new TextDecoder();
+    let enhancedPrompt = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              if (data.type === 'complete' && data.success) {
+                return data.enhanced_prompt;
+              } else if (data.type === 'error') {
+                throw new Error(data.error || 'Failed to enhance prompt');
+              }
+              // For 'chunk' type, we can optionally accumulate the content
+              // but we'll wait for the complete response
+            } catch (parseError) {
+              // Skip invalid JSON lines
+              continue;
+            }
+          }
+        }
+      }
+      
+      // If we reach here without getting a complete response, throw an error
+      throw new Error('Incomplete response from enhance prompt API');
+      
+    } finally {
+      reader.releaseLock();
     }
   }
 
