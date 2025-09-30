@@ -36,6 +36,8 @@ function getStaticImport(componentPath: string): () => Promise<{ default: React.
       return () => import("@/tools/token-generator")
     case "@/tools/ai-image-studio/AIImageStudio":
       return () => import("@/tools/ai-image-studio/AIImageStudio")
+    case "@/tools/frame/Frame":
+      return () => import("@/tools/frame/Frame")
 
     default:
       throw new Error(`Unknown component path: ${componentPath}`)

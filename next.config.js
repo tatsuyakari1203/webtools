@@ -29,20 +29,7 @@ const nextConfig = {
   // Tối ưu performance
   experimental: {
     // optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'], // Disabled for testing
-  },
-  // Minimal webpack optimization
-  webpack: (config, { dev, isServer }) => {
-    if (!dev && !isServer) {
-      // Disable chunk splitting for single bundle
-      config.optimization.splitChunks = {
-        chunks: 'initial',
-        cacheGroups: {
-          default: false,
-          vendors: false,
-        },
-      };
-    }
-    return config;
+    // Turbopack configurations can be added here if needed
   },
 }
 

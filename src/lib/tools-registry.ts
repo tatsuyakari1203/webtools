@@ -153,6 +153,16 @@ export const toolsRegistry: Tool[] = [
     componentPath: "@/tools/ai-image-studio/AIImageStudio",
     requiresInvite: true,
     inviteDescription: "This AI tool requires special access due to API costs and usage limits.",
+  },
+  {
+    id: "frame",
+    name: "Frame",
+    description: "Create professional photo frames with EXIF metadata and camera information",
+    category: "Image",
+    icon: ImageIcon,
+    path: "/tools/frame",
+    featured: false,
+    componentPath: "@/tools/frame/Frame",
   },]
 
 export const getToolById = (id: string): Tool | undefined => {
