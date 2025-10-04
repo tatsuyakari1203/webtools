@@ -6,10 +6,12 @@ FROM base AS deps
 WORKDIR /app
 
 # Copy package files
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock* ./
 
 # Install all dependencies (including dev dependencies for build)
-RUN bun install --frozen-lockfile
+# Use cache mount to speed up subsequent builds
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --timeout 300000
 
 # Stage 2: Build the application
 FROM base AS builder

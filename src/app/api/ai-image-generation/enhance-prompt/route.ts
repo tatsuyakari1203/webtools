@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
 
     console.log('🤖 Calling Gemini 2.5 Flash with optimized thinking mode...');
     const genAIPromise = genAI.models.generateContentStream({
-      model: 'models/gemini-2.5-flash',
+      model: 'models/gemini-flash-latest',
       contents: [
         { role: 'user', parts }
       ],

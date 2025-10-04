@@ -16,7 +16,7 @@ export const AVAILABLE_MODELS = {
   FLASH_LITE: 'gemini-2.5-flash-lite',
   FLASH: 'gemini-2.5-flash', 
   PRO: 'gemini-2.5-pro',
-  FLASH_IMAGE: 'gemini-2.5-flash-image-preview'
+  FLASH_IMAGE: 'gemini-2.5-flash-image'
 } as const;
 
 /**

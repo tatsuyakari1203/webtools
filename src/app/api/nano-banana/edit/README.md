@@ -56,7 +56,7 @@ function createSimplePrompt(instruction: string, imageDescription?: string): str
 ### 2. Model Configuration
 ```typescript
 // ✅ Model name optimization
-const model = 'gemini-2.5-flash-image-preview'; // Không có prefix "models/"
+const model = 'gemini-2.5-flash-image'; // Không có prefix "models/"
 ```
 
 **Kinh nghiệm:**

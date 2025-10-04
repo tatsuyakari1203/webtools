@@ -122,14 +122,14 @@ export async function POST(request: NextRequest) {
       const prompt = createPrompt(language);
 
       // Gọi API để xử lý OCR với streaming và timeout
-      console.log(`[OCR-${requestId}] Sending streaming request to GenAI with model: models/gemini-2.5-flash-lite`);
+      console.log(`[OCR-${requestId}] Sending streaming request to GenAI with model: models/gemini-flash-lite-latest`);
       
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Request timeout')), 30000); // 30s timeout
       });
       
       const genAIPromise = genAI.models.generateContentStream({
-        model: 'models/gemini-2.5-flash-lite',
+        model: 'models/gemini-flash-lite-latest',
         contents: [
           {
             role: 'user',

@@ -34,6 +34,10 @@ const DEFAULT_CONFIG: FrameConfig = {
 };
 
 export default function Frame({ tool }: FrameProps) {
+  // Tool parameter is required by the component interface but not currently used
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _tool = tool;
+  
   const [imageData, setImageData] = useState<ImageData | null>(null);
   const [exifData, setExifData] = useState<ExifData | null>(null);
   const [config, setConfig] = useState<FrameConfig>(DEFAULT_CONFIG);
@@ -70,8 +74,8 @@ export default function Frame({ tool }: FrameProps) {
       const originalHeight = canvas.height;
       const aspectRatio = originalWidth / originalHeight;
       
-      let exportWidth = config.exportWidth;
-      let exportHeight = Math.round(exportWidth / aspectRatio);
+      const exportWidth = config.exportWidth;
+      const exportHeight = Math.round(exportWidth / aspectRatio);
       
       // Set export canvas size
       exportCanvas.width = exportWidth;

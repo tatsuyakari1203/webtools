@@ -1,13 +1,13 @@
 import dynamic from "next/dynamic"
 import React from "react"
-import { toolsRegistry } from "./tools-registry"
+import { toolsRegistry, type Tool } from "./tools-registry"
 import { createProtectedComponent } from "./auto-invite-wrapper"
 
 // Cache for dynamic components to avoid recreating them
-const componentCache = new Map<string, React.ComponentType<{ tool: unknown }>>()
+const componentCache = new Map<string, React.ComponentType<{ tool: Tool }>>()
 
 // Static import function for Next.js compatibility
-function getStaticImport(componentPath: string): () => Promise<{ default: React.ComponentType<{ tool: unknown }> }> {
+function getStaticImport(componentPath: string): () => Promise<{ default: React.ComponentType<{ tool: Tool }> }> {
   // Next.js requires static analysis of import paths
   switch (componentPath) {
     case "@/tools/calculator/Calculator":
@@ -38,6 +38,8 @@ function getStaticImport(componentPath: string): () => Promise<{ default: React.
       return () => import("@/tools/ai-image-studio/AIImageStudio")
     case "@/tools/frame/Frame":
       return () => import("@/tools/frame/Frame")
+    case "@/components/tools/ComingSoonTool":
+      return () => import("@/components/tools/ComingSoonTool")
 
     default:
       throw new Error(`Unknown component path: ${componentPath}`)
@@ -49,7 +51,7 @@ function getStaticImport(componentPath: string): () => Promise<{ default: React.
  * @param componentPath - The path to the component (e.g., "@/tools/calculator/Calculator")
  * @returns A React component that can be rendered (with invite protection if required)
  */
-export function loadDynamicComponent(componentPath: string): React.ComponentType<{ tool: unknown }> {
+export function loadDynamicComponent(componentPath: string): React.ComponentType<{ tool: Tool }> {
   // Check cache first
   if (componentCache.has(componentPath)) {
     return componentCache.get(componentPath)!
@@ -70,7 +72,7 @@ export function loadDynamicComponent(componentPath: string): React.ComponentType
     {
       loading: () => React.createElement('div', null, 'Loading...'),
     }
-  ) as React.ComponentType<{ tool: unknown }>
+  ) as React.ComponentType<{ tool: Tool }>
 
   // Automatically apply invite protection if required
   const ProtectedComponent = createProtectedComponent(DynamicComponent, tool.id)

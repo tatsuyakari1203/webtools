@@ -160,7 +160,7 @@ export class GeminiService {
     try {
       // Test với một prompt đơn giản
       const stream = await this.genAI.models.generateContentStream({
-           model: 'models/gemini-2.5-flash',
+           model: 'models/gemini-flash-latest',
            contents: [{
              role: 'user',
              parts: [{ text: 'Hello' }]

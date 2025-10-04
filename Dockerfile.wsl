@@ -1,0 +1,26 @@
+# Use Bun Alpine image as the base image for WSL optimized build
+FROM oven/bun:1-alpine AS runner
+WORKDIR /app
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Create a non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy the built application (built on host) with proper ownership
+COPY --chown=nextjs:nodejs public ./public
+COPY --chown=nextjs:nodejs .next/standalone/ ./
+COPY --chown=nextjs:nodejs .next/static ./.next/static
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Start the application
+CMD ["bun", "server.js"]

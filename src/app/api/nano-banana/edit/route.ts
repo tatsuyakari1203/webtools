@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     console.log('Prompt created');
     
     const ai = new GoogleGenAI({ apiKey });
-    console.log('Using model: gemini-2.5-flash-image-preview');
+    console.log('Using model: gemini-2.5-flash-image');
 
     const contents = [{
       parts: [
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
           console.log(`Attempt ${attempt + 1}/${maxRetries} for image ${index + 1}`);
           
           const genAIPromise = ai.models.generateContent({
-            model: 'gemini-2.5-flash-image-preview',
+            model: 'gemini-2.5-flash-image',
             contents
           });
           

@@ -106,7 +106,7 @@ export default function SettingsPanel({
             <Label className="text-xs">Bar Position</Label>
             <Select
               value={config.barPosition || 'bottom'}
-              onValueChange={(value) => updateConfig({ barPosition: value as any })}
+              onValueChange={(value) => updateConfig({ barPosition: value as 'top' | 'bottom' | 'both' })}
             >
               <SelectTrigger className="h-8">
                 <SelectValue />

@@ -173,7 +173,6 @@ export class ApiService {
     }
 
     const decoder = new TextDecoder();
-    let enhancedPrompt = '';
 
     try {
       while (true) {
@@ -196,7 +195,7 @@ export class ApiService {
               }
               // For 'chunk' type, we can optionally accumulate the content
               // but we'll wait for the complete response
-            } catch (parseError) {
+            } catch {
               // Skip invalid JSON lines
               continue;
             }

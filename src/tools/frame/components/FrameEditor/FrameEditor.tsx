@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -88,8 +88,79 @@ export default function FrameEditor({
     return colors[textColor] || '#000000';
   };
 
+  // Draw metadata bar (header or footer)
+  const drawMetadataBar = useCallback((
+    ctx: CanvasRenderingContext2D, 
+    position: 'top' | 'bottom', 
+    canvasWidth: number, 
+    barY: number, 
+    borderWidth: number, 
+    textColor: string
+  ) => {
+    const barHeight = 60;
+    const padding = 12;
+    const lineHeight = config.fontSize + 2;
+    const logoSize = 20;
+    
+    // Get metadata values (custom or from EXIF)
+    const cameraName = config.customCameraBrand || (exifData ? formatCameraName(exifData) : 'Unknown Camera');
+    const aperture = config.customAperture || (exifData?.settings.aperture || 'f/0');
+    const shutter = config.customShutter || (exifData?.settings.shutterSpeed || '1/0s');
+    const iso = config.customISO || (exifData?.settings.iso ? `ISO ${exifData.settings.iso}` : 'ISO 0');
+    const focal = config.customFocal || (exifData?.settings.focalLength || '0mm');
+    const date = config.customDate || (exifData ? new Date(exifData.datetime).toLocaleDateString() : new Date().toLocaleDateString());
+    const photographer = config.photographerName || '';
+    
+    // Get camera brand for logo
+    const cameraBrand = exifData ? getCameraBrand(exifData) : 'Other';
+    
+    // Draw camera logo
+    const logoImg = new Image();
+    logoImg.onload = () => {
+      ctx.drawImage(logoImg, borderWidth + padding, barY + padding + 2, logoSize, logoSize);
+    };
+    logoImg.src = getCameraLogoDataUrl(cameraBrand, logoSize, textColor);
+    
+    // Draw camera brand/name (left side, next to logo)
+    const textX = borderWidth + padding + logoSize + 8;
+    drawText(ctx, cameraName, textX, barY + padding + lineHeight, config.fontSize + 1, textColor, 'bold');
+    
+    // Draw photo settings (center-left)
+    const settingsText = `${aperture} • ${shutter} • ${iso} • ${focal}`;
+    const settingsX = textX;
+    const settingsY = barY + padding + lineHeight * 2 + 4;
+    drawText(ctx, settingsText, settingsX, settingsY, config.fontSize - 1, textColor);
+    
+    // Draw date (right side)
+    const dateWidth = ctx.measureText(date).width;
+    const dateX = canvasWidth - borderWidth - padding - dateWidth;
+    drawText(ctx, date, dateX, barY + padding + lineHeight, config.fontSize, textColor);
+    
+    // Draw photographer name (right side, below date)
+    if (photographer) {
+      const photographerWidth = ctx.measureText(photographer).width;
+      const photographerX = canvasWidth - borderWidth - padding - photographerWidth;
+      drawText(ctx, photographer, photographerX, barY + padding + lineHeight * 2 + 4, config.fontSize - 1, textColor);
+    }
+    
+    // Draw separator line
+    ctx.strokeStyle = textColor;
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (position === 'top') {
+      ctx.moveTo(borderWidth + padding, barY + barHeight - 2);
+      ctx.lineTo(canvasWidth - borderWidth - padding, barY + barHeight - 2);
+    } else {
+      ctx.moveTo(borderWidth + padding, barY + 2);
+      ctx.lineTo(canvasWidth - borderWidth - padding, barY + 2);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }, [config, exifData]);
+
   // Draw frame on canvas
-  const drawFrame = async () => {
+  const drawFrame = useCallback(async () => {
     const canvas = canvasRef.current;
     if (!canvas || !imageData) return;
 
@@ -200,78 +271,9 @@ export default function FrameEditor({
     };
     
     img.src = imageData.imageData;
-  };
+  }, [imageData, config, drawMetadataBar]);
 
-  // Draw metadata bar (header or footer)
-  const drawMetadataBar = (
-    ctx: CanvasRenderingContext2D, 
-    position: 'top' | 'bottom', 
-    canvasWidth: number, 
-    barY: number, 
-    borderWidth: number, 
-    textColor: string
-  ) => {
-    const barHeight = 60;
-    const padding = 12;
-    const lineHeight = config.fontSize + 2;
-    const logoSize = 20;
-    
-    // Get metadata values (custom or from EXIF)
-    const cameraName = config.customCameraBrand || (exifData ? formatCameraName(exifData) : 'Unknown Camera');
-    const aperture = config.customAperture || (exifData?.settings.aperture || 'f/0');
-    const shutter = config.customShutter || (exifData?.settings.shutterSpeed || '1/0s');
-    const iso = config.customISO || (exifData?.settings.iso ? `ISO ${exifData.settings.iso}` : 'ISO 0');
-    const focal = config.customFocal || (exifData?.settings.focalLength || '0mm');
-    const date = config.customDate || (exifData ? new Date(exifData.datetime).toLocaleDateString() : new Date().toLocaleDateString());
-    const photographer = config.photographerName || '';
-    
-    // Get camera brand for logo
-    const cameraBrand = exifData ? getCameraBrand(exifData) : 'Other';
-    
-    // Draw camera logo
-    const logoImg = new Image();
-    logoImg.onload = () => {
-      ctx.drawImage(logoImg, borderWidth + padding, barY + padding + 2, logoSize, logoSize);
-    };
-    logoImg.src = getCameraLogoDataUrl(cameraBrand, logoSize, textColor);
-    
-    // Draw camera brand/name (left side, next to logo)
-    const textX = borderWidth + padding + logoSize + 8;
-    drawText(ctx, cameraName, textX, barY + padding + lineHeight, config.fontSize + 1, textColor, 'bold');
-    
-    // Draw photo settings (center-left)
-    const settingsText = `${aperture} • ${shutter} • ${iso} • ${focal}`;
-    const settingsX = textX;
-    const settingsY = barY + padding + lineHeight * 2 + 4;
-    drawText(ctx, settingsText, settingsX, settingsY, config.fontSize - 1, textColor);
-    
-    // Draw date (right side)
-    const dateWidth = ctx.measureText(date).width;
-    const dateX = canvasWidth - borderWidth - padding - dateWidth;
-    drawText(ctx, date, dateX, barY + padding + lineHeight, config.fontSize, textColor);
-    
-    // Draw photographer name (right side, below date)
-    if (photographer) {
-      const photographerWidth = ctx.measureText(photographer).width;
-      const photographerX = canvasWidth - borderWidth - padding - photographerWidth;
-      drawText(ctx, photographer, photographerX, barY + padding + lineHeight * 2 + 4, config.fontSize - 1, textColor);
-    }
-    
-    // Draw separator line
-    ctx.strokeStyle = textColor;
-    ctx.globalAlpha = 0.3;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    if (position === 'top') {
-      ctx.moveTo(borderWidth + padding, barY + barHeight - 2);
-      ctx.lineTo(canvasWidth - borderWidth - padding, barY + barHeight - 2);
-    } else {
-      ctx.moveTo(borderWidth + padding, barY + 2);
-      ctx.lineTo(canvasWidth - borderWidth - padding, barY + 2);
-    }
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  };
+
 
   // Helper function to draw rounded rectangle
   const roundedRect = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) => {
@@ -384,7 +386,7 @@ export default function FrameEditor({
     if (imageData) {
       drawFrame();
     }
-  }, [imageData, config, exifData]);
+  }, [imageData, config, exifData, drawFrame]);
 
   if (!imageData) {
     return (

@@ -162,7 +162,7 @@ export const toolsRegistry: Tool[] = [
     icon: ImageIcon,
     path: "/tools/frame",
     featured: false,
-    componentPath: "@/tools/frame/Frame",
+    componentPath: "@/components/tools/ComingSoonTool",
   },]
 
 export const getToolById = (id: string): Tool | undefined => {

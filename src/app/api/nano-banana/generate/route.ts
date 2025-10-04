@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Generate multiple images by making multiple API calls
     const imagePromises = Array.from({ length: imageCount }, async () => {
       const response = await ai.models.generateContent({
-        model: 'models/gemini-2.5-flash-image-preview',
+        model: 'models/gemini-2.5-flash-image',
         contents: [{
           parts: [{ text: finalPrompt }]
         }]
